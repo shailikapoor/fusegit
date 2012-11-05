@@ -6,7 +6,7 @@ CFLAGS = #-g -I../include -I../src
 LFLAGS = -lgit2
 APPS = test_libgit2
 
-all: $(APPS)
+all: clean $(APPS)
 
 % : %.c
 	$(CC) -o $@ $(CFLAGS) $< $(LFLAGS)
@@ -14,4 +14,4 @@ all: $(APPS)
 clean:
 	$(RM) $(APPS)
 	$(RM) -r *.dSYM
-	$(RM) -r repo.git
+	$(RM) -r repo*

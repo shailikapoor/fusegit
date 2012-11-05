@@ -46,28 +46,32 @@ main(int argc, char *argv[])
 	git_repository_set_config(repo, config);
 	printf("Repo config set\n");
 
-	// create a blob
-	r = git_blob_create_fromdisk(&blob_id, repo, "/home/varun/work/gitfs/gitfs.c");
-	if (r)
-		printf("error in creating blob from disk\n");
-	printf("Blob created\n");
-	
-	// create a author
-	time = get_time();
-	r = git_signature_new(&author, "Varun Agrawal", "varun729@gmail.com", time, -300);
-	if (r)
-		printf("error in creating signature\n");
-	printf("Author signature created\n");
-
-	// BELOW THIS NOT SURE
 	// create a treebuilder
 	r = git_treebuilder_create(&tree_builder, NULL);
 	if (r)
 		printf("error in creting treebuilder\n");
 	printf("Tree builder created\n");
 
-	// build a tree
-	r = git_treebuilder_insert(NULL, tree_builder, "gitfs.c", &blob_id, (git_filemode_t)0100644);
+	// create a blob
+	r = git_blob_create_fromdisk(&blob_id, repo, "test1");
+	if (r)
+		printf("error in creating blob from disk\n");
+	printf("Blob created\n");
+
+	// insert into tree
+	r = git_treebuilder_insert(NULL, tree_builder, "test1", &blob_id, (git_filemode_t)0100644);
+	if (r)
+		printf("error in inserting into treebuilder\n");
+	printf("Insert into treebuilder successful\n");
+
+	// create a blob
+	r = git_blob_create_fromdisk(&blob_id, repo, "test2");
+	if (r)
+		printf("error in creating blob from disk\n");
+	printf("Blob created\n");
+
+	// insert into tree
+	r = git_treebuilder_insert(NULL, tree_builder, "test2", &blob_id, (git_filemode_t)0100644);
 	if (r)
 		printf("error in inserting into treebuilder\n");
 	printf("Insert into treebuilder successful\n");
@@ -83,6 +87,13 @@ main(int argc, char *argv[])
 	if (r)
 		printf("error in tree lookup\n");
 	printf("Tree lookup done\n");
+	
+	// create a author
+	time = get_time();
+	r = git_signature_new(&author, "Varun Agrawal", "varun729@gmail.com", time, -300);
+	if (r)
+		printf("error in creating signature\n");
+	printf("Author signature created\n");
 
 	// create a commit
 	r = git_commit_create(  &oid, // object id
