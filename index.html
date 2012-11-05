@@ -32,15 +32,15 @@
       <section>
         <h1>FuseGit</h1>
 
-<p>A FUSE file system with Git as the backend. Git is known to be a file system in 
-itself. So what is different in 'FuseGit'.</p>
+<p>A FUSE file system with Git as the backend. Git is known to be a file system 
+in itself. So what is different in 'FuseGit'.</p>
 
 <p>FuseGit is a file system first, and has the features of Git at its backend. So 
 if you modified a file and want to revert back. There is a backup waiting for 
 you. If you keep taking snapshots of your file system, then it becomes 
 extremely easy for FuseGit to revert you back in time. But, if you didn't name 
-it, it will still keep taking snapshots regularly. And you can choose your time 
-from the list provided to you.</p>
+it, it will still keep taking snapshots regularly. And you can choose your 
+time from the list provided to you.</p>
 
 <p>All this sounds non-magical if you are familiar with Git or any other version 
 control system. But for people who don't want the added complexity of playing 
@@ -59,8 +59,8 @@ handled if you take care to clean up the history markers at regular intervals.</
 <h2>Implementation</h2>
 
 <p><code>FUSE</code> is in the name, so we are obviously using it. This means that the file 
-system is in user space. This is a prototype version and we want to keep things 
-simple.</p>
+system is in user space. This is a prototype version and we want to keep 
+things simple.</p>
 
 <p><code>libgit2</code> will be used to get the Git functionality. This library is still 
 under active development. I hope we don't end up requiring a feature which is 
@@ -68,9 +68,21 @@ still under development. This is a risk we might have to take right now.</p>
 
 <h3>libgit2</h3>
 
-<p>TODO</p>
+<ol>
+<li>Create a repository.</li>
+<li>If its a new repository, find the global configuration path in the system, 
+and apply it to this repository using <code>git_config_find_global</code> and <code>git_config_add_file_ondisk</code>.</li>
+<li>To add a new file to the repository:
 
-<h3>FUSE</h3>
+<ol>
+<li>Create a blob from the file.</li>
+<li>Create a signature for the author and committer.</li>
+<li>Create a treebuilder, and add the blob to the tree.</li>
+<li>Multiple files could be added to this treebuilder.</li>
+<li>Once the tree is obtained, commit it to the repository.</li>
+</ol>
+</li>
+</ol><h3>FUSE</h3>
 
 <p>TODO</p>
       </section>
