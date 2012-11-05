@@ -34,3 +34,9 @@ simple.
 `libgit2` will be used to get the Git functionality. This library is still 
 under active development. I hope we don't end up requiring a feature which is 
 still under development. This is a risk we might have to take right now.
+
+### libgit2
+TODO
+
+### FUSE
+TODO
