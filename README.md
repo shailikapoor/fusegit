@@ -50,3 +50,7 @@ and apply it to this repository using `git_config_find_global` and `git_config_a
 
 ### FUSE
 TODO
+
+### Information
+Found another project with similar goals:
+[git-fs](http://github.com/patrickhaller/git-fs)
