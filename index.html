@@ -1,0 +1,65 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <title>FuseGit by varun729</title>
+
+    <link rel="stylesheet" href="stylesheets/styles.css">
+    <link rel="stylesheet" href="stylesheets/pygment_trac.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+    <!--[if lt IE 9]>
+    <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+  </head>
+  <body>
+    <div class="wrapper">
+      <header>
+        <h1>FuseGit</h1>
+        <p>a FUSE filesystem based on Git object database as its backend.</p>
+
+        <p class="view"><a href="https://github.com/varun729/fusegit">View the Project on GitHub <small>varun729/fusegit</small></a></p>
+
+
+        <ul>
+          <li><a href="https://github.com/varun729/fusegit/zipball/master">Download <strong>ZIP File</strong></a></li>
+          <li><a href="https://github.com/varun729/fusegit/tarball/master">Download <strong>TAR Ball</strong></a></li>
+          <li><a href="https://github.com/varun729/fusegit">View On <strong>GitHub</strong></a></li>
+        </ul>
+      </header>
+      <section>
+        <h1>FuseGit</h1>
+
+<p>A FUSE file system with Git as the backend. Git is known to be a file system in 
+itself. So what is different in 'FuseGit'.</p>
+
+<p>FuseGit is a file system first, and has the features of Git at its backend. So 
+if you modified a file and want to revert back. There is a backup waiting for 
+you. If you keep taking snapshots of your file system, then it becomes 
+extremely easy for FuseGit to revert you back in time. But, if you didn't name 
+it, it will still keep taking snapshots regularly. And you can choose your time 
+from the list provided to you.</p>
+
+<p>All this sounds non-magical if you are familiar with Git or any other version 
+control system. But for people who don't want the added complexity of playing 
+with a VCS, FuseGit will give a ready to use recipe. Just plug it in. And have 
+regular backups of your file system, without worrying about too much memory 
+being consumed.</p>
+
+<h2>Cleaning up</h2>
+
+<p>Have you ever looked at the Linux repository? If you do a clone of the 
+repository, it will be several multiples of the actual filesize. This is 
+because they are storing every possible content. This is a common issue with 
+any VCS, it grows in size with time more than the actual content. This can be 
+handled if you take care to clean up the history markers at regular intervals.</p>
+      </section>
+      <footer>
+        <p>This project is maintained by <a href="https://github.com/varun729">varun729</a></p>
+        <p><small>Hosted on GitHub Pages &mdash; Theme by <a href="https://github.com/orderedlist">orderedlist</a></small></p>
+      </footer>
+    </div>
+    <script src="javascripts/scale.fix.js"></script>
+    
+  </body>
+</html>
