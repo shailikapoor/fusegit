@@ -53,6 +53,16 @@ repository, it will be several multiples of the actual filesize. This is
 because they are storing every possible content. This is a common issue with 
 any VCS, it grows in size with time more than the actual content. This can be 
 handled if you take care to clean up the history markers at regular intervals.</p>
+
+<h2>Implementation</h2>
+
+<p><code>FUSE</code> is in the name, so we are obviously using it. This means that the file 
+system is in user space. This is a prototype version and we want to keep things 
+simple.</p>
+
+<p><code>libgit2</code> will be used to get the Git functionality. This library is still 
+under active development. I hope we don't end up requiring a feature which is 
+still under development. This is a risk we might have to take right now.</p>
       </section>
       <footer>
         <p>This project is maintained by <a href="https://github.com/varun729">varun729</a></p>
