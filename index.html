@@ -68,25 +68,7 @@ things simple.</p>
 under active development. I hope we don't end up requiring a feature which is 
 still under development. This is a risk we might have to take right now.</p>
 
-<h3>libgit2</h3>
-
-<ol>
-<li>Create a repository.</li>
-<li>If its a new repository, find the global configuration path in the system, 
-and apply it to this repository using <code>git_config_find_global</code> and <code>git_config_add_file_ondisk</code>.</li>
-<li>To add a new file to the repository:
-
-<ol>
-<li>Create a blob from the file.</li>
-<li>Create a signature for the author and committer.</li>
-<li>Create a treebuilder, and add the blob to the tree.</li>
-<li>Multiple files could be added to this treebuilder.</li>
-<li>Once the tree is obtained, commit it to the repository.</li>
-</ol>
-</li>
-</ol><h3>FUSE</h3>
-
-<p>TODO</p>
+<p>Please see the <a href="http://github.com/varun729/fusegit/wiki">wiki</a> to track the progress.</p>
 
 <h3>Information</h3>
 
