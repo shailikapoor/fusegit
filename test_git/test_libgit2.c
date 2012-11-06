@@ -23,12 +23,14 @@ main(int argc, char *argv[])
 	git_repository *repo;
 	git_oid blob_id;
 	git_oid oid;
+	git_oid tree_id;
 	git_signature *author;
 	git_time_t time;
 	git_config *config;
 	git_index *index;
 	git_tree *tree;
 	git_treebuilder *tree_builder;
+	git_treebuilder *empty_tree_builder;
 	char global_config_path[GIT_PATH_MAX];
 	
 	// create the repository
@@ -52,6 +54,7 @@ main(int argc, char *argv[])
 		printf("error in creting treebuilder\n");
 	printf("Tree builder created\n");
 
+	// ADDING FIRST FILE
 	// create a blob
 	r = git_blob_create_fromdisk(&blob_id, repo, "test1");
 	if (r)
@@ -64,6 +67,7 @@ main(int argc, char *argv[])
 		printf("error in inserting into treebuilder\n");
 	printf("Insert into treebuilder successful\n");
 
+	// ADDING SECOND FILE
 	// create a blob
 	r = git_blob_create_fromdisk(&blob_id, repo, "test2");
 	if (r)
@@ -72,6 +76,26 @@ main(int argc, char *argv[])
 
 	// insert into tree
 	r = git_treebuilder_insert(NULL, tree_builder, "test2", &blob_id, (git_filemode_t)0100644);
+	if (r)
+		printf("error in inserting into treebuilder\n");
+	printf("Insert into treebuilder successful\n");
+
+	// ADDING A EMPTY FOLDER
+	// create a empty tree
+	r = git_treebuilder_create(&empty_tree_builder, NULL);
+	if (r)
+		printf("error in creting empty treebuilder\n");
+	printf("Empty Tree builder created\n");
+	
+	// write the empty tree to the repo
+	r = git_treebuilder_write(&tree_id, repo, empty_tree_builder);
+	if (r)
+		printf("error in writing the empty tree to the repo\n");
+	printf("Writing the empty tree to repo successful\n");
+
+
+	// insert empty tree into the tree
+	r = git_treebuilder_insert(NULL, tree_builder, "test_dir", &tree_id, (git_filemode_t)0040000);
 	if (r)
 		printf("error in inserting into treebuilder\n");
 	printf("Insert into treebuilder successful\n");
@@ -110,7 +134,6 @@ main(int argc, char *argv[])
 		printf("error in creating a commit\n");
 	printf("Commit created\n");
 	
-
 	git_repository_free(repo);
 	return 0;
 }
