@@ -7,7 +7,17 @@
 #include <stdio.h>
 #include <time.h>
 
+git_time_t get_time(void);
+int create_repo(const char *repo_name);
+int read_repo(const char *repo_name);
 
+int
+main(int argc, char *argv[])
+{
+	create_repo("repo.git");
+	read_repo("repo.git");
+	return 0;
+}
 
 git_time_t
 get_time(void)
@@ -16,7 +26,7 @@ get_time(void)
 }
 
 int
-main(int argc, char *argv[])
+create_repo(const char *repo_name)
 {
 	int r;
 
@@ -34,7 +44,7 @@ main(int argc, char *argv[])
 	char global_config_path[GIT_PATH_MAX];
 	
 	// create the repository
-	r = git_repository_init(&repo, "repo.git", 1);
+	r = git_repository_init(&repo, repo_name, 1);
 	if (r)
 		printf("error in creating repository\n");
 	printf("Repo created\n");
@@ -134,6 +144,35 @@ main(int argc, char *argv[])
 		printf("error in creating a commit\n");
 	printf("Commit created\n");
 	
+	git_repository_free(repo);
+	return 0;
+}
+
+int
+read_repo(const char *repo_name)
+{
+	int r;
+	git_repository *repo;
+	git_reference *head;
+	git_oid oid;
+	char out[41];
+	out[40] = '\0';
+
+	// opening the repository
+	r = git_repository_open(&repo, repo_name);
+	if (r)
+		printf("error in opening the repository\n");
+	printf("Opened the repository successfully.\n");
+
+	// obtaining the head
+	r = git_repository_head(&head, repo);
+	if (r)
+		printf("error in obtaining the head\n");
+	r = git_reference_name_to_oid(&oid, repo, git_reference_name(head));
+	if (r)
+		printf("error in obtaining the ref id of head\n");
+	printf("Obtained the head id %s\n", git_oid_tostr(out, 41, &oid));
+
 	git_repository_free(repo);
 	return 0;
 }
