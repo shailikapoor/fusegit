@@ -16,6 +16,8 @@ main(int argc, char *argv[])
 {
 	create_repo("repo.git");
 	read_repo("repo.git");
+	edit_repo("repo.git");
+	read_repo("repo.git");
 	return 0;
 }
 
@@ -136,7 +138,7 @@ create_repo(const char *repo_name)
 				author, // author
 				author, // committer
 				NULL, // message encoding, by default UTF-8 is used
-				"temp message", // message for the commit
+				"first commit", // message for the commit
 				tree, // the git_tree object which will be used as the tree for this commit. don't know if NULL is valid
 				0, // number of parents. Don't know what value should be used here
 				NULL); // array of pointers to the parents(git_commit *parents[])
@@ -202,3 +204,99 @@ read_repo(const char *repo_name)
 	git_repository_free(repo);
 	return 0;
 }
+
+int
+edit_repo(const char *repo_name)
+{
+	int r;
+
+	git_repository *repo;
+	git_oid blob_id;
+	git_oid oid;
+	git_oid tree_id;
+	git_signature *author;
+	git_time_t time;
+	git_config *config;
+	git_index *index;
+	git_tree *tree;
+	git_treebuilder *tree_builder;
+	git_treebuilder *empty_tree_builder;
+	git_reference *head;
+	git_commit *commit_parents[1];
+	char global_config_path[GIT_PATH_MAX];
+	char out[41];
+	out[40] = '\0';
+	
+	// create the repository
+	r = git_repository_open(&repo, repo_name);
+	if (r)
+		printf("error in opening repository\n");
+	printf("Repo opened\n");
+	
+	// create a treebuilder
+	r = git_treebuilder_create(&tree_builder, NULL);
+	if (r)
+		printf("error in creting treebuilder\n");
+	printf("Tree builder created\n");
+
+	// ADDING FIRST FILE
+	// create a blob
+	r = git_blob_create_fromdisk(&blob_id, repo, "test2");
+	if (r)
+		printf("error in creating blob from disk\n");
+	printf("Blob created\n");
+
+	// insert into tree
+	r = git_treebuilder_insert(NULL, tree_builder, "test1", &blob_id, (git_filemode_t)0100644);
+	if (r)
+		printf("error in inserting into treebuilder\n");
+	printf("Insert into treebuilder successful\n");
+	
+	// write the tree to the repo
+	r = git_treebuilder_write(&oid, repo, tree_builder);
+	if (r)
+		printf("error in writing the tree to the repo\n");
+	printf("Writing the tree to repo successful\n");
+
+	// tree lookup
+	r = git_tree_lookup(&tree, repo, &oid);
+	if (r)
+		printf("error in tree lookup\n");
+	printf("Tree lookup done\n");
+	
+	// create a author
+	time = get_time();
+	r = git_signature_new(&author, "Varun Agrawal", "varun729@gmail.com", time, -300);
+	if (r)
+		printf("error in creating signature\n");
+	printf("Author signature created\n");
+
+	// obtaining the head
+	r = git_repository_head(&head, repo);
+	if (r)
+		printf("error in obtaining the head\n");
+	r = git_reference_name_to_oid(&oid, repo, git_reference_name(head));
+	if (r)
+		printf("error in obtaining the ref id of head\n");
+	printf("Obtained the head id %s\n", git_oid_tostr(out, 41, &oid));
+	git_commit_lookup(&commit_parents[0], repo, &oid);
+
+	// create a commit
+	r = git_commit_create(  &oid, // object id
+				repo, // repository
+				"HEAD", // update reference, this will update the HEAD to this commit
+				author, // author
+				author, // committer
+				NULL, // message encoding, by default UTF-8 is used
+				"second commit", // message for the commit
+				tree, // the git_tree object which will be used as the tree for this commit. don't know if NULL is valid
+				1, // number of parents. Don't know what value should be used here
+				commit_parents); // array of pointers to the parents(git_commit *parents[])
+	if (r)
+		printf("error in creating a commit\n");
+	printf("Commit created\n");
+	
+	git_repository_free(repo);
+	return 0;
+}
+
