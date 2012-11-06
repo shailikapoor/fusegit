@@ -151,10 +151,15 @@ create_repo(const char *repo_name)
 int
 read_repo(const char *repo_name)
 {
+	int i;
 	int r;
+	int n;
 	git_repository *repo;
 	git_reference *head;
 	git_oid oid;
+	git_commit *commit;
+	git_tree *tree;
+	git_tree_entry *tree_entry;
 	char out[41];
 	out[40] = '\0';
 
@@ -172,6 +177,27 @@ read_repo(const char *repo_name)
 	if (r)
 		printf("error in obtaining the ref id of head\n");
 	printf("Obtained the head id %s\n", git_oid_tostr(out, 41, &oid));
+
+	// obtaining the commit from commit id
+	r = git_commit_lookup(&commit, repo, &oid);
+	if (r)
+		printf("error in obtaining the commit from oid\n");
+	printf("Obtained the commit.\n");
+
+	// obtaining the tree id from the commit
+	oid = *git_commit_tree_oid(commit);
+
+	// get the tree
+	r = git_tree_lookup(&tree, repo, &oid);
+	if (r)
+		printf("error in looking up the tree for oid\n");
+	printf("Lookup for tree of oid successful.\n");
+
+	n = git_tree_entrycount(tree);
+	for (i=0; i<n; i++) {
+		tree_entry = git_tree_entry_byindex(tree, i);
+		printf("entry >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> %s %s\n", git_tree_entry_name(tree_entry), git_object_type2string(git_tree_entry_type(tree_entry)));
+	}
 
 	git_repository_free(repo);
 	return 0;
