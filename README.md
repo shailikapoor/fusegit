@@ -37,19 +37,7 @@ things simple.
 under active development. I hope we don't end up requiring a feature which is 
 still under development. This is a risk we might have to take right now.
 
-### libgit2
-1. Create a repository.
-2. If its a new repository, find the global configuration path in the system, 
-and apply it to this repository using `git_config_find_global` and `git_config_add_file_ondisk`.
-3. To add a new file to the repository:
-	1. Create a blob from the file.
-	2. Create a signature for the author and committer.
-	3. Create a treebuilder, and add the blob to the tree.
-	4. Multiple files could be added to this treebuilder.
-	5. Once the tree is obtained, commit it to the repository.
-
-### FUSE
-TODO
+Please see the [wiki](http://github.com/varun729/fusegit/wiki) to track the progress.
 
 ### Information
 Found another project with similar goals:

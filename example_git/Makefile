@@ -4,7 +4,7 @@ CC = gcc
 CFLAGS = #-g -I../include -I../src
 #LFLAGS = -L../build -lgit2 -lz
 LFLAGS = -lgit2
-APPS = test_libgit2
+APPS = example
 
 all: clean $(APPS)
 
