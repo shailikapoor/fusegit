@@ -1,9 +1,5 @@
-/*
- * Copyright
- *
- * License
- *
- * gcc -Wall `pkg-config fuse --cflags --libs` fg_fuse.c -o fg_fuse
+/**
+ * Implements the FUSE API function calls
  */
 
 #define FUSE_USE_VERSION 26
@@ -41,19 +37,6 @@ static int fg_getattr(const char *path, struct stat *stbuf)
 }
 
 /**
- * Check file access permissions
- *
- * This will be called for the fg_access() system call. If the 
- * 'default_permissions' mount option is given, this method is not called.
- * 
- * Kernel version 2.4.x above
- */
-static int fg_access(const char *path, int mask)
-{
-        return -ENOSYS;
-}
-
-/**
  * Read the target of the symbolic link
  * 
  * The buffer should be filled with a null terminated string. The buffer size 
@@ -62,27 +45,6 @@ static int fg_access(const char *path, int mask)
  * return value should be 0 for success.
  */
 static int fg_readlink(const char *path, char *buf, size_t size)
-{
-        return -ENOSYS;
-}
-
-/**
- * Read directory
- * 
- * The filesystem may choose between two modes of operation.
- * 
- * 1) The readdir implementation ignores the offset parameter, and passes zero 
- * to the filler function's offset. The killer function will not return '1' 
- * (unless an error happens), so the whole directory is read in a single 
- * readdir operation.
- * 
- * 2) The readdir implementation keeps track of the offsets of the directory 
- * entries. It uses the offset parameter and always passes non-zero offset to 
- * the filler function. When the buffer is full (or an error happens) the 
- * filler function will return '1'.
- */
-static int fg_readdir(const char *path, void *buf, fuse_fill_dir_t filler, 
-                         off_t offset, struct fuse_file_info *fi)
 {
         return -ENOSYS;
 }
@@ -174,16 +136,6 @@ static int fg_truncate(const char *path, off_t size)
 {
         return -ENOSYS;
 }
-
-#ifdef HAVE_UTIMENSAT
-/**
- * Change the access and modification times of a file with nanosecond reslution
- */
-static int fg_utimens(const char *path, const struct timespec ts[2])
-{
-        return -ENOSYS;
-}
-#endif
 
 /**
  * File open operation
@@ -293,36 +245,93 @@ static int fg_removexattr(const char *path, const char *name)
 }
 #endif  /* HAVE_SETXATTR */
 
+/**
+ * Read directory
+ * 
+ * The filesystem may choose between two modes of operation.
+ * 
+ * 1) The readdir implementation ignores the offset parameter, and passes zero 
+ * to the filler function's offset. The killer function will not return '1' 
+ * (unless an error happens), so the whole directory is read in a single 
+ * readdir operation.
+ * 
+ * 2) The readdir implementation keeps track of the offsets of the directory 
+ * entries. It uses the offset parameter and always passes non-zero offset to 
+ * the filler function. When the buffer is full (or an error happens) the 
+ * filler function will return '1'.
+ */
+static int fg_readdir(const char *path, void *buf, fuse_fill_dir_t filler, 
+                         off_t offset, struct fuse_file_info *fi)
+{
+        return -ENOSYS;
+}
+
+/**
+ * Check file access permissions
+ *
+ * This will be called for the fg_access() system call. If the 
+ * 'default_permissions' mount option is given, this method is not called.
+ * 
+ * Kernel version 2.4.x above
+ */
+static int fg_access(const char *path, int mask)
+{
+        return -ENOSYS;
+}
+
+#ifdef HAVE_UTIMENSAT
+/**
+ * Change the access and modification times of a file with nanosecond reslution
+ */
+static int fg_utimens(const char *path, const struct timespec ts[2])
+{
+        return -ENOSYS;
+}
+#endif
+
 static struct fuse_operations fg_oper = {
-        .getattr        = fg_getattr, // get file attributes
-        .access	        = fg_access,
+        .getattr        = fg_getattr,
         .readlink	= fg_readlink,
-        .readdir	= fg_readdir,
         .mknod	        = fg_mknod,
         .mkdir	        = fg_mkdir,
-        .symlink	= fg_symlink,
         .unlink	        = fg_unlink,
         .rmdir	        = fg_rmdir,
+        .symlink	= fg_symlink,
         .rename	        = fg_rename,
         .link	        = fg_link,
         .chmod	        = fg_chmod,
         .chown	        = fg_chown,
         .truncate	= fg_truncate,
-#ifdef HAVE_UTIMENSAT
-        .utimens	= fg_utimens,
-#endif
         .open	        = fg_open,
         .read	        = fg_read,
         .write	        = fg_write,
         .statfs	        = fg_statfs,
+	//.flush          = fg_flush, // TODO
         .release	= fg_release,
         .fsync	        = fg_fsync,
 #ifdef HAVE_SETXATTR
         .setxattr	= fg_setxattr,
-        .getxattr	= fg_getxattr,
+        .getxattr	= fg_getxattr, // TODO
         .listxattr	= fg_listxattr,
         .removexattr	= fg_removexattr,
 #endif
+        //.opendir        = fg_opendir, // TODO
+        .readdir	= fg_readdir,
+        //.releasedir	= fg_releasedir, // TODO
+        //.fsyncdir	= fg_fsyncdir, // TODO
+	//.init           = fg_init, // TODO
+	//.destroy        = fg_destroy, // TODO
+        .access	        = fg_access,
+	//.create         = fg_create, // TODO
+	//.ftruncate      = fg_ftruncate, // TODO
+	//.fgetattr       = fg_fgetattr, // TODO
+	//.lock           = fg_lock, // TODO
+#ifdef HAVE_UTIMENSAT
+        .utimens	= fg_utimens,
+#endif
+	//.bmap           = fg_bmap, // TODO
+	//.ioctl          = fg_ioctl, // TODO
+	//.poll           = fg_poll, // TODO
 };
 
 int main(int argc, char *argv[])

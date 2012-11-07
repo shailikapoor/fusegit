@@ -18,11 +18,7 @@ void \hyperlink{fg__fuse_8c_a708a4c1a4d0c4acc4c447310dd4db27f}{test} (void)
 \item 
 static int \hyperlink{fg__fuse_8c_a42dbbae5136f9ba9f45003e328ffeea6}{fg\-\_\-getattr} (const char $\ast$path, struct stat $\ast$stbuf)
 \item 
-static int \hyperlink{fg__fuse_8c_af0ded5a0adf121e29f380ae143c09f2a}{fg\-\_\-access} (const char $\ast$path, int mask)
-\item 
 static int \hyperlink{fg__fuse_8c_a03909f37b6771886c3bd070db6a0d289}{fg\-\_\-readlink} (const char $\ast$path, char $\ast$buf, size\-\_\-t size)
-\item 
-static int \hyperlink{fg__fuse_8c_a57fd9632870a3ad1d084b1bee78efff3}{fg\-\_\-readdir} (const char $\ast$path, void $\ast$buf, fuse\-\_\-fill\-\_\-dir\-\_\-t filler, off\-\_\-t offset, struct fuse\-\_\-file\-\_\-info $\ast$fi)
 \item 
 static int \hyperlink{fg__fuse_8c_adc4b96121d51352ed0b5825abafa7f1e}{fg\-\_\-mknod} (const char $\ast$path, mode\-\_\-t mode, dev\-\_\-t rdev)
 \item 
@@ -56,6 +52,10 @@ static int \hyperlink{fg__fuse_8c_af81df566c92a45a4e50e1046607dcebc}{fg\-\_\-rel
 \item 
 static int \hyperlink{fg__fuse_8c_af705d87d064051e01bdfc588855705f7}{fg\-\_\-fsync} (const char $\ast$path, int isdatasync, struct fuse\-\_\-file\-\_\-info $\ast$fi)
 \item 
+static int \hyperlink{fg__fuse_8c_a57fd9632870a3ad1d084b1bee78efff3}{fg\-\_\-readdir} (const char $\ast$path, void $\ast$buf, fuse\-\_\-fill\-\_\-dir\-\_\-t filler, off\-\_\-t offset, struct fuse\-\_\-file\-\_\-info $\ast$fi)
+\item 
+static int \hyperlink{fg__fuse_8c_af0ded5a0adf121e29f380ae143c09f2a}{fg\-\_\-access} (const char $\ast$path, int mask)
+\item 
 int \hyperlink{fg__fuse_8c_a0ddf1224851353fc92bfbff6f499fa97}{main} (int argc, char $\ast$argv\mbox{[}$\,$\mbox{]})
 \end{DoxyCompactItemize}
 \subsection*{\-Variables}
@@ -69,7 +69,7 @@ static struct fuse\-\_\-operations \hyperlink{fg__fuse_8c_aa37f56469ba4f848f7027
 \hypertarget{fg__fuse_8c_a0919197af2e154da2c05727b6d87cbda}{\index{fg\-\_\-fuse.\-c@{fg\-\_\-fuse.\-c}!\-F\-U\-S\-E\-\_\-\-U\-S\-E\-\_\-\-V\-E\-R\-S\-I\-O\-N@{\-F\-U\-S\-E\-\_\-\-U\-S\-E\-\_\-\-V\-E\-R\-S\-I\-O\-N}}
 \index{\-F\-U\-S\-E\-\_\-\-U\-S\-E\-\_\-\-V\-E\-R\-S\-I\-O\-N@{\-F\-U\-S\-E\-\_\-\-U\-S\-E\-\_\-\-V\-E\-R\-S\-I\-O\-N}!fg_fuse.c@{fg\-\_\-fuse.\-c}}
 \subsubsection[{\-F\-U\-S\-E\-\_\-\-U\-S\-E\-\_\-\-V\-E\-R\-S\-I\-O\-N}]{\setlength{\rightskip}{0pt plus 5cm}\#define {\bf \-F\-U\-S\-E\-\_\-\-U\-S\-E\-\_\-\-V\-E\-R\-S\-I\-O\-N}~26}}\label{fg__fuse_8c_a0919197af2e154da2c05727b6d87cbda}
-
+\-Implements the \-F\-U\-S\-E \-A\-P\-I function calls 
 
 \subsection{\-Function \-Documentation}
 \hypertarget{fg__fuse_8c_af0ded5a0adf121e29f380ae143c09f2a}{\index{fg\-\_\-fuse.\-c@{fg\-\_\-fuse.\-c}!fg\-\_\-access@{fg\-\_\-access}}
