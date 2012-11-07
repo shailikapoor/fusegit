@@ -1,12 +1,18 @@
 /**
  * Implements the FUSE API function calls
+ * 
+ * TODO The backup functionality can be called via `fg_fuse` giving it a 
+ * parameter like 'restore' or 'backup', to actually restore, or do backup of 
+ * the filesystem.
+ * TODO it is unknown if I can actually know if the call is made from the current 
+ * file system or not. This is annoying. :(
  */
 
-#define FUSE_USE_VERSION 26
+#define FUSE_USE_VERSION 29
 
 #include <fuse.h>
-#include <stdio.h>
-#include <string.h>
+//#include <stdio.h>
+//#include <string.h>
 #include <errno.h>
 #include "fg_vcs.h"
 #ifdef HAVE_SETXATTR
@@ -20,6 +26,8 @@ extern void test(void); // TODO remove this. This is just to test that the files
  * 
  * Similar to stat(). The 'st_dev' and 'st_blksize' files are ignored. The
  * 'st_ino' field is ignored exceptif the 'use_ino' mount option is given.
+ * 
+ * XXX 
  */
 static int fg_getattr(const char *path, struct stat *stbuf)
 {
@@ -43,6 +51,8 @@ static int fg_getattr(const char *path, struct stat *stbuf)
  * argument includes the space for the terminating null character. If the 
  * linkname is too long to fit in the buffer, it should be truncated. The 
  * return value should be 0 for success.
+ * 
+ * XXX 
  */
 static int fg_readlink(const char *path, char *buf, size_t size)
 {
@@ -55,6 +65,8 @@ static int fg_readlink(const char *path, char *buf, size_t size)
  * This is called for creation of all non-directory, non-symlink nodes. If the 
  * filesystem defines a fg_create() method, then for regular files that will be 
  * called instead.
+ * 
+ * XXX 
  */
 static int fg_mknod(const char *path, mode_t mode, dev_t rdev)
 {
@@ -67,6 +79,8 @@ static int fg_mknod(const char *path, mode_t mode, dev_t rdev)
  * Note that the mode argument may not have the type specification bits set, 
  * i.e. S_ISDIR(mode) can be false. To obtain the correct directory type bits 
  * use mode|S_IFDIR
+ * 
+ * XXX 
  */
 static int fg_mkdir(const char *path, mode_t mode)
 {
@@ -75,6 +89,8 @@ static int fg_mkdir(const char *path, mode_t mode)
 
 /**
  * Remove a file
+ * 
+ * XXX 
  */
 static int fg_unlink(const char *path)
 {
@@ -83,6 +99,8 @@ static int fg_unlink(const char *path)
 
 /**
  * Remove a directory
+ * 
+ * XXX 
  */
 static int fg_rmdir(const char *path)
 {
@@ -91,6 +109,8 @@ static int fg_rmdir(const char *path)
 
 /**
  * Create a symbolic link
+ * 
+ * XXX 
  */
 static int fg_symlink(const char *from, const char *to)
 {
@@ -99,6 +119,8 @@ static int fg_symlink(const char *from, const char *to)
 
 /**
  * Rename a file
+ * 
+ * XXX 
  */
 static int fg_rename(const char *from, const char *to)
 {
@@ -107,6 +129,8 @@ static int fg_rename(const char *from, const char *to)
 
 /**
  * Create a hard link to a file
+ * 
+ * XXX 
  */
 static int fg_link(const char *from, const char *to)
 {
@@ -115,6 +139,8 @@ static int fg_link(const char *from, const char *to)
 
 /**
  * Change the permission bits of a file
+ * 
+ * XXX 
  */
 static int fg_chmod(const char *path, mode_t mode)
 {
@@ -123,6 +149,8 @@ static int fg_chmod(const char *path, mode_t mode)
 
 /**
  * Change the owner and group of a file
+ * 
+ * XXX 
  */
 static int fg_chown(const char *path, uid_t uid, gid_t gid)
 {
@@ -131,6 +159,8 @@ static int fg_chown(const char *path, uid_t uid, gid_t gid)
 
 /**
  * Change the size of a file
+ * 
+ * XXX 
  */
 static int fg_truncate(const char *path, off_t size)
 {
@@ -146,6 +176,8 @@ static int fg_truncate(const char *path, off_t size)
  * been specified, O_TRUNC is passed on to open.
  * 
  * Kernel version 2.6.24 or later
+ * 
+ * XXX 
  */
 static int fg_open(const char *path, struct fuse_file_info *fi)
 {
@@ -160,6 +192,8 @@ static int fg_open(const char *path, struct fuse_file_info *fi)
  * An exception to this is when the 'direct_io' mount option is specified, in 
  * which case the return value of the read system call will reflect the return 
  * value of this operation.
+ * 
+ * XXX 
  */
 static int fg_read(const char *path, char *buf, size_t size, off_t offset,
                       struct fuse_file_info *fi)
@@ -172,6 +206,8 @@ static int fg_read(const char *path, char *buf, size_t size, off_t offset,
  * 
  * Write should return exactly the number of bytes requested except on error. An 
  * exception to this is when the 'direct_io' mount option is specified.
+ * 
+ * XXX 
  */
 static int fg_write(const char *path, const char *buf, size_t size,
                        off_t offset, struct fuse_file_info *fi)
@@ -183,6 +219,8 @@ static int fg_write(const char *path, const char *buf, size_t size,
  * Get file system statistics
  * 
  * The 'f_frsize', 'f_favail', 'f_fsid' and 'f_flag' fields are ignored.
+ * 
+ * XXX 
  */
 static int fg_statfs(const char *path, struct statvfs *stbuf)
 {
@@ -200,6 +238,8 @@ static int fg_statfs(const char *path, struct statvfs *stbuf)
  * more than once, in which case only the last release will mean, that no 
  * more reads/writes will happen on the file. The return value of release is 
  * ignored.
+ * 
+ * XXX 
  */
 static int fg_release(const char *path, struct fuse_file_info *fi)
 {
@@ -211,6 +251,8 @@ static int fg_release(const char *path, struct fuse_file_info *fi)
  * 
  * If the datasync parameter is non-zero, then only the user data should be 
  * flushed, not the meta data.
+ * 
+ * XXX 
  */
 static int fg_fsync(const char *path, int isdatasync,
                        struct fuse_file_info *fi)
@@ -221,6 +263,8 @@ static int fg_fsync(const char *path, int isdatasync,
 #ifdef HAVE_SETXATTR
 /**
  * Set extended attributes
+ * 
+ * XXX 
  */
 static int fg_setxattr(const char *path, const char *name,
                           const char *value, size_t size, int flags)
@@ -230,6 +274,8 @@ static int fg_setxattr(const char *path, const char *name,
 
 /**
  * List extended attributes
+ * 
+ * XXX 
  */
 static int fg_listxattr(const char *path, char *list, size_t size)
 {
@@ -238,6 +284,8 @@ static int fg_listxattr(const char *path, char *list, size_t size)
 
 /**
  * Remove extended attributes
+ * 
+ * XXX 
  */
 static int fg_removexattr(const char *path, const char *name)
 {
@@ -259,6 +307,8 @@ static int fg_removexattr(const char *path, const char *name)
  * entries. It uses the offset parameter and always passes non-zero offset to 
  * the filler function. When the buffer is full (or an error happens) the 
  * filler function will return '1'.
+ * 
+ * XXX 
  */
 static int fg_readdir(const char *path, void *buf, fuse_fill_dir_t filler, 
                          off_t offset, struct fuse_file_info *fi)
@@ -273,6 +323,8 @@ static int fg_readdir(const char *path, void *buf, fuse_fill_dir_t filler,
  * 'default_permissions' mount option is given, this method is not called.
  * 
  * Kernel version 2.4.x above
+ * 
+ * XXX 
  */
 static int fg_access(const char *path, int mask)
 {
@@ -282,6 +334,8 @@ static int fg_access(const char *path, int mask)
 #ifdef HAVE_UTIMENSAT
 /**
  * Change the access and modification times of a file with nanosecond reslution
+ * 
+ * XXX 
  */
 static int fg_utimens(const char *path, const struct timespec ts[2])
 {
@@ -336,6 +390,6 @@ static struct fuse_operations fg_oper = {
 
 int main(int argc, char *argv[])
 {
-        umask(0);
+        umask(0); // XXX this provides the bits which will be masked for all the files which are to be created.
         return fuse_main(argc, argv, &fg_oper, NULL);
 }

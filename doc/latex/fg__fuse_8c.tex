@@ -2,14 +2,12 @@
 \label{fg__fuse_8c}\index{fg\-\_\-fuse.\-c@{fg\-\_\-fuse.\-c}}
 }
 {\ttfamily \#include $<$fuse.\-h$>$}\*
-{\ttfamily \#include $<$stdio.\-h$>$}\*
-{\ttfamily \#include $<$string.\-h$>$}\*
 {\ttfamily \#include $<$errno.\-h$>$}\*
 {\ttfamily \#include \char`\"{}fg\-\_\-vcs.\-h\char`\"{}}\*
 \subsection*{\-Defines}
 \begin{DoxyCompactItemize}
 \item 
-\#define \hyperlink{fg__fuse_8c_a0919197af2e154da2c05727b6d87cbda}{\-F\-U\-S\-E\-\_\-\-U\-S\-E\-\_\-\-V\-E\-R\-S\-I\-O\-N}~26
+\#define \hyperlink{fg__fuse_8c_a0919197af2e154da2c05727b6d87cbda}{\-F\-U\-S\-E\-\_\-\-U\-S\-E\-\_\-\-V\-E\-R\-S\-I\-O\-N}~29
 \end{DoxyCompactItemize}
 \subsection*{\-Functions}
 \begin{DoxyCompactItemize}
@@ -68,8 +66,10 @@ static struct fuse\-\_\-operations \hyperlink{fg__fuse_8c_aa37f56469ba4f848f7027
 \subsection{\-Define \-Documentation}
 \hypertarget{fg__fuse_8c_a0919197af2e154da2c05727b6d87cbda}{\index{fg\-\_\-fuse.\-c@{fg\-\_\-fuse.\-c}!\-F\-U\-S\-E\-\_\-\-U\-S\-E\-\_\-\-V\-E\-R\-S\-I\-O\-N@{\-F\-U\-S\-E\-\_\-\-U\-S\-E\-\_\-\-V\-E\-R\-S\-I\-O\-N}}
 \index{\-F\-U\-S\-E\-\_\-\-U\-S\-E\-\_\-\-V\-E\-R\-S\-I\-O\-N@{\-F\-U\-S\-E\-\_\-\-U\-S\-E\-\_\-\-V\-E\-R\-S\-I\-O\-N}!fg_fuse.c@{fg\-\_\-fuse.\-c}}
-\subsubsection[{\-F\-U\-S\-E\-\_\-\-U\-S\-E\-\_\-\-V\-E\-R\-S\-I\-O\-N}]{\setlength{\rightskip}{0pt plus 5cm}\#define {\bf \-F\-U\-S\-E\-\_\-\-U\-S\-E\-\_\-\-V\-E\-R\-S\-I\-O\-N}~26}}\label{fg__fuse_8c_a0919197af2e154da2c05727b6d87cbda}
-\-Implements the \-F\-U\-S\-E \-A\-P\-I function calls 
+\subsubsection[{\-F\-U\-S\-E\-\_\-\-U\-S\-E\-\_\-\-V\-E\-R\-S\-I\-O\-N}]{\setlength{\rightskip}{0pt plus 5cm}\#define {\bf \-F\-U\-S\-E\-\_\-\-U\-S\-E\-\_\-\-V\-E\-R\-S\-I\-O\-N}~29}}\label{fg__fuse_8c_a0919197af2e154da2c05727b6d87cbda}
+\-Implements the \-F\-U\-S\-E \-A\-P\-I function calls
+
+\-T\-O\-D\-O \-The backup functionality can be called via `fg\-\_\-fuse` giving it a parameter like 'restore' or 'backup', to actually restore, or do backup of the filesystem. \-T\-O\-D\-O it is unknown if \-I can actually know if the call is made from the current file system or not. \-This is annoying. \-:( 
 
 \subsection{\-Function \-Documentation}
 \hypertarget{fg__fuse_8c_af0ded5a0adf121e29f380ae143c09f2a}{\index{fg\-\_\-fuse.\-c@{fg\-\_\-fuse.\-c}!fg\-\_\-access@{fg\-\_\-access}}
@@ -84,7 +84,9 @@ static struct fuse\-\_\-operations \hyperlink{fg__fuse_8c_aa37f56469ba4f848f7027
 
 \-This will be called for the \hyperlink{fg__fuse_8c_af0ded5a0adf121e29f380ae143c09f2a}{fg\-\_\-access()} system call. \-If the 'default\-\_\-permissions' mount option is given, this method is not called.
 
-\-Kernel version 2.\-4.\-x above \hypertarget{fg__fuse_8c_acc27a1144af3fc84e0083a7d1f40b4a3}{\index{fg\-\_\-fuse.\-c@{fg\-\_\-fuse.\-c}!fg\-\_\-chmod@{fg\-\_\-chmod}}
+\-Kernel version 2.\-4.\-x above
+
+\-X\-X\-X \hypertarget{fg__fuse_8c_acc27a1144af3fc84e0083a7d1f40b4a3}{\index{fg\-\_\-fuse.\-c@{fg\-\_\-fuse.\-c}!fg\-\_\-chmod@{fg\-\_\-chmod}}
 \index{fg\-\_\-chmod@{fg\-\_\-chmod}!fg_fuse.c@{fg\-\_\-fuse.\-c}}
 \subsubsection[{fg\-\_\-chmod}]{\setlength{\rightskip}{0pt plus 5cm}static int {\bf fg\-\_\-chmod} (
 \begin{DoxyParamCaption}
@@ -92,7 +94,9 @@ static struct fuse\-\_\-operations \hyperlink{fg__fuse_8c_aa37f56469ba4f848f7027
 \item[{mode\-\_\-t}]{mode}
 \end{DoxyParamCaption}
 )\hspace{0.3cm}{\ttfamily  \mbox{[}static\mbox{]}}}}\label{fg__fuse_8c_acc27a1144af3fc84e0083a7d1f40b4a3}
-\-Change the permission bits of a file \hypertarget{fg__fuse_8c_adc403acb1b19a067ba51f1e15da32a5c}{\index{fg\-\_\-fuse.\-c@{fg\-\_\-fuse.\-c}!fg\-\_\-chown@{fg\-\_\-chown}}
+\-Change the permission bits of a file
+
+\-X\-X\-X \hypertarget{fg__fuse_8c_adc403acb1b19a067ba51f1e15da32a5c}{\index{fg\-\_\-fuse.\-c@{fg\-\_\-fuse.\-c}!fg\-\_\-chown@{fg\-\_\-chown}}
 \index{fg\-\_\-chown@{fg\-\_\-chown}!fg_fuse.c@{fg\-\_\-fuse.\-c}}
 \subsubsection[{fg\-\_\-chown}]{\setlength{\rightskip}{0pt plus 5cm}static int {\bf fg\-\_\-chown} (
 \begin{DoxyParamCaption}
@@ -101,7 +105,9 @@ static struct fuse\-\_\-operations \hyperlink{fg__fuse_8c_aa37f56469ba4f848f7027
 \item[{gid\-\_\-t}]{gid}
 \end{DoxyParamCaption}
 )\hspace{0.3cm}{\ttfamily  \mbox{[}static\mbox{]}}}}\label{fg__fuse_8c_adc403acb1b19a067ba51f1e15da32a5c}
-\-Change the owner and group of a file \hypertarget{fg__fuse_8c_af705d87d064051e01bdfc588855705f7}{\index{fg\-\_\-fuse.\-c@{fg\-\_\-fuse.\-c}!fg\-\_\-fsync@{fg\-\_\-fsync}}
+\-Change the owner and group of a file
+
+\-X\-X\-X \hypertarget{fg__fuse_8c_af705d87d064051e01bdfc588855705f7}{\index{fg\-\_\-fuse.\-c@{fg\-\_\-fuse.\-c}!fg\-\_\-fsync@{fg\-\_\-fsync}}
 \index{fg\-\_\-fsync@{fg\-\_\-fsync}!fg_fuse.c@{fg\-\_\-fuse.\-c}}
 \subsubsection[{fg\-\_\-fsync}]{\setlength{\rightskip}{0pt plus 5cm}static int {\bf fg\-\_\-fsync} (
 \begin{DoxyParamCaption}
@@ -112,7 +118,9 @@ static struct fuse\-\_\-operations \hyperlink{fg__fuse_8c_aa37f56469ba4f848f7027
 )\hspace{0.3cm}{\ttfamily  \mbox{[}static\mbox{]}}}}\label{fg__fuse_8c_af705d87d064051e01bdfc588855705f7}
 \-Synchronize the file contents
 
-\-If the datasync parameter is non-\/zero, then only the user data should be flushed, not the meta data. \hypertarget{fg__fuse_8c_a42dbbae5136f9ba9f45003e328ffeea6}{\index{fg\-\_\-fuse.\-c@{fg\-\_\-fuse.\-c}!fg\-\_\-getattr@{fg\-\_\-getattr}}
+\-If the datasync parameter is non-\/zero, then only the user data should be flushed, not the meta data.
+
+\-X\-X\-X \hypertarget{fg__fuse_8c_a42dbbae5136f9ba9f45003e328ffeea6}{\index{fg\-\_\-fuse.\-c@{fg\-\_\-fuse.\-c}!fg\-\_\-getattr@{fg\-\_\-getattr}}
 \index{fg\-\_\-getattr@{fg\-\_\-getattr}!fg_fuse.c@{fg\-\_\-fuse.\-c}}
 \subsubsection[{fg\-\_\-getattr}]{\setlength{\rightskip}{0pt plus 5cm}static int {\bf fg\-\_\-getattr} (
 \begin{DoxyParamCaption}
@@ -122,7 +130,9 @@ static struct fuse\-\_\-operations \hyperlink{fg__fuse_8c_aa37f56469ba4f848f7027
 )\hspace{0.3cm}{\ttfamily  \mbox{[}static\mbox{]}}}}\label{fg__fuse_8c_a42dbbae5136f9ba9f45003e328ffeea6}
 \-Get file attributes.
 
-\-Similar to stat(). \-The 'st\-\_\-dev' and 'st\-\_\-blksize' files are ignored. \-The 'st\-\_\-ino' field is ignored exceptif the 'use\-\_\-ino' mount option is given. \hypertarget{fg__fuse_8c_aae17ec2405554adb32ff05b2ebf479dc}{\index{fg\-\_\-fuse.\-c@{fg\-\_\-fuse.\-c}!fg\-\_\-link@{fg\-\_\-link}}
+\-Similar to stat(). \-The 'st\-\_\-dev' and 'st\-\_\-blksize' files are ignored. \-The 'st\-\_\-ino' field is ignored exceptif the 'use\-\_\-ino' mount option is given.
+
+\-X\-X\-X \hypertarget{fg__fuse_8c_aae17ec2405554adb32ff05b2ebf479dc}{\index{fg\-\_\-fuse.\-c@{fg\-\_\-fuse.\-c}!fg\-\_\-link@{fg\-\_\-link}}
 \index{fg\-\_\-link@{fg\-\_\-link}!fg_fuse.c@{fg\-\_\-fuse.\-c}}
 \subsubsection[{fg\-\_\-link}]{\setlength{\rightskip}{0pt plus 5cm}static int {\bf fg\-\_\-link} (
 \begin{DoxyParamCaption}
@@ -130,7 +140,9 @@ static struct fuse\-\_\-operations \hyperlink{fg__fuse_8c_aa37f56469ba4f848f7027
 \item[{const char $\ast$}]{to}
 \end{DoxyParamCaption}
 )\hspace{0.3cm}{\ttfamily  \mbox{[}static\mbox{]}}}}\label{fg__fuse_8c_aae17ec2405554adb32ff05b2ebf479dc}
-\-Create a hard link to a file \hypertarget{fg__fuse_8c_a88857c5cb5e61440f7271d8d7b51011a}{\index{fg\-\_\-fuse.\-c@{fg\-\_\-fuse.\-c}!fg\-\_\-mkdir@{fg\-\_\-mkdir}}
+\-Create a hard link to a file
+
+\-X\-X\-X \hypertarget{fg__fuse_8c_a88857c5cb5e61440f7271d8d7b51011a}{\index{fg\-\_\-fuse.\-c@{fg\-\_\-fuse.\-c}!fg\-\_\-mkdir@{fg\-\_\-mkdir}}
 \index{fg\-\_\-mkdir@{fg\-\_\-mkdir}!fg_fuse.c@{fg\-\_\-fuse.\-c}}
 \subsubsection[{fg\-\_\-mkdir}]{\setlength{\rightskip}{0pt plus 5cm}static int {\bf fg\-\_\-mkdir} (
 \begin{DoxyParamCaption}
@@ -140,7 +152,9 @@ static struct fuse\-\_\-operations \hyperlink{fg__fuse_8c_aa37f56469ba4f848f7027
 )\hspace{0.3cm}{\ttfamily  \mbox{[}static\mbox{]}}}}\label{fg__fuse_8c_a88857c5cb5e61440f7271d8d7b51011a}
 \-Create a directory
 
-\-Note that the mode argument may not have the type specification bits set, i.\-e. \-S\-\_\-\-I\-S\-D\-I\-R(mode) can be false. \-To obtain the correct directory type bits use mode$|$\-S\-\_\-\-I\-F\-D\-I\-R \hypertarget{fg__fuse_8c_adc4b96121d51352ed0b5825abafa7f1e}{\index{fg\-\_\-fuse.\-c@{fg\-\_\-fuse.\-c}!fg\-\_\-mknod@{fg\-\_\-mknod}}
+\-Note that the mode argument may not have the type specification bits set, i.\-e. \-S\-\_\-\-I\-S\-D\-I\-R(mode) can be false. \-To obtain the correct directory type bits use mode$|$\-S\-\_\-\-I\-F\-D\-I\-R
+
+\-X\-X\-X \hypertarget{fg__fuse_8c_adc4b96121d51352ed0b5825abafa7f1e}{\index{fg\-\_\-fuse.\-c@{fg\-\_\-fuse.\-c}!fg\-\_\-mknod@{fg\-\_\-mknod}}
 \index{fg\-\_\-mknod@{fg\-\_\-mknod}!fg_fuse.c@{fg\-\_\-fuse.\-c}}
 \subsubsection[{fg\-\_\-mknod}]{\setlength{\rightskip}{0pt plus 5cm}static int {\bf fg\-\_\-mknod} (
 \begin{DoxyParamCaption}
@@ -151,7 +165,9 @@ static struct fuse\-\_\-operations \hyperlink{fg__fuse_8c_aa37f56469ba4f848f7027
 )\hspace{0.3cm}{\ttfamily  \mbox{[}static\mbox{]}}}}\label{fg__fuse_8c_adc4b96121d51352ed0b5825abafa7f1e}
 \-Create a file node
 
-\-This is called for creation of all non-\/directory, non-\/symlink nodes. \-If the filesystem defines a fg\-\_\-create() method, then for regular files that will be called instead. \hypertarget{fg__fuse_8c_acc9e9a1cecaa8d9e66b87401dec98a94}{\index{fg\-\_\-fuse.\-c@{fg\-\_\-fuse.\-c}!fg\-\_\-open@{fg\-\_\-open}}
+\-This is called for creation of all non-\/directory, non-\/symlink nodes. \-If the filesystem defines a fg\-\_\-create() method, then for regular files that will be called instead.
+
+\-X\-X\-X \hypertarget{fg__fuse_8c_acc9e9a1cecaa8d9e66b87401dec98a94}{\index{fg\-\_\-fuse.\-c@{fg\-\_\-fuse.\-c}!fg\-\_\-open@{fg\-\_\-open}}
 \index{fg\-\_\-open@{fg\-\_\-open}!fg_fuse.c@{fg\-\_\-fuse.\-c}}
 \subsubsection[{fg\-\_\-open}]{\setlength{\rightskip}{0pt plus 5cm}static int {\bf fg\-\_\-open} (
 \begin{DoxyParamCaption}
@@ -163,7 +179,9 @@ static struct fuse\-\_\-operations \hyperlink{fg__fuse_8c_aa37f56469ba4f848f7027
 
 \-No creation (\-O\-\_\-\-C\-R\-E\-A\-T, \-O\-\_\-\-E\-X\-C\-L) and by default also no truncation (\-O\-\_\-\-T\-R\-U\-N\-C) flags will be passed to \hyperlink{fg__fuse_8c_acc9e9a1cecaa8d9e66b87401dec98a94}{fg\-\_\-open()}. \-If an application specifies \-O\-\_\-\-T\-R\-U\-N\-C, fuse first calls \hyperlink{fg__fuse_8c_afaee168a3ef65211e792c8f3b38d76d8}{fg\-\_\-truncate()} and then \hyperlink{fg__fuse_8c_acc9e9a1cecaa8d9e66b87401dec98a94}{fg\-\_\-open()}. \-Only if 'atomic\-\_\-o\-\_\-trunc' has been specified, \-O\-\_\-\-T\-R\-U\-N\-C is passed on to open.
 
-\-Kernel version 2.\-6.\-24 or later \hypertarget{fg__fuse_8c_a0a8686cddbdfeac45160e50f7a2b0849}{\index{fg\-\_\-fuse.\-c@{fg\-\_\-fuse.\-c}!fg\-\_\-read@{fg\-\_\-read}}
+\-Kernel version 2.\-6.\-24 or later
+
+\-X\-X\-X \hypertarget{fg__fuse_8c_a0a8686cddbdfeac45160e50f7a2b0849}{\index{fg\-\_\-fuse.\-c@{fg\-\_\-fuse.\-c}!fg\-\_\-read@{fg\-\_\-read}}
 \index{fg\-\_\-read@{fg\-\_\-read}!fg_fuse.c@{fg\-\_\-fuse.\-c}}
 \subsubsection[{fg\-\_\-read}]{\setlength{\rightskip}{0pt plus 5cm}static int {\bf fg\-\_\-read} (
 \begin{DoxyParamCaption}
@@ -176,7 +194,9 @@ static struct fuse\-\_\-operations \hyperlink{fg__fuse_8c_aa37f56469ba4f848f7027
 )\hspace{0.3cm}{\ttfamily  \mbox{[}static\mbox{]}}}}\label{fg__fuse_8c_a0a8686cddbdfeac45160e50f7a2b0849}
 \-Read data from an open file
 
-\-Read should return exactly the number of bytes requested except on \-E\-O\-F or error, otherwise the rest of the data will be substituted with zeroes. \-An exception to this is when the 'direct\-\_\-io' mount option is specified, in which case the return value of the read system call will reflect the return value of this operation. \hypertarget{fg__fuse_8c_a57fd9632870a3ad1d084b1bee78efff3}{\index{fg\-\_\-fuse.\-c@{fg\-\_\-fuse.\-c}!fg\-\_\-readdir@{fg\-\_\-readdir}}
+\-Read should return exactly the number of bytes requested except on \-E\-O\-F or error, otherwise the rest of the data will be substituted with zeroes. \-An exception to this is when the 'direct\-\_\-io' mount option is specified, in which case the return value of the read system call will reflect the return value of this operation.
+
+\-X\-X\-X \hypertarget{fg__fuse_8c_a57fd9632870a3ad1d084b1bee78efff3}{\index{fg\-\_\-fuse.\-c@{fg\-\_\-fuse.\-c}!fg\-\_\-readdir@{fg\-\_\-readdir}}
 \index{fg\-\_\-readdir@{fg\-\_\-readdir}!fg_fuse.c@{fg\-\_\-fuse.\-c}}
 \subsubsection[{fg\-\_\-readdir}]{\setlength{\rightskip}{0pt plus 5cm}static int {\bf fg\-\_\-readdir} (
 \begin{DoxyParamCaption}
@@ -193,7 +213,9 @@ static struct fuse\-\_\-operations \hyperlink{fg__fuse_8c_aa37f56469ba4f848f7027
 
 1) \-The readdir implementation ignores the offset parameter, and passes zero to the filler function's offset. \-The killer function will not return '1' (unless an error happens), so the whole directory is read in a single readdir operation.
 
-2) \-The readdir implementation keeps track of the offsets of the directory entries. \-It uses the offset parameter and always passes non-\/zero offset to the filler function. \-When the buffer is full (or an error happens) the filler function will return '1'. \hypertarget{fg__fuse_8c_a03909f37b6771886c3bd070db6a0d289}{\index{fg\-\_\-fuse.\-c@{fg\-\_\-fuse.\-c}!fg\-\_\-readlink@{fg\-\_\-readlink}}
+2) \-The readdir implementation keeps track of the offsets of the directory entries. \-It uses the offset parameter and always passes non-\/zero offset to the filler function. \-When the buffer is full (or an error happens) the filler function will return '1'.
+
+\-X\-X\-X \hypertarget{fg__fuse_8c_a03909f37b6771886c3bd070db6a0d289}{\index{fg\-\_\-fuse.\-c@{fg\-\_\-fuse.\-c}!fg\-\_\-readlink@{fg\-\_\-readlink}}
 \index{fg\-\_\-readlink@{fg\-\_\-readlink}!fg_fuse.c@{fg\-\_\-fuse.\-c}}
 \subsubsection[{fg\-\_\-readlink}]{\setlength{\rightskip}{0pt plus 5cm}static int {\bf fg\-\_\-readlink} (
 \begin{DoxyParamCaption}
@@ -204,7 +226,9 @@ static struct fuse\-\_\-operations \hyperlink{fg__fuse_8c_aa37f56469ba4f848f7027
 )\hspace{0.3cm}{\ttfamily  \mbox{[}static\mbox{]}}}}\label{fg__fuse_8c_a03909f37b6771886c3bd070db6a0d289}
 \-Read the target of the symbolic link
 
-\-The buffer should be filled with a null terminated string. \-The buffer size argument includes the space for the terminating null character. \-If the linkname is too long to fit in the buffer, it should be truncated. \-The return value should be 0 for success. \hypertarget{fg__fuse_8c_af81df566c92a45a4e50e1046607dcebc}{\index{fg\-\_\-fuse.\-c@{fg\-\_\-fuse.\-c}!fg\-\_\-release@{fg\-\_\-release}}
+\-The buffer should be filled with a null terminated string. \-The buffer size argument includes the space for the terminating null character. \-If the linkname is too long to fit in the buffer, it should be truncated. \-The return value should be 0 for success.
+
+\-X\-X\-X \hypertarget{fg__fuse_8c_af81df566c92a45a4e50e1046607dcebc}{\index{fg\-\_\-fuse.\-c@{fg\-\_\-fuse.\-c}!fg\-\_\-release@{fg\-\_\-release}}
 \index{fg\-\_\-release@{fg\-\_\-release}!fg_fuse.c@{fg\-\_\-fuse.\-c}}
 \subsubsection[{fg\-\_\-release}]{\setlength{\rightskip}{0pt plus 5cm}static int {\bf fg\-\_\-release} (
 \begin{DoxyParamCaption}
@@ -216,7 +240,9 @@ static struct fuse\-\_\-operations \hyperlink{fg__fuse_8c_aa37f56469ba4f848f7027
 
 \-Release is called when there are no more references to an open file\-: all file descriptors are closed and all memory mappings are unmapped.
 
-\-For every \hyperlink{fg__fuse_8c_acc9e9a1cecaa8d9e66b87401dec98a94}{fg\-\_\-open()} call there will be exactly one \hyperlink{fg__fuse_8c_af81df566c92a45a4e50e1046607dcebc}{fg\-\_\-release()} call with the same flags and file descriptor. \-It is possible to have a file opened more than once, in which case only the last release will mean, that no more reads/writes will happen on the file. \-The return value of release is ignored. \hypertarget{fg__fuse_8c_afa726de3a6920581590e6607613b5fe8}{\index{fg\-\_\-fuse.\-c@{fg\-\_\-fuse.\-c}!fg\-\_\-rename@{fg\-\_\-rename}}
+\-For every \hyperlink{fg__fuse_8c_acc9e9a1cecaa8d9e66b87401dec98a94}{fg\-\_\-open()} call there will be exactly one \hyperlink{fg__fuse_8c_af81df566c92a45a4e50e1046607dcebc}{fg\-\_\-release()} call with the same flags and file descriptor. \-It is possible to have a file opened more than once, in which case only the last release will mean, that no more reads/writes will happen on the file. \-The return value of release is ignored.
+
+\-X\-X\-X \hypertarget{fg__fuse_8c_afa726de3a6920581590e6607613b5fe8}{\index{fg\-\_\-fuse.\-c@{fg\-\_\-fuse.\-c}!fg\-\_\-rename@{fg\-\_\-rename}}
 \index{fg\-\_\-rename@{fg\-\_\-rename}!fg_fuse.c@{fg\-\_\-fuse.\-c}}
 \subsubsection[{fg\-\_\-rename}]{\setlength{\rightskip}{0pt plus 5cm}static int {\bf fg\-\_\-rename} (
 \begin{DoxyParamCaption}
@@ -224,14 +250,18 @@ static struct fuse\-\_\-operations \hyperlink{fg__fuse_8c_aa37f56469ba4f848f7027
 \item[{const char $\ast$}]{to}
 \end{DoxyParamCaption}
 )\hspace{0.3cm}{\ttfamily  \mbox{[}static\mbox{]}}}}\label{fg__fuse_8c_afa726de3a6920581590e6607613b5fe8}
-\-Rename a file \hypertarget{fg__fuse_8c_a276670d3cb8342d8a432316e8efb7c70}{\index{fg\-\_\-fuse.\-c@{fg\-\_\-fuse.\-c}!fg\-\_\-rmdir@{fg\-\_\-rmdir}}
+\-Rename a file
+
+\-X\-X\-X \hypertarget{fg__fuse_8c_a276670d3cb8342d8a432316e8efb7c70}{\index{fg\-\_\-fuse.\-c@{fg\-\_\-fuse.\-c}!fg\-\_\-rmdir@{fg\-\_\-rmdir}}
 \index{fg\-\_\-rmdir@{fg\-\_\-rmdir}!fg_fuse.c@{fg\-\_\-fuse.\-c}}
 \subsubsection[{fg\-\_\-rmdir}]{\setlength{\rightskip}{0pt plus 5cm}static int {\bf fg\-\_\-rmdir} (
 \begin{DoxyParamCaption}
 \item[{const char $\ast$}]{path}
 \end{DoxyParamCaption}
 )\hspace{0.3cm}{\ttfamily  \mbox{[}static\mbox{]}}}}\label{fg__fuse_8c_a276670d3cb8342d8a432316e8efb7c70}
-\-Remove a directory \hypertarget{fg__fuse_8c_a3b260a1e37083749594c1ac449210b52}{\index{fg\-\_\-fuse.\-c@{fg\-\_\-fuse.\-c}!fg\-\_\-statfs@{fg\-\_\-statfs}}
+\-Remove a directory
+
+\-X\-X\-X \hypertarget{fg__fuse_8c_a3b260a1e37083749594c1ac449210b52}{\index{fg\-\_\-fuse.\-c@{fg\-\_\-fuse.\-c}!fg\-\_\-statfs@{fg\-\_\-statfs}}
 \index{fg\-\_\-statfs@{fg\-\_\-statfs}!fg_fuse.c@{fg\-\_\-fuse.\-c}}
 \subsubsection[{fg\-\_\-statfs}]{\setlength{\rightskip}{0pt plus 5cm}static int {\bf fg\-\_\-statfs} (
 \begin{DoxyParamCaption}
@@ -241,7 +271,9 @@ static struct fuse\-\_\-operations \hyperlink{fg__fuse_8c_aa37f56469ba4f848f7027
 )\hspace{0.3cm}{\ttfamily  \mbox{[}static\mbox{]}}}}\label{fg__fuse_8c_a3b260a1e37083749594c1ac449210b52}
 \-Get file system statistics
 
-\-The 'f\-\_\-frsize', 'f\-\_\-favail', 'f\-\_\-fsid' and 'f\-\_\-flag' fields are ignored. \hypertarget{fg__fuse_8c_a2dd88068ebe4b1e7145e385f40a8a73b}{\index{fg\-\_\-fuse.\-c@{fg\-\_\-fuse.\-c}!fg\-\_\-symlink@{fg\-\_\-symlink}}
+\-The 'f\-\_\-frsize', 'f\-\_\-favail', 'f\-\_\-fsid' and 'f\-\_\-flag' fields are ignored.
+
+\-X\-X\-X \hypertarget{fg__fuse_8c_a2dd88068ebe4b1e7145e385f40a8a73b}{\index{fg\-\_\-fuse.\-c@{fg\-\_\-fuse.\-c}!fg\-\_\-symlink@{fg\-\_\-symlink}}
 \index{fg\-\_\-symlink@{fg\-\_\-symlink}!fg_fuse.c@{fg\-\_\-fuse.\-c}}
 \subsubsection[{fg\-\_\-symlink}]{\setlength{\rightskip}{0pt plus 5cm}static int {\bf fg\-\_\-symlink} (
 \begin{DoxyParamCaption}
@@ -249,7 +281,9 @@ static struct fuse\-\_\-operations \hyperlink{fg__fuse_8c_aa37f56469ba4f848f7027
 \item[{const char $\ast$}]{to}
 \end{DoxyParamCaption}
 )\hspace{0.3cm}{\ttfamily  \mbox{[}static\mbox{]}}}}\label{fg__fuse_8c_a2dd88068ebe4b1e7145e385f40a8a73b}
-\-Create a symbolic link \hypertarget{fg__fuse_8c_afaee168a3ef65211e792c8f3b38d76d8}{\index{fg\-\_\-fuse.\-c@{fg\-\_\-fuse.\-c}!fg\-\_\-truncate@{fg\-\_\-truncate}}
+\-Create a symbolic link
+
+\-X\-X\-X \hypertarget{fg__fuse_8c_afaee168a3ef65211e792c8f3b38d76d8}{\index{fg\-\_\-fuse.\-c@{fg\-\_\-fuse.\-c}!fg\-\_\-truncate@{fg\-\_\-truncate}}
 \index{fg\-\_\-truncate@{fg\-\_\-truncate}!fg_fuse.c@{fg\-\_\-fuse.\-c}}
 \subsubsection[{fg\-\_\-truncate}]{\setlength{\rightskip}{0pt plus 5cm}static int {\bf fg\-\_\-truncate} (
 \begin{DoxyParamCaption}
@@ -257,14 +291,18 @@ static struct fuse\-\_\-operations \hyperlink{fg__fuse_8c_aa37f56469ba4f848f7027
 \item[{off\-\_\-t}]{size}
 \end{DoxyParamCaption}
 )\hspace{0.3cm}{\ttfamily  \mbox{[}static\mbox{]}}}}\label{fg__fuse_8c_afaee168a3ef65211e792c8f3b38d76d8}
-\-Change the size of a file \hypertarget{fg__fuse_8c_a76c1b29b529df45dec6d376b125b1337}{\index{fg\-\_\-fuse.\-c@{fg\-\_\-fuse.\-c}!fg\-\_\-unlink@{fg\-\_\-unlink}}
+\-Change the size of a file
+
+\-X\-X\-X \hypertarget{fg__fuse_8c_a76c1b29b529df45dec6d376b125b1337}{\index{fg\-\_\-fuse.\-c@{fg\-\_\-fuse.\-c}!fg\-\_\-unlink@{fg\-\_\-unlink}}
 \index{fg\-\_\-unlink@{fg\-\_\-unlink}!fg_fuse.c@{fg\-\_\-fuse.\-c}}
 \subsubsection[{fg\-\_\-unlink}]{\setlength{\rightskip}{0pt plus 5cm}static int {\bf fg\-\_\-unlink} (
 \begin{DoxyParamCaption}
 \item[{const char $\ast$}]{path}
 \end{DoxyParamCaption}
 )\hspace{0.3cm}{\ttfamily  \mbox{[}static\mbox{]}}}}\label{fg__fuse_8c_a76c1b29b529df45dec6d376b125b1337}
-\-Remove a file \hypertarget{fg__fuse_8c_ac6788de7fe8142e55733a7c656015d25}{\index{fg\-\_\-fuse.\-c@{fg\-\_\-fuse.\-c}!fg\-\_\-write@{fg\-\_\-write}}
+\-Remove a file
+
+\-X\-X\-X \hypertarget{fg__fuse_8c_ac6788de7fe8142e55733a7c656015d25}{\index{fg\-\_\-fuse.\-c@{fg\-\_\-fuse.\-c}!fg\-\_\-write@{fg\-\_\-write}}
 \index{fg\-\_\-write@{fg\-\_\-write}!fg_fuse.c@{fg\-\_\-fuse.\-c}}
 \subsubsection[{fg\-\_\-write}]{\setlength{\rightskip}{0pt plus 5cm}static int {\bf fg\-\_\-write} (
 \begin{DoxyParamCaption}
@@ -277,7 +315,9 @@ static struct fuse\-\_\-operations \hyperlink{fg__fuse_8c_aa37f56469ba4f848f7027
 )\hspace{0.3cm}{\ttfamily  \mbox{[}static\mbox{]}}}}\label{fg__fuse_8c_ac6788de7fe8142e55733a7c656015d25}
 \-Write data to an open file
 
-\-Write should return exactly the number of bytes requested except on error. \-An exception to this is when the 'direct\-\_\-io' mount option is specified. \hypertarget{fg__fuse_8c_a0ddf1224851353fc92bfbff6f499fa97}{\index{fg\-\_\-fuse.\-c@{fg\-\_\-fuse.\-c}!main@{main}}
+\-Write should return exactly the number of bytes requested except on error. \-An exception to this is when the 'direct\-\_\-io' mount option is specified.
+
+\-X\-X\-X \hypertarget{fg__fuse_8c_a0ddf1224851353fc92bfbff6f499fa97}{\index{fg\-\_\-fuse.\-c@{fg\-\_\-fuse.\-c}!main@{main}}
 \index{main@{main}!fg_fuse.c@{fg\-\_\-fuse.\-c}}
 \subsubsection[{main}]{\setlength{\rightskip}{0pt plus 5cm}int {\bf main} (
 \begin{DoxyParamCaption}

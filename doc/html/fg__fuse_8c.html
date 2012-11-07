@@ -83,14 +83,12 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 </div><!--header-->
 <div class="contents">
 <div class="textblock"><code>#include &lt;fuse.h&gt;</code><br/>
-<code>#include &lt;stdio.h&gt;</code><br/>
-<code>#include &lt;string.h&gt;</code><br/>
 <code>#include &lt;errno.h&gt;</code><br/>
 <code>#include &quot;fg_vcs.h&quot;</code><br/>
 </div><table class="memberdecls">
 <tr><td colspan="2"><h2><a name="define-members"></a>
 Defines</h2></td></tr>
-<tr><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="fg__fuse_8c.html#a0919197af2e154da2c05727b6d87cbda">FUSE_USE_VERSION</a>&#160;&#160;&#160;26</td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="fg__fuse_8c.html#a0919197af2e154da2c05727b6d87cbda">FUSE_USE_VERSION</a>&#160;&#160;&#160;29</td></tr>
 <tr><td colspan="2"><h2><a name="func-members"></a>
 Functions</h2></td></tr>
 <tr><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="fg__fuse_8c.html#a708a4c1a4d0c4acc4c447310dd4db27f">test</a> (void)</td></tr>
@@ -125,12 +123,13 @@ Variables</h2></td></tr>
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">#define <a class="el" href="fg__fuse_8c.html#a0919197af2e154da2c05727b6d87cbda">FUSE_USE_VERSION</a>&#160;&#160;&#160;26</td>
+          <td class="memname">#define <a class="el" href="fg__fuse_8c.html#a0919197af2e154da2c05727b6d87cbda">FUSE_USE_VERSION</a>&#160;&#160;&#160;29</td>
         </tr>
       </table>
 </div>
 <div class="memdoc">
-<p>Implements the FUSE API function calls </p>
+<p>Implements the FUSE API function calls</p>
+<p>TODO The backup functionality can be called via `fg_fuse` giving it a parameter like 'restore' or 'backup', to actually restore, or do backup of the filesystem. TODO it is unknown if I can actually know if the call is made from the current file system or not. This is annoying. :( </p>
 
 </div>
 </div>
@@ -161,7 +160,8 @@ Variables</h2></td></tr>
 <div class="memdoc">
 <p>Check file access permissions</p>
 <p>This will be called for the <a class="el" href="fg__fuse_8c.html#af0ded5a0adf121e29f380ae143c09f2a">fg_access()</a> system call. If the 'default_permissions' mount option is given, this method is not called.</p>
-<p>Kernel version 2.4.x above </p>
+<p>Kernel version 2.4.x above</p>
+<p>XXX </p>
 
 </div>
 </div>
@@ -189,7 +189,8 @@ Variables</h2></td></tr>
       </table>
 </div>
 <div class="memdoc">
-<p>Change the permission bits of a file </p>
+<p>Change the permission bits of a file</p>
+<p>XXX </p>
 
 </div>
 </div>
@@ -223,7 +224,8 @@ Variables</h2></td></tr>
       </table>
 </div>
 <div class="memdoc">
-<p>Change the owner and group of a file </p>
+<p>Change the owner and group of a file</p>
+<p>XXX </p>
 
 </div>
 </div>
@@ -258,7 +260,8 @@ Variables</h2></td></tr>
 </div>
 <div class="memdoc">
 <p>Synchronize the file contents</p>
-<p>If the datasync parameter is non-zero, then only the user data should be flushed, not the meta data. </p>
+<p>If the datasync parameter is non-zero, then only the user data should be flushed, not the meta data.</p>
+<p>XXX </p>
 
 </div>
 </div>
@@ -287,7 +290,8 @@ Variables</h2></td></tr>
 </div>
 <div class="memdoc">
 <p>Get file attributes.</p>
-<p>Similar to stat(). The 'st_dev' and 'st_blksize' files are ignored. The 'st_ino' field is ignored exceptif the 'use_ino' mount option is given. </p>
+<p>Similar to stat(). The 'st_dev' and 'st_blksize' files are ignored. The 'st_ino' field is ignored exceptif the 'use_ino' mount option is given.</p>
+<p>XXX </p>
 
 </div>
 </div>
@@ -315,7 +319,8 @@ Variables</h2></td></tr>
       </table>
 </div>
 <div class="memdoc">
-<p>Create a hard link to a file </p>
+<p>Create a hard link to a file</p>
+<p>XXX </p>
 
 </div>
 </div>
@@ -344,7 +349,8 @@ Variables</h2></td></tr>
 </div>
 <div class="memdoc">
 <p>Create a directory</p>
-<p>Note that the mode argument may not have the type specification bits set, i.e. S_ISDIR(mode) can be false. To obtain the correct directory type bits use mode|S_IFDIR </p>
+<p>Note that the mode argument may not have the type specification bits set, i.e. S_ISDIR(mode) can be false. To obtain the correct directory type bits use mode|S_IFDIR</p>
+<p>XXX </p>
 
 </div>
 </div>
@@ -379,7 +385,8 @@ Variables</h2></td></tr>
 </div>
 <div class="memdoc">
 <p>Create a file node</p>
-<p>This is called for creation of all non-directory, non-symlink nodes. If the filesystem defines a fg_create() method, then for regular files that will be called instead. </p>
+<p>This is called for creation of all non-directory, non-symlink nodes. If the filesystem defines a fg_create() method, then for regular files that will be called instead.</p>
+<p>XXX </p>
 
 </div>
 </div>
@@ -409,7 +416,8 @@ Variables</h2></td></tr>
 <div class="memdoc">
 <p>File open operation</p>
 <p>No creation (O_CREAT, O_EXCL) and by default also no truncation (O_TRUNC) flags will be passed to <a class="el" href="fg__fuse_8c.html#acc9e9a1cecaa8d9e66b87401dec98a94">fg_open()</a>. If an application specifies O_TRUNC, fuse first calls <a class="el" href="fg__fuse_8c.html#afaee168a3ef65211e792c8f3b38d76d8">fg_truncate()</a> and then <a class="el" href="fg__fuse_8c.html#acc9e9a1cecaa8d9e66b87401dec98a94">fg_open()</a>. Only if 'atomic_o_trunc' has been specified, O_TRUNC is passed on to open.</p>
-<p>Kernel version 2.6.24 or later </p>
+<p>Kernel version 2.6.24 or later</p>
+<p>XXX </p>
 
 </div>
 </div>
@@ -456,7 +464,8 @@ Variables</h2></td></tr>
 </div>
 <div class="memdoc">
 <p>Read data from an open file</p>
-<p>Read should return exactly the number of bytes requested except on EOF or error, otherwise the rest of the data will be substituted with zeroes. An exception to this is when the 'direct_io' mount option is specified, in which case the return value of the read system call will reflect the return value of this operation. </p>
+<p>Read should return exactly the number of bytes requested except on EOF or error, otherwise the rest of the data will be substituted with zeroes. An exception to this is when the 'direct_io' mount option is specified, in which case the return value of the read system call will reflect the return value of this operation.</p>
+<p>XXX </p>
 
 </div>
 </div>
@@ -505,7 +514,8 @@ Variables</h2></td></tr>
 <p>Read directory</p>
 <p>The filesystem may choose between two modes of operation.</p>
 <p>1) The readdir implementation ignores the offset parameter, and passes zero to the filler function's offset. The killer function will not return '1' (unless an error happens), so the whole directory is read in a single readdir operation.</p>
-<p>2) The readdir implementation keeps track of the offsets of the directory entries. It uses the offset parameter and always passes non-zero offset to the filler function. When the buffer is full (or an error happens) the filler function will return '1'. </p>
+<p>2) The readdir implementation keeps track of the offsets of the directory entries. It uses the offset parameter and always passes non-zero offset to the filler function. When the buffer is full (or an error happens) the filler function will return '1'.</p>
+<p>XXX </p>
 
 </div>
 </div>
@@ -540,7 +550,8 @@ Variables</h2></td></tr>
 </div>
 <div class="memdoc">
 <p>Read the target of the symbolic link</p>
-<p>The buffer should be filled with a null terminated string. The buffer size argument includes the space for the terminating null character. If the linkname is too long to fit in the buffer, it should be truncated. The return value should be 0 for success. </p>
+<p>The buffer should be filled with a null terminated string. The buffer size argument includes the space for the terminating null character. If the linkname is too long to fit in the buffer, it should be truncated. The return value should be 0 for success.</p>
+<p>XXX </p>
 
 </div>
 </div>
@@ -570,7 +581,8 @@ Variables</h2></td></tr>
 <div class="memdoc">
 <p>Release an open file</p>
 <p>Release is called when there are no more references to an open file: all file descriptors are closed and all memory mappings are unmapped.</p>
-<p>For every <a class="el" href="fg__fuse_8c.html#acc9e9a1cecaa8d9e66b87401dec98a94">fg_open()</a> call there will be exactly one <a class="el" href="fg__fuse_8c.html#af81df566c92a45a4e50e1046607dcebc">fg_release()</a> call with the same flags and file descriptor. It is possible to have a file opened more than once, in which case only the last release will mean, that no more reads/writes will happen on the file. The return value of release is ignored. </p>
+<p>For every <a class="el" href="fg__fuse_8c.html#acc9e9a1cecaa8d9e66b87401dec98a94">fg_open()</a> call there will be exactly one <a class="el" href="fg__fuse_8c.html#af81df566c92a45a4e50e1046607dcebc">fg_release()</a> call with the same flags and file descriptor. It is possible to have a file opened more than once, in which case only the last release will mean, that no more reads/writes will happen on the file. The return value of release is ignored.</p>
+<p>XXX </p>
 
 </div>
 </div>
@@ -598,7 +610,8 @@ Variables</h2></td></tr>
       </table>
 </div>
 <div class="memdoc">
-<p>Rename a file </p>
+<p>Rename a file</p>
+<p>XXX </p>
 
 </div>
 </div>
@@ -616,7 +629,8 @@ Variables</h2></td></tr>
       </table>
 </div>
 <div class="memdoc">
-<p>Remove a directory </p>
+<p>Remove a directory</p>
+<p>XXX </p>
 
 </div>
 </div>
@@ -645,7 +659,8 @@ Variables</h2></td></tr>
 </div>
 <div class="memdoc">
 <p>Get file system statistics</p>
-<p>The 'f_frsize', 'f_favail', 'f_fsid' and 'f_flag' fields are ignored. </p>
+<p>The 'f_frsize', 'f_favail', 'f_fsid' and 'f_flag' fields are ignored.</p>
+<p>XXX </p>
 
 </div>
 </div>
@@ -673,7 +688,8 @@ Variables</h2></td></tr>
       </table>
 </div>
 <div class="memdoc">
-<p>Create a symbolic link </p>
+<p>Create a symbolic link</p>
+<p>XXX </p>
 
 </div>
 </div>
@@ -701,7 +717,8 @@ Variables</h2></td></tr>
       </table>
 </div>
 <div class="memdoc">
-<p>Change the size of a file </p>
+<p>Change the size of a file</p>
+<p>XXX </p>
 
 </div>
 </div>
@@ -719,7 +736,8 @@ Variables</h2></td></tr>
       </table>
 </div>
 <div class="memdoc">
-<p>Remove a file </p>
+<p>Remove a file</p>
+<p>XXX </p>
 
 </div>
 </div>
@@ -766,7 +784,8 @@ Variables</h2></td></tr>
 </div>
 <div class="memdoc">
 <p>Write data to an open file</p>
-<p>Write should return exactly the number of bytes requested except on error. An exception to this is when the 'direct_io' mount option is specified. </p>
+<p>Write should return exactly the number of bytes requested except on error. An exception to this is when the 'direct_io' mount option is specified.</p>
+<p>XXX </p>
 
 </div>
 </div>
@@ -847,7 +866,7 @@ Variables</h2></td></tr>
 
 
 <hr class="footer"/><address class="footer"><small>
-Generated on Wed Nov 7 2012 17:52:49 for FuseGit by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Wed Nov 7 2012 18:56:43 for FuseGit by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.7.6.1
 </small></address>

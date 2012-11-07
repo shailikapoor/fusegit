@@ -1,4 +1,7 @@
-
+# TODO Make a configure script which will ask the user to determine the 
+# directory where all the git repositories will be kept. User just needs to 
+# specify the folder. The repositories will be based on a timestamp, and 
+# linked to the folder.
 
 all: fg_fuse docs
 
