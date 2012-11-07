@@ -1,5 +1,6 @@
 
 
+all: fg_fuse docs
 
 fg_fuse: clean src/fg_git.o
 	gcc -Wall -Iinclude src/fg_fuse.c fg_git.o `pkg-config fuse --cflags --libs` -o fg_fuse

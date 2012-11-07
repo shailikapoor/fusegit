@@ -159,7 +159,8 @@ Variables</h2></td></tr>
 </div>
 <div class="memdoc">
 <p>Check file access permissions</p>
-<p>This will be called for the access() system call. If the 'default_permissions' mount option is given, this method is not called. </p>
+<p>This will be called for the <a class="el" href="fg__fuse_8c.html#af0ded5a0adf121e29f380ae143c09f2a">fg_access()</a> system call. If the 'default_permissions' mount option is given, this method is not called.</p>
+<p>Kernel version 2.4.x above </p>
 
 </div>
 </div>
@@ -187,6 +188,7 @@ Variables</h2></td></tr>
       </table>
 </div>
 <div class="memdoc">
+<p>Change the permission bits of a file </p>
 
 </div>
 </div>
@@ -220,6 +222,7 @@ Variables</h2></td></tr>
       </table>
 </div>
 <div class="memdoc">
+<p>Change the owner and group of a file </p>
 
 </div>
 </div>
@@ -253,6 +256,8 @@ Variables</h2></td></tr>
       </table>
 </div>
 <div class="memdoc">
+<p>Synchronize the file contents</p>
+<p>If the datasync parameter is non-zero, then only the user data should be flushed, not the meta data. </p>
 
 </div>
 </div>
@@ -309,6 +314,7 @@ Variables</h2></td></tr>
       </table>
 </div>
 <div class="memdoc">
+<p>Create a hard link to a file </p>
 
 </div>
 </div>
@@ -336,6 +342,8 @@ Variables</h2></td></tr>
       </table>
 </div>
 <div class="memdoc">
+<p>Create a directory</p>
+<p>Note that the mode argument may not have the type specification bits set, i.e. S_ISDIR(mode) can be false. To obtain the correct directory type bits use mode|S_IFDIR </p>
 
 </div>
 </div>
@@ -369,6 +377,8 @@ Variables</h2></td></tr>
       </table>
 </div>
 <div class="memdoc">
+<p>Create a file node</p>
+<p>This is called for creation of all non-directory, non-symlink nodes. If the filesystem defines a fg_create() method, then for regular files that will be called instead. </p>
 
 </div>
 </div>
@@ -396,6 +406,9 @@ Variables</h2></td></tr>
       </table>
 </div>
 <div class="memdoc">
+<p>File open operation</p>
+<p>No creation (O_CREAT, O_EXCL) and by default also no truncation (O_TRUNC) flags will be passed to <a class="el" href="fg__fuse_8c.html#acc9e9a1cecaa8d9e66b87401dec98a94">fg_open()</a>. If an application specifies O_TRUNC, fuse first calls <a class="el" href="fg__fuse_8c.html#afaee168a3ef65211e792c8f3b38d76d8">fg_truncate()</a> and then <a class="el" href="fg__fuse_8c.html#acc9e9a1cecaa8d9e66b87401dec98a94">fg_open()</a>. Only if 'atomic_o_trunc' has been specified, O_TRUNC is passed on to open.</p>
+<p>Kernel version 2.6.24 or later </p>
 
 </div>
 </div>
@@ -441,6 +454,8 @@ Variables</h2></td></tr>
       </table>
 </div>
 <div class="memdoc">
+<p>Read data from an open file</p>
+<p>Read should return exactly the number of bytes requested except on EOF or error, otherwise the rest of the data will be substituted with zeroes. An exception to this is when the 'direct_io' mount option is specified, in which case the return value of the read system call will reflect the return value of this operation. </p>
 
 </div>
 </div>
@@ -486,6 +501,10 @@ Variables</h2></td></tr>
       </table>
 </div>
 <div class="memdoc">
+<p>Read directory</p>
+<p>The filesystem may choose between two modes of operation.</p>
+<p>1) The readdir implementation ignores the offset parameter, and passes zero to the filler function's offset. The killer function will not return '1' (unless an error happens), so the whole directory is read in a single readdir operation.</p>
+<p>2) The readdir implementation keeps track of the offsets of the directory entries. It uses the offset parameter and always passes non-zero offset to the filler function. When the buffer is full (or an error happens) the filler function will return '1'. </p>
 
 </div>
 </div>
@@ -519,6 +538,8 @@ Variables</h2></td></tr>
       </table>
 </div>
 <div class="memdoc">
+<p>Read the target of the symbolic link</p>
+<p>The buffer should be filled with a null terminated string. The buffer size argument includes the space for the terminating null character. If the linkname is too long to fit in the buffer, it should be truncated. The return value should be 0 for success. </p>
 
 </div>
 </div>
@@ -546,6 +567,9 @@ Variables</h2></td></tr>
       </table>
 </div>
 <div class="memdoc">
+<p>Release an open file</p>
+<p>Release is called when there are no more references to an open file: all file descriptors are closed and all memory mappings are unmapped.</p>
+<p>For every <a class="el" href="fg__fuse_8c.html#acc9e9a1cecaa8d9e66b87401dec98a94">fg_open()</a> call there will be exactly one <a class="el" href="fg__fuse_8c.html#af81df566c92a45a4e50e1046607dcebc">fg_release()</a> call with the same flags and file descriptor. It is possible to have a file opened more than once, in which case only the last release will mean, that no more reads/writes will happen on the file. The return value of release is ignored. </p>
 
 </div>
 </div>
@@ -573,6 +597,7 @@ Variables</h2></td></tr>
       </table>
 </div>
 <div class="memdoc">
+<p>Rename a file </p>
 
 </div>
 </div>
@@ -590,6 +615,7 @@ Variables</h2></td></tr>
       </table>
 </div>
 <div class="memdoc">
+<p>Remove a directory </p>
 
 </div>
 </div>
@@ -617,6 +643,8 @@ Variables</h2></td></tr>
       </table>
 </div>
 <div class="memdoc">
+<p>Get file system statistics</p>
+<p>The 'f_frsize', 'f_favail', 'f_fsid' and 'f_flag' fields are ignored. </p>
 
 </div>
 </div>
@@ -644,6 +672,7 @@ Variables</h2></td></tr>
       </table>
 </div>
 <div class="memdoc">
+<p>Create a symbolic link </p>
 
 </div>
 </div>
@@ -671,6 +700,7 @@ Variables</h2></td></tr>
       </table>
 </div>
 <div class="memdoc">
+<p>Change the size of a file </p>
 
 </div>
 </div>
@@ -688,6 +718,7 @@ Variables</h2></td></tr>
       </table>
 </div>
 <div class="memdoc">
+<p>Remove a file </p>
 
 </div>
 </div>
@@ -733,6 +764,8 @@ Variables</h2></td></tr>
       </table>
 </div>
 <div class="memdoc">
+<p>Write data to an open file</p>
+<p>Write should return exactly the number of bytes requested except on error. An exception to this is when the 'direct_io' mount option is specified. </p>
 
 </div>
 </div>
@@ -813,7 +846,7 @@ Variables</h2></td></tr>
 
 
 <hr class="footer"/><address class="footer"><small>
-Generated on Wed Nov 7 2012 14:08:42 for FuseGit by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Wed Nov 7 2012 17:35:25 for FuseGit by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.7.6.1
 </small></address>
