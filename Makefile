@@ -8,5 +8,8 @@ fg_fuse: clean src/fg_git.o
 src/fg_git.o:
 	gcc -c -Wall -Iinclude -lgit2 src/fg_git.c
 
+docs:
+	doxygen doxy-config
+
 clean:
 	$(RM) fg_fuse

@@ -17,12 +17,18 @@
 #include <sys/xattr.h>
 #endif
 
-extern void test(void);
+extern void test(void); // TODO remove this. This is just to test that the files in src folder and include folder are linked properly.
 
+/**
+ * Get file attributes.
+ * 
+ * Similar to stat(). The 'st_dev' and 'st_blksize' files are ignored. The
+ * 'st_ino' field is ignored exceptif the 'use_ino' mount option is given.
+ */
 static int fg_getattr(const char *path, struct stat *stbuf)
 {
         int res = 0;
-	test();
+	test(); // TODO remove this. This is just to test that the files in src folder and include folder are linked properly.
         memset(stbuf, 0, sizeof(struct stat));
 
         if (strcmp(path, "/") == 0) {
@@ -34,6 +40,12 @@ static int fg_getattr(const char *path, struct stat *stbuf)
         return res;
 }
 
+/**
+ * Check file access permissions
+ *
+ * This will be called for the access() system call. If the 
+ * 'default_permissions' mount option is given, this method is not called.
+ */
 static int fg_access(const char *path, int mask)
 {
         return -ENOSYS;
@@ -159,7 +171,7 @@ static int fg_removexattr(const char *path, const char *name)
 #endif  /* HAVE_SETXATTR */
 
 static struct fuse_operations fg_oper = {
-        .getattr        = fg_getattr,
+        .getattr        = fg_getattr, // get file attributes
         .access	        = fg_access,
         .readlink	= fg_readlink,
         .readdir	= fg_readdir,

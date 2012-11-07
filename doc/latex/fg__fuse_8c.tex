@@ -1,0 +1,270 @@
+\hypertarget{fg__fuse_8c}{\section{fg\-\_\-fuse.\-c \-File \-Reference}
+\label{fg__fuse_8c}\index{fg\-\_\-fuse.\-c@{fg\-\_\-fuse.\-c}}
+}
+{\ttfamily \#include $<$fuse.\-h$>$}\*
+{\ttfamily \#include $<$stdio.\-h$>$}\*
+{\ttfamily \#include $<$string.\-h$>$}\*
+{\ttfamily \#include $<$errno.\-h$>$}\*
+{\ttfamily \#include \char`\"{}fg\-\_\-vcs.\-h\char`\"{}}\*
+\subsection*{\-Defines}
+\begin{DoxyCompactItemize}
+\item 
+\#define \hyperlink{fg__fuse_8c_a0919197af2e154da2c05727b6d87cbda}{\-F\-U\-S\-E\-\_\-\-U\-S\-E\-\_\-\-V\-E\-R\-S\-I\-O\-N}~26
+\end{DoxyCompactItemize}
+\subsection*{\-Functions}
+\begin{DoxyCompactItemize}
+\item 
+void \hyperlink{fg__fuse_8c_a708a4c1a4d0c4acc4c447310dd4db27f}{test} (void)
+\item 
+static int \hyperlink{fg__fuse_8c_a42dbbae5136f9ba9f45003e328ffeea6}{fg\-\_\-getattr} (const char $\ast$path, struct stat $\ast$stbuf)
+\item 
+static int \hyperlink{fg__fuse_8c_af0ded5a0adf121e29f380ae143c09f2a}{fg\-\_\-access} (const char $\ast$path, int mask)
+\item 
+static int \hyperlink{fg__fuse_8c_a03909f37b6771886c3bd070db6a0d289}{fg\-\_\-readlink} (const char $\ast$path, char $\ast$buf, size\-\_\-t size)
+\item 
+static int \hyperlink{fg__fuse_8c_a57fd9632870a3ad1d084b1bee78efff3}{fg\-\_\-readdir} (const char $\ast$path, void $\ast$buf, fuse\-\_\-fill\-\_\-dir\-\_\-t filler, off\-\_\-t offset, struct fuse\-\_\-file\-\_\-info $\ast$fi)
+\item 
+static int \hyperlink{fg__fuse_8c_adc4b96121d51352ed0b5825abafa7f1e}{fg\-\_\-mknod} (const char $\ast$path, mode\-\_\-t mode, dev\-\_\-t rdev)
+\item 
+static int \hyperlink{fg__fuse_8c_a88857c5cb5e61440f7271d8d7b51011a}{fg\-\_\-mkdir} (const char $\ast$path, mode\-\_\-t mode)
+\item 
+static int \hyperlink{fg__fuse_8c_a76c1b29b529df45dec6d376b125b1337}{fg\-\_\-unlink} (const char $\ast$path)
+\item 
+static int \hyperlink{fg__fuse_8c_a276670d3cb8342d8a432316e8efb7c70}{fg\-\_\-rmdir} (const char $\ast$path)
+\item 
+static int \hyperlink{fg__fuse_8c_a2dd88068ebe4b1e7145e385f40a8a73b}{fg\-\_\-symlink} (const char $\ast$from, const char $\ast$to)
+\item 
+static int \hyperlink{fg__fuse_8c_afa726de3a6920581590e6607613b5fe8}{fg\-\_\-rename} (const char $\ast$from, const char $\ast$to)
+\item 
+static int \hyperlink{fg__fuse_8c_aae17ec2405554adb32ff05b2ebf479dc}{fg\-\_\-link} (const char $\ast$from, const char $\ast$to)
+\item 
+static int \hyperlink{fg__fuse_8c_acc27a1144af3fc84e0083a7d1f40b4a3}{fg\-\_\-chmod} (const char $\ast$path, mode\-\_\-t mode)
+\item 
+static int \hyperlink{fg__fuse_8c_adc403acb1b19a067ba51f1e15da32a5c}{fg\-\_\-chown} (const char $\ast$path, uid\-\_\-t uid, gid\-\_\-t gid)
+\item 
+static int \hyperlink{fg__fuse_8c_afaee168a3ef65211e792c8f3b38d76d8}{fg\-\_\-truncate} (const char $\ast$path, off\-\_\-t size)
+\item 
+static int \hyperlink{fg__fuse_8c_acc9e9a1cecaa8d9e66b87401dec98a94}{fg\-\_\-open} (const char $\ast$path, struct fuse\-\_\-file\-\_\-info $\ast$fi)
+\item 
+static int \hyperlink{fg__fuse_8c_a0a8686cddbdfeac45160e50f7a2b0849}{fg\-\_\-read} (const char $\ast$path, char $\ast$buf, size\-\_\-t size, off\-\_\-t offset, struct fuse\-\_\-file\-\_\-info $\ast$fi)
+\item 
+static int \hyperlink{fg__fuse_8c_ac6788de7fe8142e55733a7c656015d25}{fg\-\_\-write} (const char $\ast$path, const char $\ast$buf, size\-\_\-t size, off\-\_\-t offset, struct fuse\-\_\-file\-\_\-info $\ast$fi)
+\item 
+static int \hyperlink{fg__fuse_8c_a3b260a1e37083749594c1ac449210b52}{fg\-\_\-statfs} (const char $\ast$path, struct statvfs $\ast$stbuf)
+\item 
+static int \hyperlink{fg__fuse_8c_af81df566c92a45a4e50e1046607dcebc}{fg\-\_\-release} (const char $\ast$path, struct fuse\-\_\-file\-\_\-info $\ast$fi)
+\item 
+static int \hyperlink{fg__fuse_8c_af705d87d064051e01bdfc588855705f7}{fg\-\_\-fsync} (const char $\ast$path, int isdatasync, struct fuse\-\_\-file\-\_\-info $\ast$fi)
+\item 
+int \hyperlink{fg__fuse_8c_a0ddf1224851353fc92bfbff6f499fa97}{main} (int argc, char $\ast$argv\mbox{[}$\,$\mbox{]})
+\end{DoxyCompactItemize}
+\subsection*{\-Variables}
+\begin{DoxyCompactItemize}
+\item 
+static struct fuse\-\_\-operations \hyperlink{fg__fuse_8c_aa37f56469ba4f848f702784a1aa9448f}{fg\-\_\-oper}
+\end{DoxyCompactItemize}
+
+
+\subsection{\-Define \-Documentation}
+\hypertarget{fg__fuse_8c_a0919197af2e154da2c05727b6d87cbda}{\index{fg\-\_\-fuse.\-c@{fg\-\_\-fuse.\-c}!\-F\-U\-S\-E\-\_\-\-U\-S\-E\-\_\-\-V\-E\-R\-S\-I\-O\-N@{\-F\-U\-S\-E\-\_\-\-U\-S\-E\-\_\-\-V\-E\-R\-S\-I\-O\-N}}
+\index{\-F\-U\-S\-E\-\_\-\-U\-S\-E\-\_\-\-V\-E\-R\-S\-I\-O\-N@{\-F\-U\-S\-E\-\_\-\-U\-S\-E\-\_\-\-V\-E\-R\-S\-I\-O\-N}!fg_fuse.c@{fg\-\_\-fuse.\-c}}
+\subsubsection[{\-F\-U\-S\-E\-\_\-\-U\-S\-E\-\_\-\-V\-E\-R\-S\-I\-O\-N}]{\setlength{\rightskip}{0pt plus 5cm}\#define {\bf \-F\-U\-S\-E\-\_\-\-U\-S\-E\-\_\-\-V\-E\-R\-S\-I\-O\-N}~26}}\label{fg__fuse_8c_a0919197af2e154da2c05727b6d87cbda}
+
+
+\subsection{\-Function \-Documentation}
+\hypertarget{fg__fuse_8c_af0ded5a0adf121e29f380ae143c09f2a}{\index{fg\-\_\-fuse.\-c@{fg\-\_\-fuse.\-c}!fg\-\_\-access@{fg\-\_\-access}}
+\index{fg\-\_\-access@{fg\-\_\-access}!fg_fuse.c@{fg\-\_\-fuse.\-c}}
+\subsubsection[{fg\-\_\-access}]{\setlength{\rightskip}{0pt plus 5cm}static int {\bf fg\-\_\-access} (
+\begin{DoxyParamCaption}
+\item[{const char $\ast$}]{path, }
+\item[{int}]{mask}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily  \mbox{[}static\mbox{]}}}}\label{fg__fuse_8c_af0ded5a0adf121e29f380ae143c09f2a}
+\-Check file access permissions
+
+\-This will be called for the access() system call. \-If the 'default\-\_\-permissions' mount option is given, this method is not called. \hypertarget{fg__fuse_8c_acc27a1144af3fc84e0083a7d1f40b4a3}{\index{fg\-\_\-fuse.\-c@{fg\-\_\-fuse.\-c}!fg\-\_\-chmod@{fg\-\_\-chmod}}
+\index{fg\-\_\-chmod@{fg\-\_\-chmod}!fg_fuse.c@{fg\-\_\-fuse.\-c}}
+\subsubsection[{fg\-\_\-chmod}]{\setlength{\rightskip}{0pt plus 5cm}static int {\bf fg\-\_\-chmod} (
+\begin{DoxyParamCaption}
+\item[{const char $\ast$}]{path, }
+\item[{mode\-\_\-t}]{mode}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily  \mbox{[}static\mbox{]}}}}\label{fg__fuse_8c_acc27a1144af3fc84e0083a7d1f40b4a3}
+\hypertarget{fg__fuse_8c_adc403acb1b19a067ba51f1e15da32a5c}{\index{fg\-\_\-fuse.\-c@{fg\-\_\-fuse.\-c}!fg\-\_\-chown@{fg\-\_\-chown}}
+\index{fg\-\_\-chown@{fg\-\_\-chown}!fg_fuse.c@{fg\-\_\-fuse.\-c}}
+\subsubsection[{fg\-\_\-chown}]{\setlength{\rightskip}{0pt plus 5cm}static int {\bf fg\-\_\-chown} (
+\begin{DoxyParamCaption}
+\item[{const char $\ast$}]{path, }
+\item[{uid\-\_\-t}]{uid, }
+\item[{gid\-\_\-t}]{gid}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily  \mbox{[}static\mbox{]}}}}\label{fg__fuse_8c_adc403acb1b19a067ba51f1e15da32a5c}
+\hypertarget{fg__fuse_8c_af705d87d064051e01bdfc588855705f7}{\index{fg\-\_\-fuse.\-c@{fg\-\_\-fuse.\-c}!fg\-\_\-fsync@{fg\-\_\-fsync}}
+\index{fg\-\_\-fsync@{fg\-\_\-fsync}!fg_fuse.c@{fg\-\_\-fuse.\-c}}
+\subsubsection[{fg\-\_\-fsync}]{\setlength{\rightskip}{0pt plus 5cm}static int {\bf fg\-\_\-fsync} (
+\begin{DoxyParamCaption}
+\item[{const char $\ast$}]{path, }
+\item[{int}]{isdatasync, }
+\item[{struct fuse\-\_\-file\-\_\-info $\ast$}]{fi}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily  \mbox{[}static\mbox{]}}}}\label{fg__fuse_8c_af705d87d064051e01bdfc588855705f7}
+\hypertarget{fg__fuse_8c_a42dbbae5136f9ba9f45003e328ffeea6}{\index{fg\-\_\-fuse.\-c@{fg\-\_\-fuse.\-c}!fg\-\_\-getattr@{fg\-\_\-getattr}}
+\index{fg\-\_\-getattr@{fg\-\_\-getattr}!fg_fuse.c@{fg\-\_\-fuse.\-c}}
+\subsubsection[{fg\-\_\-getattr}]{\setlength{\rightskip}{0pt plus 5cm}static int {\bf fg\-\_\-getattr} (
+\begin{DoxyParamCaption}
+\item[{const char $\ast$}]{path, }
+\item[{struct stat $\ast$}]{stbuf}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily  \mbox{[}static\mbox{]}}}}\label{fg__fuse_8c_a42dbbae5136f9ba9f45003e328ffeea6}
+\-Get file attributes.
+
+\-Similar to stat(). \-The 'st\-\_\-dev' and 'st\-\_\-blksize' files are ignored. \-The 'st\-\_\-ino' field is ignored exceptif the 'use\-\_\-ino' mount option is given. \hypertarget{fg__fuse_8c_aae17ec2405554adb32ff05b2ebf479dc}{\index{fg\-\_\-fuse.\-c@{fg\-\_\-fuse.\-c}!fg\-\_\-link@{fg\-\_\-link}}
+\index{fg\-\_\-link@{fg\-\_\-link}!fg_fuse.c@{fg\-\_\-fuse.\-c}}
+\subsubsection[{fg\-\_\-link}]{\setlength{\rightskip}{0pt plus 5cm}static int {\bf fg\-\_\-link} (
+\begin{DoxyParamCaption}
+\item[{const char $\ast$}]{from, }
+\item[{const char $\ast$}]{to}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily  \mbox{[}static\mbox{]}}}}\label{fg__fuse_8c_aae17ec2405554adb32ff05b2ebf479dc}
+\hypertarget{fg__fuse_8c_a88857c5cb5e61440f7271d8d7b51011a}{\index{fg\-\_\-fuse.\-c@{fg\-\_\-fuse.\-c}!fg\-\_\-mkdir@{fg\-\_\-mkdir}}
+\index{fg\-\_\-mkdir@{fg\-\_\-mkdir}!fg_fuse.c@{fg\-\_\-fuse.\-c}}
+\subsubsection[{fg\-\_\-mkdir}]{\setlength{\rightskip}{0pt plus 5cm}static int {\bf fg\-\_\-mkdir} (
+\begin{DoxyParamCaption}
+\item[{const char $\ast$}]{path, }
+\item[{mode\-\_\-t}]{mode}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily  \mbox{[}static\mbox{]}}}}\label{fg__fuse_8c_a88857c5cb5e61440f7271d8d7b51011a}
+\hypertarget{fg__fuse_8c_adc4b96121d51352ed0b5825abafa7f1e}{\index{fg\-\_\-fuse.\-c@{fg\-\_\-fuse.\-c}!fg\-\_\-mknod@{fg\-\_\-mknod}}
+\index{fg\-\_\-mknod@{fg\-\_\-mknod}!fg_fuse.c@{fg\-\_\-fuse.\-c}}
+\subsubsection[{fg\-\_\-mknod}]{\setlength{\rightskip}{0pt plus 5cm}static int {\bf fg\-\_\-mknod} (
+\begin{DoxyParamCaption}
+\item[{const char $\ast$}]{path, }
+\item[{mode\-\_\-t}]{mode, }
+\item[{dev\-\_\-t}]{rdev}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily  \mbox{[}static\mbox{]}}}}\label{fg__fuse_8c_adc4b96121d51352ed0b5825abafa7f1e}
+\hypertarget{fg__fuse_8c_acc9e9a1cecaa8d9e66b87401dec98a94}{\index{fg\-\_\-fuse.\-c@{fg\-\_\-fuse.\-c}!fg\-\_\-open@{fg\-\_\-open}}
+\index{fg\-\_\-open@{fg\-\_\-open}!fg_fuse.c@{fg\-\_\-fuse.\-c}}
+\subsubsection[{fg\-\_\-open}]{\setlength{\rightskip}{0pt plus 5cm}static int {\bf fg\-\_\-open} (
+\begin{DoxyParamCaption}
+\item[{const char $\ast$}]{path, }
+\item[{struct fuse\-\_\-file\-\_\-info $\ast$}]{fi}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily  \mbox{[}static\mbox{]}}}}\label{fg__fuse_8c_acc9e9a1cecaa8d9e66b87401dec98a94}
+\hypertarget{fg__fuse_8c_a0a8686cddbdfeac45160e50f7a2b0849}{\index{fg\-\_\-fuse.\-c@{fg\-\_\-fuse.\-c}!fg\-\_\-read@{fg\-\_\-read}}
+\index{fg\-\_\-read@{fg\-\_\-read}!fg_fuse.c@{fg\-\_\-fuse.\-c}}
+\subsubsection[{fg\-\_\-read}]{\setlength{\rightskip}{0pt plus 5cm}static int {\bf fg\-\_\-read} (
+\begin{DoxyParamCaption}
+\item[{const char $\ast$}]{path, }
+\item[{char $\ast$}]{buf, }
+\item[{size\-\_\-t}]{size, }
+\item[{off\-\_\-t}]{offset, }
+\item[{struct fuse\-\_\-file\-\_\-info $\ast$}]{fi}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily  \mbox{[}static\mbox{]}}}}\label{fg__fuse_8c_a0a8686cddbdfeac45160e50f7a2b0849}
+\hypertarget{fg__fuse_8c_a57fd9632870a3ad1d084b1bee78efff3}{\index{fg\-\_\-fuse.\-c@{fg\-\_\-fuse.\-c}!fg\-\_\-readdir@{fg\-\_\-readdir}}
+\index{fg\-\_\-readdir@{fg\-\_\-readdir}!fg_fuse.c@{fg\-\_\-fuse.\-c}}
+\subsubsection[{fg\-\_\-readdir}]{\setlength{\rightskip}{0pt plus 5cm}static int {\bf fg\-\_\-readdir} (
+\begin{DoxyParamCaption}
+\item[{const char $\ast$}]{path, }
+\item[{void $\ast$}]{buf, }
+\item[{fuse\-\_\-fill\-\_\-dir\-\_\-t}]{filler, }
+\item[{off\-\_\-t}]{offset, }
+\item[{struct fuse\-\_\-file\-\_\-info $\ast$}]{fi}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily  \mbox{[}static\mbox{]}}}}\label{fg__fuse_8c_a57fd9632870a3ad1d084b1bee78efff3}
+\hypertarget{fg__fuse_8c_a03909f37b6771886c3bd070db6a0d289}{\index{fg\-\_\-fuse.\-c@{fg\-\_\-fuse.\-c}!fg\-\_\-readlink@{fg\-\_\-readlink}}
+\index{fg\-\_\-readlink@{fg\-\_\-readlink}!fg_fuse.c@{fg\-\_\-fuse.\-c}}
+\subsubsection[{fg\-\_\-readlink}]{\setlength{\rightskip}{0pt plus 5cm}static int {\bf fg\-\_\-readlink} (
+\begin{DoxyParamCaption}
+\item[{const char $\ast$}]{path, }
+\item[{char $\ast$}]{buf, }
+\item[{size\-\_\-t}]{size}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily  \mbox{[}static\mbox{]}}}}\label{fg__fuse_8c_a03909f37b6771886c3bd070db6a0d289}
+\hypertarget{fg__fuse_8c_af81df566c92a45a4e50e1046607dcebc}{\index{fg\-\_\-fuse.\-c@{fg\-\_\-fuse.\-c}!fg\-\_\-release@{fg\-\_\-release}}
+\index{fg\-\_\-release@{fg\-\_\-release}!fg_fuse.c@{fg\-\_\-fuse.\-c}}
+\subsubsection[{fg\-\_\-release}]{\setlength{\rightskip}{0pt plus 5cm}static int {\bf fg\-\_\-release} (
+\begin{DoxyParamCaption}
+\item[{const char $\ast$}]{path, }
+\item[{struct fuse\-\_\-file\-\_\-info $\ast$}]{fi}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily  \mbox{[}static\mbox{]}}}}\label{fg__fuse_8c_af81df566c92a45a4e50e1046607dcebc}
+\hypertarget{fg__fuse_8c_afa726de3a6920581590e6607613b5fe8}{\index{fg\-\_\-fuse.\-c@{fg\-\_\-fuse.\-c}!fg\-\_\-rename@{fg\-\_\-rename}}
+\index{fg\-\_\-rename@{fg\-\_\-rename}!fg_fuse.c@{fg\-\_\-fuse.\-c}}
+\subsubsection[{fg\-\_\-rename}]{\setlength{\rightskip}{0pt plus 5cm}static int {\bf fg\-\_\-rename} (
+\begin{DoxyParamCaption}
+\item[{const char $\ast$}]{from, }
+\item[{const char $\ast$}]{to}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily  \mbox{[}static\mbox{]}}}}\label{fg__fuse_8c_afa726de3a6920581590e6607613b5fe8}
+\hypertarget{fg__fuse_8c_a276670d3cb8342d8a432316e8efb7c70}{\index{fg\-\_\-fuse.\-c@{fg\-\_\-fuse.\-c}!fg\-\_\-rmdir@{fg\-\_\-rmdir}}
+\index{fg\-\_\-rmdir@{fg\-\_\-rmdir}!fg_fuse.c@{fg\-\_\-fuse.\-c}}
+\subsubsection[{fg\-\_\-rmdir}]{\setlength{\rightskip}{0pt plus 5cm}static int {\bf fg\-\_\-rmdir} (
+\begin{DoxyParamCaption}
+\item[{const char $\ast$}]{path}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily  \mbox{[}static\mbox{]}}}}\label{fg__fuse_8c_a276670d3cb8342d8a432316e8efb7c70}
+\hypertarget{fg__fuse_8c_a3b260a1e37083749594c1ac449210b52}{\index{fg\-\_\-fuse.\-c@{fg\-\_\-fuse.\-c}!fg\-\_\-statfs@{fg\-\_\-statfs}}
+\index{fg\-\_\-statfs@{fg\-\_\-statfs}!fg_fuse.c@{fg\-\_\-fuse.\-c}}
+\subsubsection[{fg\-\_\-statfs}]{\setlength{\rightskip}{0pt plus 5cm}static int {\bf fg\-\_\-statfs} (
+\begin{DoxyParamCaption}
+\item[{const char $\ast$}]{path, }
+\item[{struct statvfs $\ast$}]{stbuf}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily  \mbox{[}static\mbox{]}}}}\label{fg__fuse_8c_a3b260a1e37083749594c1ac449210b52}
+\hypertarget{fg__fuse_8c_a2dd88068ebe4b1e7145e385f40a8a73b}{\index{fg\-\_\-fuse.\-c@{fg\-\_\-fuse.\-c}!fg\-\_\-symlink@{fg\-\_\-symlink}}
+\index{fg\-\_\-symlink@{fg\-\_\-symlink}!fg_fuse.c@{fg\-\_\-fuse.\-c}}
+\subsubsection[{fg\-\_\-symlink}]{\setlength{\rightskip}{0pt plus 5cm}static int {\bf fg\-\_\-symlink} (
+\begin{DoxyParamCaption}
+\item[{const char $\ast$}]{from, }
+\item[{const char $\ast$}]{to}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily  \mbox{[}static\mbox{]}}}}\label{fg__fuse_8c_a2dd88068ebe4b1e7145e385f40a8a73b}
+\hypertarget{fg__fuse_8c_afaee168a3ef65211e792c8f3b38d76d8}{\index{fg\-\_\-fuse.\-c@{fg\-\_\-fuse.\-c}!fg\-\_\-truncate@{fg\-\_\-truncate}}
+\index{fg\-\_\-truncate@{fg\-\_\-truncate}!fg_fuse.c@{fg\-\_\-fuse.\-c}}
+\subsubsection[{fg\-\_\-truncate}]{\setlength{\rightskip}{0pt plus 5cm}static int {\bf fg\-\_\-truncate} (
+\begin{DoxyParamCaption}
+\item[{const char $\ast$}]{path, }
+\item[{off\-\_\-t}]{size}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily  \mbox{[}static\mbox{]}}}}\label{fg__fuse_8c_afaee168a3ef65211e792c8f3b38d76d8}
+\hypertarget{fg__fuse_8c_a76c1b29b529df45dec6d376b125b1337}{\index{fg\-\_\-fuse.\-c@{fg\-\_\-fuse.\-c}!fg\-\_\-unlink@{fg\-\_\-unlink}}
+\index{fg\-\_\-unlink@{fg\-\_\-unlink}!fg_fuse.c@{fg\-\_\-fuse.\-c}}
+\subsubsection[{fg\-\_\-unlink}]{\setlength{\rightskip}{0pt plus 5cm}static int {\bf fg\-\_\-unlink} (
+\begin{DoxyParamCaption}
+\item[{const char $\ast$}]{path}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily  \mbox{[}static\mbox{]}}}}\label{fg__fuse_8c_a76c1b29b529df45dec6d376b125b1337}
+\hypertarget{fg__fuse_8c_ac6788de7fe8142e55733a7c656015d25}{\index{fg\-\_\-fuse.\-c@{fg\-\_\-fuse.\-c}!fg\-\_\-write@{fg\-\_\-write}}
+\index{fg\-\_\-write@{fg\-\_\-write}!fg_fuse.c@{fg\-\_\-fuse.\-c}}
+\subsubsection[{fg\-\_\-write}]{\setlength{\rightskip}{0pt plus 5cm}static int {\bf fg\-\_\-write} (
+\begin{DoxyParamCaption}
+\item[{const char $\ast$}]{path, }
+\item[{const char $\ast$}]{buf, }
+\item[{size\-\_\-t}]{size, }
+\item[{off\-\_\-t}]{offset, }
+\item[{struct fuse\-\_\-file\-\_\-info $\ast$}]{fi}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily  \mbox{[}static\mbox{]}}}}\label{fg__fuse_8c_ac6788de7fe8142e55733a7c656015d25}
+\hypertarget{fg__fuse_8c_a0ddf1224851353fc92bfbff6f499fa97}{\index{fg\-\_\-fuse.\-c@{fg\-\_\-fuse.\-c}!main@{main}}
+\index{main@{main}!fg_fuse.c@{fg\-\_\-fuse.\-c}}
+\subsubsection[{main}]{\setlength{\rightskip}{0pt plus 5cm}int {\bf main} (
+\begin{DoxyParamCaption}
+\item[{int}]{argc, }
+\item[{char $\ast$}]{argv\mbox{[}$\,$\mbox{]}}
+\end{DoxyParamCaption}
+)}}\label{fg__fuse_8c_a0ddf1224851353fc92bfbff6f499fa97}
+\hypertarget{fg__fuse_8c_a708a4c1a4d0c4acc4c447310dd4db27f}{\index{fg\-\_\-fuse.\-c@{fg\-\_\-fuse.\-c}!test@{test}}
+\index{test@{test}!fg_fuse.c@{fg\-\_\-fuse.\-c}}
+\subsubsection[{test}]{\setlength{\rightskip}{0pt plus 5cm}void {\bf test} (
+\begin{DoxyParamCaption}
+\item[{void}]{}
+\end{DoxyParamCaption}
+)}}\label{fg__fuse_8c_a708a4c1a4d0c4acc4c447310dd4db27f}
+\hyperlink{fg__git_8c}{fg\-\_\-git.\-c} 
+
+\subsection{\-Variable \-Documentation}
+\hypertarget{fg__fuse_8c_aa37f56469ba4f848f702784a1aa9448f}{\index{fg\-\_\-fuse.\-c@{fg\-\_\-fuse.\-c}!fg\-\_\-oper@{fg\-\_\-oper}}
+\index{fg\-\_\-oper@{fg\-\_\-oper}!fg_fuse.c@{fg\-\_\-fuse.\-c}}
+\subsubsection[{fg\-\_\-oper}]{\setlength{\rightskip}{0pt plus 5cm}struct fuse\-\_\-operations {\bf fg\-\_\-oper}\hspace{0.3cm}{\ttfamily  \mbox{[}static\mbox{]}}}}\label{fg__fuse_8c_aa37f56469ba4f848f702784a1aa9448f}
