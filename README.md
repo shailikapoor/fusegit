@@ -42,3 +42,8 @@ Please see the [wiki](http://github.com/varun729/fusegit/wiki) to track the prog
 ### Information
 Found another project with similar goals:
 [git-fs](http://github.com/patrickhaller/git-fs)
+
+
+
+
+
