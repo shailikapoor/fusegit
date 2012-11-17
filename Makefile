@@ -3,10 +3,10 @@
 # specify the folder. The repositories will be based on a timestamp, and 
 # linked to the folder.
 
-all: fg_fuse #docs
+all: fusegit #docs	# THE CREATION OF DOCS IS COMMENTED FOR NOW
 
-fg_fuse: clean src/fg_git.o
-	gcc -Wall -Iinclude src/fg_fuse.c fg_git.o `pkg-config fuse --cflags --libs` -o fg_fuse
+fusegit: clean src/fg_git.o
+	gcc -Wall -Iinclude src/fg_fuse.c fg_git.o `pkg-config fuse --cflags --libs` -o fusegit
 	rm fg_git.o
 
 src/fg_git.o:
@@ -16,4 +16,4 @@ docs:
 	doxygen doxy-config
 
 clean:
-	$(RM) fg_fuse
+	$(RM) fusegit
