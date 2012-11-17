@@ -1,4 +1,4 @@
-/**
+/*
  * Implements the FUSE API function calls
  * 
  * TODO The backup functionality can be called via `fg_fuse` giving it a 
@@ -11,18 +11,24 @@
 #define FUSE_USE_VERSION 29
 
 #include <fuse.h>
-//#include <stdio.h>
-//#include <string.h>
+#include <stdio.h>
+#include <string.h>
 #include <errno.h>
 #include "fg_vcs.h"
 #ifdef HAVE_SETXATTR
 #include <sys/xattr.h>
 #endif
 
-extern void test(void); // TODO remove this. This is just to test that the files in src folder and include folder are linked properly.
+
+static const char *fg_path = "/fgtmp";  // path for the /fgtmp file
+static const char *fg_str = "Welcome to Fuse GIT";  // content of the /fgtmp file 
+
+
+//extern void test(void); // TODO remove this. This is just to test that the files in src folder and include folder are linked properly.
 
 /**
- * Get file attributes.
+ * Get file attributes. 
+ * Returns the metadata about the file specified by the path in a special stat structure.  
  * 
  * Similar to stat(). The 'st_dev' and 'st_blksize' files are ignored. The
  * 'st_ino' field is ignored exceptif the 'use_ino' mount option is given.
@@ -31,16 +37,28 @@ extern void test(void); // TODO remove this. This is just to test that the files
  */
 static int fg_getattr(const char *path, struct stat *stbuf)
 {
-        int res = 0;
+        int res = 0; // temporary result 
+	
 	test(); // TODO remove this. This is just to test that the files in src folder and include folder are linked properly.
-        memset(stbuf, 0, sizeof(struct stat));
+        
+	memset(stbuf, 0, sizeof(struct stat)); // reset memory and setthe contents of the stat structure to 0
+
+	/* We have to check which file attributes we have to return.
+	 * st_mode in the stat structure will contain the file attributes, S_IFDIR == 0040000 and it marks 
+         * and it marks a file a directory. It is thne binary added to 0755 value. 
+	 * 
+	*/
 
         if (strcmp(path, "/") == 0) {
                 stbuf->st_mode = S_IFDIR | 0755;
                 stbuf->st_nlink = 2;
-        } else {
+        } else if (strcmp(path, fg_path) == 0){
+		stbuf->st_mode = S_IFREG | 0444;
+		stbuf->st_nlink = 1;
+		stbuf->st_size = strlen(fg_str);
+	} else 
                 res = -ENOENT;
-        }
+        
         return res;
 }
 
@@ -181,7 +199,16 @@ static int fg_truncate(const char *path, off_t size)
  */
 static int fg_open(const char *path, struct fuse_file_info *fi)
 {
-        return -ENOSYS;
+	// if the user if asking for anything besides /fgtmp, return  file does not exist
+        if(strcmp(path, fg_path) != 0)
+		return -ENOENT;
+	
+	// if the user wants to open the file for anything else than reading only, return  doesn't have sufficient permissions
+	if((fi->flags & 3) != O_RDONLY)
+		return -EACCES;
+
+	// else open the file
+	return 0;
 }
 
 /**
@@ -197,8 +224,26 @@ static int fg_open(const char *path, struct fuse_file_info *fi)
  */
 static int fg_read(const char *path, char *buf, size_t size, off_t offset,
                       struct fuse_file_info *fi)
-{
-        return -ENOSYS;
+{       
+	size_t len;
+	(void) fi;
+
+	if(strcmp(path, fg_path) != 0){
+		return -ENOENT;
+	}
+
+	if(strcmp(path, fg_path) == 0){
+		len = strlen(fg_str);
+		if(offset < len){
+			if(offset + size > len)
+				size = len - offset;
+			memcpy(buf, fg_str + offset, size);
+		}else
+			size=0;
+		
+	}
+
+        return size;
 }
 
 /**
@@ -313,6 +358,7 @@ static int fg_removexattr(const char *path, const char *name)
 static int fg_readdir(const char *path, void *buf, fuse_fill_dir_t filler, 
                          off_t offset, struct fuse_file_info *fi)
 {
+	
         return -ENOSYS;
 }
 
