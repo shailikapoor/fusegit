@@ -11,14 +11,18 @@
 #define FUSE_USE_VERSION 29
 
 #include <fuse.h>
+#include <fuse_opt.h>	// this is to read the input arguments
 #include <stdio.h>
+#include <stdlib.h>	// for exit()
 #include <string.h>
 #include <errno.h>
+#include <unistd.h>	// this is for getcwd
 #include "fg_vcs.h"
 #ifdef HAVE_SETXATTR
 #include <sys/xattr.h>
 #endif
 
+extern char *getcwd(char *buf, size_t size);
 
 static const char *fg_path = "/fgtmp";  // path for the /fgtmp file
 static const char *fg_str = "Welcome to Fuse GIT";  // content of the /fgtmp file 
@@ -434,8 +438,74 @@ static struct fuse_operations fg_oper = {
 	//.poll           = fg_poll, // TODO
 };
 
-int main(int argc, char *argv[])
+/**
+ * remove any trailing / from the mpoint which is returned
+ */
+	static void
+get_mountpoint(const char *arg, char *mpoint)
+{
+	char cwd[1024];
+	if (getcwd(cwd, sizeof(cwd)) != NULL)
+		printf("current working directory: %s\n", cwd);
+	printf("function is called for %s\n", arg);
+
+	const char *y = cwd;
+	while ((*mpoint = *y)) {
+		mpoint++;
+		y++;
+	}
+	y = arg;
+	*mpoint = '/'; mpoint++;
+	while ((*mpoint = *y)) {
+		mpoint++;
+		y++;
+	}
+}
+
+/**
+ * Process the mountpoint which the user has provided and then use it to create
+ * a git repository in the same parent folder.
+ */
+	static int
+proc_mountpoint(void *data, const char *arg, int key, struct fuse_args *outargs)
+{
+	int r;
+	static int times_called = 0;
+	if (times_called++ > 0)
+		return -1;
+	
+	// Now that we have checked that this is the only output we expect, i.e.
+	// this is the mountpoint of our filesystem. Check if a git repository
+	// already exists for this or not.
+	// If (git repository exists for this mountpoint)
+	// 	setup the file system to use the git repository
+	// Else
+	// 	create a git repository and setup the file system to use the git
+	// 	repository.
+	char repo[1024];
+	get_mountpoint(arg, repo);
+	printf("mountpoint is %s\n", repo);
+	if (strlen(repo) + strlen(".repo") >= 1023)
+		exit(-1);
+	strcpy(repo+strlen(repo), ".repo");
+	printf("repository is %s\n", repo);
+
+	// Now we have obtained the address of the repository, we can set it
+	if ((r = repo_setup(repo)) < 0)
+		exit(r);
+
+	return 0;
+}
+
+	int
+main(int argc, char *argv[])
 {
         umask(0); // XXX this provides the bits which will be masked for all the files which are to be created.
+
+	// creating the fuse_args to parse it for the mount-point
+	struct fuse_args args = FUSE_ARGS_INIT(argc, argv);
+	struct fuse_opt matching_opts[] = { FUSE_OPT_KEY("foo", 0) };
+	fuse_opt_parse(&args, NULL, matching_opts, (fuse_opt_proc_t)proc_mountpoint);
+
         return fuse_main(argc, argv, &fg_oper, NULL);
 }
