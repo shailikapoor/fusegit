@@ -6,6 +6,9 @@
  * the filesystem.
  * TODO it is unknown if I can actually know if the call is made from the current 
  * file system or not. This is annoying. :(
+ * 
+ * WHENEVER A FILE IS ACCESSED IN THIS FILESYSTEM, IT IS ALWAYS WITH RESPECT TO
+ * THE ROOT OF THIS FILE SYSTEM
  */
 
 #define FUSE_USE_VERSION 29
@@ -18,18 +21,21 @@
 #include <errno.h>
 #include <unistd.h>	// this is for getcwd
 #include "fg_vcs.h"
+#include "fg_util.h"
 #ifdef HAVE_SETXATTR
 #include <sys/xattr.h>
 #endif
 
-extern char *getcwd(char *buf, size_t size);
+
+static char FG_ROOT[1024];
 
 static const char *fg_path = "/fgtmp";  // path for the /fgtmp file
 static const char *fg_str = "Welcome to Fuse GIT";  // content of the /fgtmp file 
 
 
-//extern void test(void); // TODO remove this. This is just to test that the files in src folder and include folder are linked properly.
 
+//=============================================================================
+// FUSE FUNCTIONS
 /**
  * Get file attributes. 
  * Returns the metadata about the file specified by the path in a special stat structure.  
@@ -41,10 +47,11 @@ static const char *fg_str = "Welcome to Fuse GIT";  // content of the /fgtmp fil
  */
 static int fg_getattr(const char *path, struct stat *stbuf)
 {
+	// TODO all the code in this function is temporary and needs to be look
+	// over
+
         int res = 0; // temporary result 
 	
-	test(); // TODO remove this. This is just to test that the files in src folder and include folder are linked properly.
-        
 	memset(stbuf, 0, sizeof(struct stat)); // reset memory and setthe contents of the stat structure to 0
 
 	/* We have to check which file attributes we have to return.
@@ -56,7 +63,7 @@ static int fg_getattr(const char *path, struct stat *stbuf)
         if (strcmp(path, "/") == 0) {
                 stbuf->st_mode = S_IFDIR | 0755;
                 stbuf->st_nlink = 2;
-        } else if (strcmp(path, fg_path) == 0){
+        } else if (strcmp(path, "/hihihi") == 0){
 		stbuf->st_mode = S_IFREG | 0444;
 		stbuf->st_nlink = 1;
 		stbuf->st_size = strlen(fg_str);
@@ -203,6 +210,9 @@ static int fg_truncate(const char *path, off_t size)
  */
 static int fg_open(const char *path, struct fuse_file_info *fi)
 {
+	// TODO all the code in this function is temporary and needs to be look
+	// over
+
 	// if the user if asking for anything besides /fgtmp, return  file does not exist
         if(strcmp(path, fg_path) != 0)
 		return -ENOENT;
@@ -229,6 +239,9 @@ static int fg_open(const char *path, struct fuse_file_info *fi)
 static int fg_read(const char *path, char *buf, size_t size, off_t offset,
                       struct fuse_file_info *fi)
 {       
+	// TODO all the code in this function is temporary and needs to be look
+	// over
+
 	size_t len;
 	(void) fi;
 
@@ -348,7 +361,7 @@ static int fg_removexattr(const char *path, const char *name)
  * The filesystem may choose between two modes of operation.
  * 
  * 1) The readdir implementation ignores the offset parameter, and passes zero 
- * to the filler function's offset. The killer function will not return '1' 
+ * to the filler function's offset. The filler function will not return '1' 
  * (unless an error happens), so the whole directory is read in a single 
  * readdir operation.
  * 
@@ -362,8 +375,33 @@ static int fg_removexattr(const char *path, const char *name)
 static int fg_readdir(const char *path, void *buf, fuse_fill_dir_t filler, 
                          off_t offset, struct fuse_file_info *fi)
 {
+	// XXX no need to check if the path is for this filesystem
+	char name[1024] = ""; // name of the path component
+	int hier = 0; // stores the index in the hierarchy, starting from 0
 	
-        return -ENOSYS;
+	while (get_next_component(path, hier++, name)) {
+		if (!repo_path_exists(name))
+			return -ENOENT;
+	}
+	if (repo_is_file(name))
+		return -ENOENT;
+	
+	// this function implements the first mode of operation, where offset is
+	// ignored.
+
+	// TODO find the contents of the directory and then call the filler function
+	// for each of the entries one by one.
+
+	// TODO the filler function takes buf, name of the entry, struct stat of the
+	// entry and offset.
+	
+	// TODO below is a temporary code. need to be removed.
+	filler(buf, ".", NULL, 0);
+	filler(buf, "..", NULL, 0);
+	filler(buf, "hihihi", NULL, 0);
+
+	// if the path doesn't exist then return -ENOENT
+        return 0;
 }
 
 /**
@@ -410,7 +448,7 @@ static struct fuse_operations fg_oper = {
         .read	        = fg_read,
         .write	        = fg_write,
         .statfs	        = fg_statfs,
-	//.flush          = fg_flush, // TODO
+        //.flush          = fg_flush, // TODO
         .release	= fg_release,
         .fsync	        = fg_fsync,
 #ifdef HAVE_SETXATTR
@@ -423,19 +461,19 @@ static struct fuse_operations fg_oper = {
         .readdir	= fg_readdir,
         //.releasedir	= fg_releasedir, // TODO
         //.fsyncdir	= fg_fsyncdir, // TODO
-	//.init           = fg_init, // TODO
-	//.destroy        = fg_destroy, // TODO
+        //.init           = fg_init, // TODO
+        //.destroy        = fg_destroy, // TODO
         .access	        = fg_access,
-	//.create         = fg_create, // TODO
-	//.ftruncate      = fg_ftruncate, // TODO
-	//.fgetattr       = fg_fgetattr, // TODO
-	//.lock           = fg_lock, // TODO
+        //.create         = fg_create, // TODO
+        //.ftruncate      = fg_ftruncate, // TODO
+        //.fgetattr       = fg_fgetattr, // TODO
+        //.lock           = fg_lock, // TODO
 #ifdef HAVE_UTIMENSAT
         .utimens	= fg_utimens,
 #endif
-	//.bmap           = fg_bmap, // TODO
-	//.ioctl          = fg_ioctl, // TODO
-	//.poll           = fg_poll, // TODO
+        //.bmap           = fg_bmap, // TODO
+        //.ioctl          = fg_ioctl, // TODO
+        //.poll           = fg_poll, // TODO
 };
 
 /**
@@ -484,6 +522,7 @@ proc_mountpoint(void *data, const char *arg, int key, struct fuse_args *outargs)
 	// 	repository.
 	char repo[1024];
 	get_mountpoint(arg, repo);
+	strcpy(FG_ROOT, repo);
 	printf("mountpoint is %s\n", repo);
 	if (strlen(repo) + strlen(".repo") >= 1023)
 		exit(-1);
