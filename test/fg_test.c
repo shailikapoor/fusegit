@@ -28,37 +28,63 @@ static void test_get_last_component(void)
 	printf("\n\nTest get_last_component:\n\n");
 	char a[100] = "/home/varun/test1/test2/test3";
 	char b[100] = "/home/varun/test1/test2/test3/";
+	char c[100] = "/";
 	char test[100];
 
 	get_last_component(a, test);
 	printf("\tlast component of %s is %s\n", a, test);
 	get_last_component(b, test);
 	printf("\tlast component of %s is %s\n", b, test);
+	get_last_component(c, test);
+	printf("\tlast component of %s is %s\n", c, test);
 }
 
 static void test_get_next_component(void)
 {
 	printf("\n\nTest get_next_component:\n\n");
-	char a[100] = "/home/varun/test1/test2/test3/";
+	char a[100] = "/home/varun/test1/test2/test3";
+	char b[100] = "/home/varun/test1/test2/test3/";
 	char name[100] = "";
+	int r;
+	int hier;
 	
 	printf("\tPath is: %s\n", a);
 	
-	int hier = 0;
-	get_next_component(a, hier++, name);
-	printf("\t%i : %s\n", hier, name);
-	get_next_component(a, hier++, name);
-	printf("\t%i : %s\n", hier, name);
-	get_next_component(a, hier++, name);
-	printf("\t%i : %s\n", hier, name);
-	get_next_component(a, hier++, name);
-	printf("\t%i : %s\n", hier, name);
-	get_next_component(a, hier++, name);
-	printf("\t%i : %s\n", hier, name);
-	get_next_component(a, hier++, name);
-	printf("\t%i : %s\n", hier, name);
-	get_next_component(a, hier++, name);
-	printf("\t%i : %s\n", hier, name);
+	hier = 0;
+	r = get_next_component(a, hier++, name);
+	printf("\t%d : %d : %s\n", r, hier, name);
+	r = get_next_component(a, hier++, name);
+	printf("\t%d : %d : %s\n", r, hier, name);
+	r = get_next_component(a, hier++, name);
+	printf("\t%d : %d : %s\n", r, hier, name);
+	r = get_next_component(a, hier++, name);
+	printf("\t%d : %d : %s\n", r, hier, name);
+	r = get_next_component(a, hier++, name);
+	printf("\t%d : %d : %s\n", r, hier, name);
+	r = get_next_component(a, hier++, name);
+	printf("\t%d : %d : %s\n", r, hier, name);
+	r = get_next_component(a, hier++, name);
+	printf("\t%d : %d : %s\n", r, hier, name);
+
+	printf("\tPath is: %s\n", b);
+		
+	hier = 0;
+	*name = '\0';
+	r = get_next_component(b, hier++, name);
+	printf("\t%d : %d : %s\n", r, hier, name);
+	r = get_next_component(b, hier++, name);
+	printf("\t%d : %d : %s\n", r, hier, name);
+	r = get_next_component(b, hier++, name);
+	printf("\t%d : %d : %s\n", r, hier, name);
+	r = get_next_component(b, hier++, name);
+	printf("\t%d : %d : %s\n", r, hier, name);
+	r = get_next_component(b, hier++, name);
+	printf("\t%d : %d : %s\n", r, hier, name);
+	r = get_next_component(b, hier++, name);
+	printf("\t%d : %d : %s\n", r, hier, name);
+	r = get_next_component(b, hier++, name);
+	printf("\t%d : %d : %s\n", r, hier, name);
+
 }
 
 int main(int argc, char *argv[])

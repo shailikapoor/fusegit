@@ -5,15 +5,15 @@
 
 all: fusegit #docs	# THE CREATION OF DOCS IS COMMENTED FOR NOW
 
-fusegit: clean src/fg_git.o src/fg_util.o
+fusegit: clean src/fg_util.o src/fg_git.o
 	@echo "Compiling the complete library..."
 	@gcc -Wall -Iinclude src/fg_fuse.c fg_git.o fg_util.o `pkg-config fuse --cflags --libs` -lgit2 -o fusegit
 	@echo "Removing the object file..."
 	@rm fg_git.o fg_util.o
 
-src/fg_git.o:
+src/fg_git.o: src/fg_util.o
 	@echo "Compiling the git code..."
-	@gcc -c -Wall -Iinclude -lgit2 src/fg_git.c
+	@gcc -c -Wall -Iinclude -lgit2 src/fg_git.c fg_util.o
 
 src/fg_util.o:
 	@echo "Compiling the util code..."

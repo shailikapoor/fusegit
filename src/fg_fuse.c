@@ -378,6 +378,9 @@ static int fg_readdir(const char *path, void *buf, fuse_fill_dir_t filler,
 	// XXX no need to check if the path is for this filesystem
 	char name[1024] = ""; // name of the path component
 	int hier = 0; // stores the index in the hierarchy, starting from 0
+	struct fg_file_node *children;
+	int children_count;
+	int i, r;
 	
 	while (get_next_component(path, hier++, name)) {
 		if (!repo_path_exists(name))
@@ -386,11 +389,15 @@ static int fg_readdir(const char *path, void *buf, fuse_fill_dir_t filler,
 	if (repo_is_file(name))
 		return -ENOENT;
 	
-	// this function implements the first mode of operation, where offset is
-	// ignored.
+	// NOTE : this function implements the first mode of operation, where
+	// offset is ignored.
 
 	// TODO find the contents of the directory and then call the filler function
 	// for each of the entries one by one.
+	if ((r = repo_get_children(&children, &children_count, path)) < 0)
+		return -ENOENT;
+	fprintf(stdout, "CHILDREN OBTAINED FROM GIT REPO : %d\n",
+		children_count);
 
 	// TODO the filler function takes buf, name of the entry, struct stat of the
 	// entry and offset.
@@ -398,7 +405,13 @@ static int fg_readdir(const char *path, void *buf, fuse_fill_dir_t filler,
 	// TODO below is a temporary code. need to be removed.
 	filler(buf, ".", NULL, 0);
 	filler(buf, "..", NULL, 0);
-	filler(buf, "hihihi", NULL, 0);
+	for (i=0; i<children_count; i++) {
+		fprintf(stdout, "adding ");
+		fprintf(stdout, "%s\n", children[i].name);
+		filler(buf, children[i].name, NULL, 0);
+		fprintf(stdout, "added\n");
+	}
+	free(children);
 
 	// if the path doesn't exist then return -ENOENT
         return 0;
