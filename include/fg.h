@@ -1,0 +1,4 @@
+
+
+
+#define	PATH_MAX_LENGTH	1024

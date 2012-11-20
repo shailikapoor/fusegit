@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <git2.h>
+#include "fg.h"
 #include "fg_vcs.h"
 #include "fg_util.h"
 
@@ -20,8 +21,8 @@ l_get_path_tree(git_tree **tree, const char *path)
 	git_tree_entry *tree_entry;	// TODO how to manage the pointer
 	git_object *object;	// TODO how to manage the pointer
 
-	char name[1024];
-	char last[1024];
+	char name[PATH_MAX_LENGTH];
+	char last[PATH_MAX_LENGTH];
 	int hier;
 	int r;
 

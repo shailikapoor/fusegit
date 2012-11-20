@@ -20,6 +20,7 @@
 #include <string.h>
 #include <errno.h>
 #include <unistd.h>	// this is for getcwd
+#include "fg.h"
 #include "fg_vcs.h"
 #include "fg_util.h"
 #ifdef HAVE_SETXATTR
@@ -27,7 +28,8 @@
 #endif
 
 
-static char FG_ROOT[1024];
+
+static char FG_ROOT[PATH_MAX_LENGTH];
 
 static const char *fg_path = "/fgtmp";  // path for the /fgtmp file
 static const char *fg_str = "Welcome to Fuse GIT";  // content of the /fgtmp file 
@@ -376,7 +378,7 @@ static int fg_readdir(const char *path, void *buf, fuse_fill_dir_t filler,
                          off_t offset, struct fuse_file_info *fi)
 {
 	// XXX no need to check if the path is for this filesystem
-	char name[1024] = ""; // name of the path component
+	char name[PATH_MAX_LENGTH] = ""; // name of the path component
 	int hier = 0; // stores the index in the hierarchy, starting from 0
 	struct fg_file_node *children;
 	int children_count;
@@ -495,7 +497,7 @@ static struct fuse_operations fg_oper = {
 	static void
 get_mountpoint(const char *arg, char *mpoint)
 {
-	char cwd[1024];
+	char cwd[PATH_MAX_LENGTH];
 	if (getcwd(cwd, sizeof(cwd)) != NULL)
 		printf("current working directory: %s\n", cwd);
 	printf("function is called for %s\n", arg);
@@ -533,11 +535,11 @@ proc_mountpoint(void *data, const char *arg, int key, struct fuse_args *outargs)
 	// Else
 	// 	create a git repository and setup the file system to use the git
 	// 	repository.
-	char repo[1024];
+	char repo[PATH_MAX_LENGTH];
 	get_mountpoint(arg, repo);
 	strcpy(FG_ROOT, repo);
 	printf("mountpoint is %s\n", repo);
-	if (strlen(repo) + strlen(".repo") >= 1023)
+	if (strlen(repo) + strlen(".repo") >= PATH_MAX_LENGTH-1)
 		exit(-1);
 	strcpy(repo+strlen(repo), ".repo");
 	printf("repository is %s\n", repo);
