@@ -70,6 +70,11 @@ static int fg_getattr(const char *path, struct stat *stbuf)
 
 	// Procedure
 	// Ask the repository to do this job for you
+
+	// NOTE :
+	// st_mode : this is obtained from the tree_entry attribute,
+	// 	t_entry->attr
+	// st_oid  : this is obtained from the tree_entry oid, t_entry->oid
 	int r;
 	
 	fprintf(stdout, "getting attribute of %s\n", path);
