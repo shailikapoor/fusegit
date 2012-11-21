@@ -152,6 +152,9 @@ static int fg_unlink(const char *path)
  */
 static int fg_rmdir(const char *path)
 {
+	// removes an empty directory
+	// first check if the directory is empty, if it is empty, delete it
+	// TODO
         return -ENOSYS;
 }
 
@@ -402,28 +405,29 @@ static int fg_readdir(const char *path, void *buf, fuse_fill_dir_t filler,
 	int i, r;
 	
 	while (get_next_component(path, hier++, name)) {
+		// if the path doesn't exist then return -ENOENT
 		if (!repo_path_exists(name))
 			return -ENOENT;
 	}
+	// if the path doesn't exist then return -ENOENT
 	if (repo_is_file(name))
 		return -ENOENT;
 	
 	// NOTE : this function implements the first mode of operation, where
 	// offset is ignored.
 
-	// TODO find the contents of the directory and then call the filler function
+	// find the contents of the directory and then call the filler function
 	// for each of the entries one by one.
 	if ((r = repo_get_children(&children, &children_count, path)) < 0)
 		return -ENOENT;
 	fprintf(stdout, "CHILDREN OBTAINED FROM GIT REPO : %d\n",
 		children_count);
 
-	// TODO the filler function takes buf, name of the entry, struct stat of the
-	// entry and offset.
-	
-	// TODO below is a temporary code. need to be removed.
 	filler(buf, ".", NULL, 0);
 	filler(buf, "..", NULL, 0);
+	
+	// the filler function takes buf, name of the entry, struct stat of the
+	// entry and offset.
 	for (i=0; i<children_count; i++) {
 		fprintf(stdout, "adding ");
 		fprintf(stdout, "%s\n", children[i].name);
@@ -432,7 +436,6 @@ static int fg_readdir(const char *path, void *buf, fuse_fill_dir_t filler,
 	}
 	free(children);
 
-	// if the path doesn't exist then return -ENOENT
         return 0;
 }
 
