@@ -146,7 +146,7 @@ repo_get_children(struct fg_file_node **children, int *count, const char *path)
 
 	fprintf(stdout, "ENTERING THE l_get_path_tree: \"%s\"\n", path);
 	if ((r = l_get_path_tree(&tree, path)) < 0)
-		return NULL;
+		return -1;
 	
 	n = git_tree_entrycount(tree);
 	struct fg_file_node *nodes = malloc(n * sizeof(struct fg_file_node));
