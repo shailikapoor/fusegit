@@ -13,11 +13,12 @@ fusegit: clean src/fg_util.o src/fg_git.o
 
 src/fg_git.o: src/fg_util.o
 	@echo "Compiling the git code..."
-	@gcc -c -Wall -Iinclude -lgit2 src/fg_git.c fg_util.o
+	@gcc -c -Wall -Iinclude -lgit2 src/fg_git.c fg_util.o `pkg-config fuse --cflags --libs`
 
 src/fg_util.o:
 	@echo "Compiling the util code..."
-	@gcc -c -Wall -Iinclude src/fg_util.c
+	@gcc -c -Wall -Iinclude src/fg_util.c `pkg-config fuse --cflags --libs`
+
 
 test: src/fg_util.o
 	@echo "Compiling the test functions for util..."

@@ -1,7 +1,7 @@
 
-
 #include <stdio.h>
 #include <string.h>
+#include "fg.h"
 
 
 
@@ -54,3 +54,18 @@ int get_next_component(const char *path, int hier, char *name)
 	return 1;
 }
 
+// print file stats
+void print_file_stats(const char *path, struct stat *stbuf)
+{
+	fprintf(stdout, "***PRINT STAT : %s\n", path);
+	fprintf(stdout, "\tdev=%x\n", stbuf->st_dev);
+	fprintf(stdout, "\tino=%x\n", stbuf->st_ino);
+	fprintf(stdout, "\tmode=%x\n", stbuf->st_mode);
+	fprintf(stdout, "\tnlink=%x\n", stbuf->st_nlink);
+	fprintf(stdout, "\tuid=%x\n", stbuf->st_uid);
+	fprintf(stdout, "\tgid=%x\n", stbuf->st_gid);
+	fprintf(stdout, "\tsize=%x\n", stbuf->st_size);
+	fprintf(stdout, "\tmtime=%x\n", stbuf->st_mtime);
+	fprintf(stdout, "\tctime=%x\n", stbuf->st_ctime);
+	fprintf(stdout, "***PRINT STAT OVER\n\n");
+}

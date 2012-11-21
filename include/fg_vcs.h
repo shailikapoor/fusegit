@@ -3,14 +3,12 @@
  */
 
 // DATA STRUCTURES
-struct fg_stat {
 
-};
 
 struct fg_file_node {
 	const char *name;
 	const char *path;
-	const struct fg_stat *stat;
+	const struct stat *stbuf;
 };
 
 
@@ -23,3 +21,9 @@ int repo_path_exists(const char *path);
 int repo_is_file(const char *path);
 
 int repo_get_children(struct fg_file_node **children, int *count, const char *path);
+
+int repo_stat(const char *path, struct stat *stbuf);
+
+int repo_dir_stat(const char *path, struct stat *stbuf);
+
+int repo_isdir(const char *path);

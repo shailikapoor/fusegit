@@ -11,9 +11,9 @@
  * THE ROOT OF THIS FILE SYSTEM
  */
 
-#define FUSE_USE_VERSION 29
+//#define FUSE_USE_VERSION 29
 
-#include <fuse.h>
+//#include <fuse.h>
 #include <fuse_opt.h>	// this is to read the input arguments
 #include <stdio.h>
 #include <stdlib.h>	// for exit()
@@ -42,26 +42,21 @@ static const char *fg_str = "Welcome to Fuse GIT";  // content of the /fgtmp fil
  * Get file attributes. 
  * Returns the metadata about the file specified by the path in a special stat structure.  
  * 
- * Similar to stat(). The 'st_dev' and 'st_blksize' files are ignored. The
+ * Similar to stat(). The 'st_dev' and 'st_blksize' fields are ignored. The
  * 'st_ino' field is ignored exceptif the 'use_ino' mount option is given.
  * 
  * XXX 
  */
 static int fg_getattr(const char *path, struct stat *stbuf)
 {
-	// TODO all the code in this function is temporary and needs to be look
-	// over
-
+	/*
         int res = 0; // temporary result 
 	
 	memset(stbuf, 0, sizeof(struct stat)); // reset memory and setthe contents of the stat structure to 0
 
-	/* We have to check which file attributes we have to return.
-	 * st_mode in the stat structure will contain the file attributes, S_IFDIR == 0040000 and it marks 
-         * and it marks a file a directory. It is thne binary added to 0755 value. 
-	 * 
-	*/
-
+	// We have to check which file attributes we have to return.
+	// st_mode in the stat structure will contain the file attributes, S_IFDIR == 0040000 and it marks 
+        // and it marks a file a directory. It is thne binary added to 0755 value. 
         if (strcmp(path, "/") == 0) {
                 stbuf->st_mode = S_IFDIR | 0755;
                 stbuf->st_nlink = 2;
@@ -71,8 +66,25 @@ static int fg_getattr(const char *path, struct stat *stbuf)
 		stbuf->st_size = strlen(fg_str);
 	} else 
                 res = -ENOENT;
-        
-        return res;
+	*/
+
+	// Procedure
+	// Ask the repository to do this job for you
+	int r;
+	
+	fprintf(stdout, "getting attribute of %s\n", path);
+	if ((r = repo_isdir(path))) {
+		fprintf(stdout, "is directory %s\n", path);
+		if ((r = repo_dir_stat(path, stbuf)) < 0)
+			return -ENOENT;
+		print_file_stats(path, stbuf);
+		return 0;
+	}
+	if ((r = repo_stat(strcmp("/", path) ? path : "/.", stbuf)) < 0)
+		return -ENOENT;
+	print_file_stats(path, stbuf);
+	
+        return 0;
 }
 
 /**

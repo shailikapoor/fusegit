@@ -10,3 +10,4 @@ int get_last_component(const char *path, char *name);
 
 int get_next_component(const char *path, int hier, char *name);
 
+void print_file_stats(const char *path, struct stat *stbuf);

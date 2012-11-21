@@ -161,3 +161,122 @@ repo_get_children(struct fg_file_node **children, int *count, const char *path)
 	fprintf(stdout, "FINISHED GETTING CHILDREN\n");
 	return 0;
 }
+
+/**
+ *
+ */
+ 	int
+repo_stat(const char *path, struct stat *stbuf)
+{
+	// Get the git index, using 'git_index_get_bypath' function call and
+	// then use the result to obtain the values
+	// Following values can be obtained from the index_entry:
+	// 	git_index_time ctime
+	//	git_index_time mtime
+	//	unsigned int dev
+	//	unsigned int ino
+	//	unsigned int mode
+	//	unsigned int uid
+	//	unsigned int gid
+	//	git_off_t file_size
+	//	git_oid oid
+	//	unsigned short flags
+	//	unsigned short flags_extended
+	//	char *path
+	// We can set whatever values are required to be set:
+	//	struct stat {
+	//		dev_t     st_dev;     /* ID of device containing file */
+	//		ino_t     st_ino;     /* inode number */
+	//		mode_t    st_mode;    /* protection */
+	//		nlink_t   st_nlink;   /* number of hard links */
+	//		uid_t     st_uid;     /* user ID of owner */
+	//		gid_t     st_gid;     /* group ID of owner */
+	//		dev_t     st_rdev;    /* device ID (if special file) */
+	//		off_t     st_size;    /* total size, in bytes */
+	//		blksize_t st_blksize; /* blocksize for file system I/O */
+	//		blkcnt_t  st_blocks;  /* number of 512B blocks allocated */
+	//		time_t    st_atime;   /* time of last access */
+	//		time_t    st_mtime;   /* time of last modification */
+	//		time_t    st_ctime;   /* time of last status change */
+	//	};
+	int r;
+	git_index *index;	// TODO manage memory
+	git_index_entry *index_entry;
+	git_tree *tree;
+	int n;
+
+	fprintf(stdout, "GET STAT : %s : STAT : %x\n", path, stbuf);
+	//fprintf(stdout, "TRYING TO GET THE TREE\n");
+	if ((r = l_get_path_tree(&tree, "/")) < 0)
+		return -1;
+	if ((r = git_repository_index(&index, repo)) < 0)
+		return -1;
+	//fprintf(stdout, "OBTAINED THE TREE\n");
+	if ((r = git_index_read_tree(index, tree)) < 0)
+		return -1;
+	//fprintf(stdout, "READING THE TREE IN THE INDEX\n");
+	
+	path += 1;	// remove the leading '/'
+	n = git_index_find(index, path);
+	//fprintf(stdout, "INDEX of %s : %d : TOTAL IN INDEX=%d\n", path, n,
+	//git_index_entrycount(index));
+	if (n < 0)
+		return -1;
+	index_entry = git_index_get(index, n);
+
+	//fprintf(stdout, "HURRAY!!!!!!!!! %d %x %s %x\n", n, index_entry, path,
+	//index);
+	stbuf->st_dev = index_entry->dev;     /* ID of device containing file */
+	stbuf->st_ino = index_entry->ino;     /* inode number */
+	stbuf->st_mode = index_entry->mode;    /* protection */
+	stbuf->st_nlink = 1;   /* number of hard links */
+	stbuf->st_uid = index_entry->uid;     /* user ID of owner */
+	stbuf->st_gid = index_entry->gid;     /* group ID of owner */
+	//stbuf->st_rdev = index_entry->rdev;    /* device ID (if special file) */
+	stbuf->st_size = index_entry->file_size;    /* total size, in bytes */
+	//stbuf->st_blksize = index_entry->blksize; /* blocksize for file system I/O */
+	//stbuf->st_blocks = index_entry->blocks;  /* number of 512B blocks allocated */
+	//stbuf->st_atime = index_entry->atime;   /* time of last access */
+	stbuf->st_mtime = index_entry->mtime.seconds;   /* time of last modification */
+	stbuf->st_ctime = index_entry->ctime.seconds;   /* time of last status change */
+	
+	return 0;
+}
+
+/**
+ * is the path a directory
+ */
+	int
+repo_isdir(const char *path)
+{
+	int r;
+	git_tree *tree;
+	
+	if ((r = l_get_path_tree(&tree, path)) == 0)
+		return 1;	// is a directory
+	return 0;	// is not a directory
+}
+
+/**
+ * get the stat for a directory
+ */
+	int
+repo_dir_stat(const char *path, struct stat *stbuf)
+{
+	stbuf->st_dev = 0;     /* ID of device containing file */
+	stbuf->st_ino = 0;     /* inode number */
+	stbuf->st_mode = S_IFDIR | 0755;    /* protection */
+	stbuf->st_nlink = 2;   /* number of hard links */
+	stbuf->st_uid = 0;     /* user ID of owner */
+	stbuf->st_gid = 0;     /* group ID of owner */
+	//stbuf->st_rdev = index_entry->rdev;    /* device ID (if special file) */
+	stbuf->st_size = 0;    /* total size, in bytes */
+	//stbuf->st_blksize = index_entry->blksize; /* blocksize for file system I/O */
+	//stbuf->st_blocks = index_entry->blocks;  /* number of 512B blocks allocated */
+	//stbuf->st_atime = index_entry->atime;   /* time of last access */
+	stbuf->st_mtime = 0;   /* time of last modification */
+	stbuf->st_ctime = 0;   /* time of last status change */
+	
+	return 0;
+}
+
