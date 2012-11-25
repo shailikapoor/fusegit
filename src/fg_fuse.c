@@ -128,7 +128,6 @@ static int fg_mknod(const char *path, mode_t mode, dev_t rdev)
  * i.e. S_ISDIR(mode) can be false. To obtain the correct directory type bits 
  * use mode|S_IFDIR
  * 
- * XXX 
  */
 static int fg_mkdir(const char *path, mode_t mode)
 {
@@ -153,7 +152,6 @@ static int fg_unlink(const char *path)
 /**
  * Remove a directory
  * 
- * XXX 
  */
 static int fg_rmdir(const char *path)
 {
@@ -175,6 +173,7 @@ static int fg_rmdir(const char *path)
 		case -EFG_NOTEMPTY:
 			return -ENOTEMPTY;
 		}
+		return -ENOENT;
 	}
         return 0;
 }
@@ -202,11 +201,25 @@ static int fg_rename(const char *from, const char *to)
 /**
  * Create a hard link to a file
  * 
- * XXX 
+ * FIXIT hard links are set, but when you change the content of the file, a new
+ * blob will be created, and this will not reflect in the linked file. So take
+ * care to actually move the link along with the file.
  */
 static int fg_link(const char *from, const char *to)
 {
-        return -ENOSYS;
+	int r;
+
+	if ((r = repo_link(from, to)) < 0) {
+		switch(r) {
+		case -EFG_UNKNOWN:
+			return -ENOENT;
+		case -EFG_NOLINK:
+			return -ENOLINK;
+		}
+		return -ENOLINK;
+	}
+
+	return 0;
 }
 
 /**

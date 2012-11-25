@@ -5,6 +5,7 @@
 // ERROR CODES
 #define EFG_UNKNOWN	1
 #define EFG_NOTEMPTY	2
+#define EFG_NOLINK	3
 
 // DATA STRUCTURES
 
@@ -35,3 +36,5 @@ int repo_isdir(const char *path);
 int repo_mkdir(const char *path, unsigned int attr);
 
 int repo_rmdir(const char *path);
+
+int repo_link(const char *from, const char *to);
