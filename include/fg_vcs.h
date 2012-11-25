@@ -38,3 +38,5 @@ int repo_mkdir(const char *path, unsigned int attr);
 int repo_rmdir(const char *path);
 
 int repo_link(const char *from, const char *to);
+
+int repo_unlink(const char *path);

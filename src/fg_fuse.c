@@ -146,7 +146,11 @@ static int fg_mkdir(const char *path, mode_t mode)
  */
 static int fg_unlink(const char *path)
 {
-        return -ENOSYS;
+	int r;
+
+	if ((r = repo_unlink(path)) < 0)
+		return -ENOLINK;
+        return 0;
 }
 
 /**
