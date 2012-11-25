@@ -52,23 +52,6 @@ l_get_path_tree(git_tree **tree, const char *path)
 	int hier;
 	int r;
 
-	/*
-	// obtaining the head
-	fprintf(stdout, "OBTAINING THE HEAD\n");
-	if ((r = git_repository_head(&ref, repo)) < 0)
-		return -1;
-
-	// obtaining the commit id from the reference
-	fprintf(stdout, "OBTAINING commit id from the reference\n");
-	if ((r = git_reference_name_to_oid(&oid, repo, git_reference_name(ref)))
-		< 0)
-		return -1;
-
-	// obtaining the commit from the commit id
-	fprintf(stdout, "OBTAINING commit from the commit id\n");
-	if ((r = git_commit_lookup(&commit, repo, &oid)) < 0)
-		return -1;
-	*/
 	// get the last commit, i.e. pointing to the reference
 	if ((r = l_get_last_commit(&commit)) < 0)
 		return -1;
@@ -107,19 +90,7 @@ l_get_path_tree(git_tree **tree, const char *path)
 	}
 	*tree = l_tree;
 	fprintf(stdout, "SUCCESSFUL\n");
-
-	// while (l_tree is not the last tree) {
-	// 	n = git_tree_entrycount(l_tree);
-	//	req_comp = next component in path;
-	//	for (i=0; i<n; i++) {
-	//		entry = get_tree_entry(i);
-	//		if (entry is req_comp)
-	//			break;
-	//	}
-	//	l_tree = tree corresponding to the entry
-	// }
-	// *tree = l_tree;
-
+	
 	return 0;
 }
 
