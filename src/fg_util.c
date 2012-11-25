@@ -10,6 +10,31 @@ int is_substr(const char *str, const char *sub)
 	return strstr(str, sub) ? 1 : 0;
 }
 
+int get_parent_path(const char *path, char *parent)
+{
+	char *tmp;
+	int old_len;
+	int new_len;
+
+	if (path)
+		strcpy(parent, path);
+	tmp = rindex(parent, '/');
+	old_len = strlen(parent);
+
+	*(tmp+1) = '\0';
+	new_len = strlen(parent);
+
+	if ((old_len == new_len) && (strcmp(parent, "/") == 0))
+		return -1;
+	if (old_len == new_len) {
+		*tmp = '\0';
+		tmp = rindex(parent, '/');
+		*(tmp+1) = '\0';
+	}
+
+	return 0;
+}
+
 int get_last_component(const char *path, char *name)
 {
 	if (*path != '/')

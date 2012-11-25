@@ -87,10 +87,37 @@ static void test_get_next_component(void)
 
 }
 
+void test_get_parent_path(void)
+{
+	printf("\n\nTest get_parent_path:\n\n");
+	char a[100] = "/this/is/a/path/";
+	char b[100] = "/this/is/a/path";
+	char c[100] = "/";
+	char d[100] = "/abc";
+	char *tmp;
+	char test[100];
+
+	tmp = a;
+	get_parent_path(tmp, test);
+	printf("\t%s : %s\n", tmp, test);
+	get_parent_path(NULL, test);
+	printf("\tPrevious result : %s\n", test);
+	tmp = b;
+	get_parent_path(tmp, test);
+	printf("\t%s : %s\n", tmp, test);
+	tmp = c;
+	get_parent_path(tmp, test);
+	printf("\t%s : %s\n", tmp, test);
+	tmp = d;
+	get_parent_path(tmp, test);
+	printf("\t%s : %s\n", tmp, test);
+}
+
 int main(int argc, char *argv[])
 {
 	test_is_substr();
 	test_get_last_component();
 	test_get_next_component();
+	test_get_parent_path();
 	return 0;
 }

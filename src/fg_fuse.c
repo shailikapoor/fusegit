@@ -82,12 +82,12 @@ static int fg_getattr(const char *path, struct stat *stbuf)
 		fprintf(stdout, "is directory %s\n", path);
 		if ((r = repo_dir_stat(path, stbuf)) < 0)
 			return -ENOENT;
-		print_file_stats(path, stbuf);
+		//print_file_stats(path, stbuf);
 		return 0;
 	}
 	if ((r = repo_stat(strcmp("/", path) ? path : "/.", stbuf)) < 0)
 		return -ENOENT;
-	print_file_stats(path, stbuf);
+	//print_file_stats(path, stbuf);
 	
         return 0;
 }
@@ -132,7 +132,12 @@ static int fg_mknod(const char *path, mode_t mode, dev_t rdev)
  */
 static int fg_mkdir(const char *path, mode_t mode)
 {
-        return -ENOSYS;
+	int r;
+	fprintf(stdout, "directory mode : %o\n", mode|S_IFDIR);
+	
+	if ((r = repo_mkdir(path, mode|S_IFDIR)) < 0)
+		return -ENOENT;
+        return 0;
 }
 
 /**
@@ -152,6 +157,13 @@ static int fg_unlink(const char *path)
  */
 static int fg_rmdir(const char *path)
 {
+	// FIXIT rmdir can remove empty directories only. But to check this, the
+	// tmp_repo should have empty directories. But it is impossible to add
+	// an empty directory to a git repository.
+	// It is definitely possible to add an empty repository from libgit2,
+	// but its possible that the library does some cleaning up when you pack
+	// the repository. This needs to be kept in mind.
+
 	// removes an empty directory
 	// first check if the directory is empty, if it is empty, delete it
 	// TODO

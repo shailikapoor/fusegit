@@ -16,8 +16,8 @@ main(int argc, char *argv[])
 {
 	create_repo("repo.git");
 	read_repo("repo.git");
-	edit_repo("repo.git");
-	read_repo("repo.git");
+	//edit_repo("repo.git");
+	//read_repo("repo.git");
 	return 0;
 }
 
@@ -74,7 +74,7 @@ create_repo(const char *repo_name)
 	printf("Blob created\n");
 
 	// insert into tree
-	r = git_treebuilder_insert(NULL, tree_builder, "test1", &blob_id, (git_filemode_t)0100644);
+	r = git_treebuilder_insert(NULL, tree_builder, "test1", &blob_id, 0100644);
 	if (r)
 		printf("error in inserting into treebuilder\n");
 	printf("Insert into treebuilder successful\n");
@@ -87,7 +87,7 @@ create_repo(const char *repo_name)
 	printf("Blob created\n");
 
 	// insert into tree
-	r = git_treebuilder_insert(NULL, tree_builder, "test2", &blob_id, (git_filemode_t)0100644);
+	r = git_treebuilder_insert(NULL, tree_builder, "test2", &blob_id, 0100644);
 	if (r)
 		printf("error in inserting into treebuilder\n");
 	printf("Insert into treebuilder successful\n");
@@ -107,7 +107,7 @@ create_repo(const char *repo_name)
 
 
 	// insert empty tree into the tree
-	r = git_treebuilder_insert(NULL, tree_builder, "test_dir", &tree_id, (git_filemode_t)0040000);
+	r = git_treebuilder_insert(NULL, tree_builder, "test_dir", &tree_id, 0040000);
 	if (r)
 		printf("error in inserting into treebuilder\n");
 	printf("Insert into treebuilder successful\n");
@@ -247,7 +247,7 @@ edit_repo(const char *repo_name)
 	printf("Blob created\n");
 
 	// insert into tree
-	r = git_treebuilder_insert(NULL, tree_builder, "test1", &blob_id, (git_filemode_t)0100644);
+	r = git_treebuilder_insert(NULL, tree_builder, "test1", &blob_id, 0100644);
 	if (r)
 		printf("error in inserting into treebuilder\n");
 	printf("Insert into treebuilder successful\n");

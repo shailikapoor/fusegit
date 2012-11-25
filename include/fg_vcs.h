@@ -27,3 +27,5 @@ int repo_stat(const char *path, struct stat *stbuf);
 int repo_dir_stat(const char *path, struct stat *stbuf);
 
 int repo_isdir(const char *path);
+
+int repo_mkdir(const char *path, unsigned int attr);
