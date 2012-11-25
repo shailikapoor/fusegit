@@ -21,18 +21,18 @@ l_get_last_commit(git_commit **commit_p)
 	// obtaining the head
 	fprintf(stdout, "OBTAINING THE HEAD\n");
 	if ((r = git_repository_head(&ref, repo)) < 0)
-		return -1;
+		return -EFG_UNKNOWN;
 
 	// obtaining the commit id from the reference
 	fprintf(stdout, "OBTAINING commit id from the reference\n");
 	if ((r = git_reference_name_to_oid(&oid, repo, git_reference_name(ref)))
 		< 0)
-		return -1;
+		return -EFG_UNKNOWN;
 
 	// obtaining the commit from the commit id
 	fprintf(stdout, "OBTAINING commit from the commit id\n");
 	if ((r = git_commit_lookup(commit_p, repo, &oid)) < 0)
-		return -1;
+		return -EFG_UNKNOWN;
 	
 	return 0;
 }
@@ -54,7 +54,7 @@ l_get_path_tree(git_tree **tree, const char *path)
 
 	// get the last commit, i.e. pointing to the reference
 	if ((r = l_get_last_commit(&commit)) < 0)
-		return -1;
+		return -EFG_UNKNOWN;
 	oid = *git_commit_id(commit);
 	
 	// obtaining the tree id from the commit
@@ -64,7 +64,7 @@ l_get_path_tree(git_tree **tree, const char *path)
 	// obtaining the tree from the tree id
 	fprintf(stdout, "OBTAINING tree from tree id\n");
 	if ((r = git_tree_lookup(&l_tree, repo, &oid)) < 0)
-		return -1;
+		return -EFG_UNKNOWN;
 
 	// TODO following is the algorithm remaining to be implemented
 	hier = 0;
@@ -78,15 +78,15 @@ l_get_path_tree(git_tree **tree, const char *path)
 		fprintf(stdout, "OBTAINING tree entry for %s\n", name);
 		tree_entry = git_tree_entry_byname(l_tree, last);
 		if (tree_entry == NULL)
-			return -1;
+			return -EFG_UNKNOWN;
 		if ((r = git_tree_entry_to_object(&object, repo, tree_entry)) <
 			0)
-			return -1;
+			return -EFG_UNKNOWN;
 		if (git_object_type(object) != GIT_OBJ_TREE)
-			return -1;
+			return -EFG_UNKNOWN;
 		oid = *git_tree_entry_id(tree_entry);
 		if ((r = git_tree_lookup(&l_tree, repo, &oid)) < 0)
-			return -1;
+			return -EFG_UNKNOWN;
 	}
 	*tree = l_tree;
 	fprintf(stdout, "SUCCESSFUL\n");
@@ -101,7 +101,7 @@ l_get_parent_tree(git_tree **tree, const char *path)
 	char parent[PATH_MAX_LENGTH];
 
 	if ((r = get_parent_path(path, parent)) < 0)
-		return -1;
+		return -EFG_UNKNOWN;
 
 	fprintf(stdout, "Path : %s, Parent path : %s\n", path, parent);
 	if ((r = l_get_path_tree(tree, parent)) < 0)
@@ -121,14 +121,14 @@ l_git_commit_now(git_tree *tree, const char *message)
 
 	if (last_commit == NULL) {
 		if ((r = l_get_last_commit(&parents[0])) < 0)
-			return -1;
+			return -EFG_UNKNOWN;
 	} else {
 		parents[0] = last_commit;
 	}
 
 	if ((r = git_signature_now(&author, "Varun Agrawal",
 		"varun729@gmail.com")) < 0)
-		return -1;
+		return -EFG_UNKNOWN;
 	if ((r = git_commit_create(&oid,	// object id
 				repo,	// repository
 				"HEAD",	// update reference, this will update 
@@ -146,10 +146,10 @@ l_git_commit_now(git_tree *tree, const char *message)
 				parents)	// array of pointers to the parents
 					// (git_commit *parents[])
 				) < 0)
-		return -1;
+		return -EFG_UNKNOWN;
 	// update the last_commit static variable for this file
 	if ((r = git_commit_lookup(&last_commit, repo, &oid)) < 0)
-		return -1;
+		return -EFG_UNKNOWN;
 	fprintf(stdout, "l_git_commit_now : Commit successful\n");
 	return 0;
 }
@@ -165,7 +165,7 @@ repo_setup(const char *repo_address)
 {
 	int r;
 	if ((r = git_repository_init(&repo, repo_address, 1)))
-		return -1;
+		return -EFG_UNKNOWN;
 	// TODO test if the repository already exists, if it already exists then
 	// just use it, and don't open a new repository.
 	// TODO use the location specified by the config file to store the
@@ -209,7 +209,7 @@ repo_get_children(struct fg_file_node **children, int *count, const char *path)
 
 	fprintf(stdout, "ENTERING THE l_get_path_tree: \"%s\"\n", path);
 	if ((r = l_get_path_tree(&tree, path)) < 0)
-		return -1;
+		return -EFG_UNKNOWN;
 	
 	n = git_tree_entrycount(tree);
 	struct fg_file_node *nodes = malloc(n * sizeof(struct fg_file_node));
@@ -271,12 +271,12 @@ repo_stat(const char *path, struct stat *stbuf)
 	fprintf(stdout, "GET STAT : %s : STAT : %x\n", path, stbuf);
 	//fprintf(stdout, "TRYING TO GET THE TREE\n");
 	if ((r = l_get_path_tree(&tree, "/")) < 0)
-		return -1;
+		return -EFG_UNKNOWN;
 	if ((r = git_repository_index(&index, repo)) < 0)
-		return -1;
+		return -EFG_UNKNOWN;
 	//fprintf(stdout, "OBTAINED THE TREE\n");
 	if ((r = git_index_read_tree(index, tree)) < 0)
-		return -1;
+		return -EFG_UNKNOWN;
 	//fprintf(stdout, "READING THE TREE IN THE INDEX\n");
 	
 	path += 1;	// remove the leading '/'
@@ -284,7 +284,7 @@ repo_stat(const char *path, struct stat *stbuf)
 	//fprintf(stdout, "INDEX of %s : %d : TOTAL IN INDEX=%d\n", path, n,
 	//git_index_entrycount(index));
 	if (n < 0)
-		return -1;
+		return -EFG_UNKNOWN;
 	index_entry = git_index_get(index, n);
 
 	//fprintf(stdout, "HURRAY!!!!!!!!! %d %x %s %x\n", n, index_entry, path,
@@ -357,6 +357,7 @@ repo_mkdir(const char *path, unsigned int attr)
 	git_tree *tree;
 	git_oid tree_id;
 	git_oid oid;
+	unsigned int old_attr;
 	char last[PATH_MAX_LENGTH];
 	char tmppath[PATH_MAX_LENGTH];
 	strcpy(tmppath, path);
@@ -364,32 +365,33 @@ repo_mkdir(const char *path, unsigned int attr)
 	while (1) {
 		fprintf(stdout, "Getting parent tree\n");
 		if ((r = l_get_parent_tree(&tree, tmppath)) < 0)
-			return -1;	// tmppath is incorrect
+			return -EFG_UNKNOWN;	// tmppath is incorrect
 		fprintf(stdout, "Creating tree builder\n");
 		if ((r = git_treebuilder_create(&builder, tree)) < 0)
-			return -1;	// can't get the treebuilder
+			return -EFG_UNKNOWN;	// can't get the treebuilder
 		if (strcmp(path, tmppath) == 0) {
 			// create a empty tree
 			fprintf(stdout, "Creating empty tree builder\n");
 			if ((r = git_treebuilder_create(&empty_treebuilder, NULL)) < 0)
-				return -1;	// can't create empty tree builder
+				return -EFG_UNKNOWN;	// can't create empty tree builder
 			fprintf(stdout, "Writing empty tree builder to repo\n");
 			if ((r = git_treebuilder_write(&tree_id, repo, empty_treebuilder)) < 0)
-				return -1;	// can't insert empty tree into repo
+				return -EFG_UNKNOWN;	// can't insert empty tree into repo
 		} else {
 			tree_id = oid;
+			attr = S_IFDIR | 0755;	// FIXIT HARD CODED
 		}
 		if ((r = get_last_component(tmppath, last)) < 0)
-			return -1;
+			return -EFG_UNKNOWN;
 		fprintf(stdout, "Inserting into tree builder\n");
 		if ((r = git_treebuilder_insert(&entry, builder, last, &tree_id, attr))
 			< 0)
-			return -1;	// can't link the empty tree to repo
+			return -EFG_UNKNOWN;	// can't link the empty tree to repo
 		fprintf(stdout, "Writing to the original tree\n");
 		if ((r = git_treebuilder_write(&oid, repo, builder)) < 0)
-			return -1;
+			return -EFG_UNKNOWN;
 		if ((r = get_parent_path(NULL, tmppath)) < 0)
-			return -1;	// if tmppath was root, you shouldn't have
+			return -EFG_UNKNOWN;	// if tmppath was root, you shouldn't have
 					// reached it
 		// tmppath is already set to the parent
 		if (strlen(tmppath) == 1)
@@ -400,7 +402,7 @@ repo_mkdir(const char *path, unsigned int attr)
 	// write the code here
 	fprintf(stdout, "Getting the tree from the oid\n");
 	if ((r = git_tree_lookup(&tree, repo, &oid)) < 0)
-		return -1;
+		return -EFG_UNKNOWN;
 
 	// do the commit
 	char header[] = "fusegit\nmkdir\n";
@@ -408,11 +410,87 @@ repo_mkdir(const char *path, unsigned int attr)
 	sprintf(message, "%s%s", header, path);
 	fprintf(stdout, "Making the commit : %s\n", message);
 	if ((r = l_git_commit_now(tree, message)) < 0)
-		return -1;
+		return -EFG_UNKNOWN;
 	fprintf(stdout, "Commit successful\n");
 
 	// free the tree builder
 	git_treebuilder_free(builder);
 	git_treebuilder_free(empty_treebuilder);
+	return 0;
+}
+
+/**
+ * remove a empty directory
+ */
+	int
+repo_rmdir(const char *path)
+{
+	fprintf(stdout, "In repo_rmdir\n");
+	int r;
+	git_treebuilder *builder;
+	git_tree_entry *entry;
+	git_tree *tree;
+	git_oid tree_id;
+	git_oid oid;
+	unsigned int attr = S_IFDIR | 0755;	// FIXIT HARD CODED
+	char last[PATH_MAX_LENGTH];
+	char tmppath[PATH_MAX_LENGTH];
+	strcpy(tmppath, path);
+
+	// check if empty and return error if not empty
+	if ((r = l_get_path_tree(&tree, tmppath)) < 0)
+		return r;
+	if (git_tree_entrycount(tree) > 0)
+		return -EFG_NOTEMPTY;
+	
+	// remove the directory entry from parent, and move up the trees
+	while (1) {
+		fprintf(stdout, "Getting parent tree\n");
+		if ((r = l_get_parent_tree(&tree, tmppath)) < 0)
+			return -EFG_UNKNOWN;	// tmppath is incorrect
+		fprintf(stdout, "Creating tree builder\n");
+		if ((r = git_treebuilder_create(&builder, tree)) < 0)
+			return -EFG_UNKNOWN;	// can't get the treebuilder
+		if ((r = get_last_component(tmppath, last)) < 0)
+			return -EFG_UNKNOWN;
+		if (strcmp(path, tmppath) == 0) {
+			fprintf(stdout, "Removing the entry from the tree builder\n");
+			if ((r = git_treebuilder_remove(builder, last)) < 0)
+				return -EFG_UNKNOWN;
+		} else {
+			tree_id = oid;
+			fprintf(stdout, "Inserting into tree builder\n");
+			if ((r = git_treebuilder_insert(&entry, builder, last, &tree_id, attr))
+				< 0)
+				return -EFG_UNKNOWN;	// can't link the empty tree to repo
+		}
+		fprintf(stdout, "Writing to the original tree\n");
+		if ((r = git_treebuilder_write(&oid, repo, builder)) < 0)
+			return -EFG_UNKNOWN;
+		if ((r = get_parent_path(NULL, tmppath)) < 0)
+			return -EFG_UNKNOWN;	// if tmppath was root, you shouldn't have
+					// reached it
+		// tmppath is already set to the parent
+		if (strlen(tmppath) == 1)
+			break;	// the parent of tmppath is /, so break now.
+	}
+
+	// TODO get the parrent tree
+	// write the code here
+	fprintf(stdout, "Getting the tree from the oid\n");
+	if ((r = git_tree_lookup(&tree, repo, &oid)) < 0)
+		return -EFG_UNKNOWN;
+
+	// do the commit
+	char header[] = "fusegit\nrmdir\n";
+	char message[PATH_MAX_LENGTH + strlen(header)];
+	sprintf(message, "%s%s", header, path);
+	fprintf(stdout, "Making the commit : %s\n", message);
+	if ((r = l_git_commit_now(tree, message)) < 0)
+		return -EFG_UNKNOWN;
+	fprintf(stdout, "Commit successful\n");
+
+	// free the tree builder
+	git_treebuilder_free(builder);
 	return 0;
 }

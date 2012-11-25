@@ -166,8 +166,17 @@ static int fg_rmdir(const char *path)
 
 	// removes an empty directory
 	// first check if the directory is empty, if it is empty, delete it
-	// TODO
-        return -ENOSYS;
+	int r;
+	
+	if ((r = repo_rmdir(path)) < 0) {
+		switch(r) {
+		case -EFG_UNKNOWN:
+			return -ENOENT;
+		case -EFG_NOTEMPTY:
+			return -ENOTEMPTY;
+		}
+	}
+        return 0;
 }
 
 /**
