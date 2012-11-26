@@ -5,7 +5,7 @@
 #include <stdlib.h>
 #include <git2.h>
 #include "fg.h"
-#include "fg_vcs.h"
+#include "fg_repo.h"
 #include "fg_util.h"
 
 // LOCAL

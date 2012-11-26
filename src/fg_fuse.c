@@ -21,7 +21,7 @@
 #include <errno.h>
 #include <unistd.h>	// this is for getcwd
 #include "fg.h"
-#include "fg_vcs.h"
+#include "fg_repo.h"
 #include "fg_util.h"
 #ifdef HAVE_SETXATTR
 #include <sys/xattr.h>
