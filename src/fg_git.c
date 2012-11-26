@@ -562,11 +562,9 @@ repo_link(const char *from, const char *to)
 	unsigned int from_attr;
 	
 	git_tree *tree;
-	git_oid tree_id;
 	git_oid oid;
 	char last[PATH_MAX_LENGTH];
 	char tmppath[PATH_MAX_LENGTH];
-	unsigned int attr;
 	unsigned int dir_attr = S_IFDIR | 0755;	// FIXIT HARD CODED
 
 	// find the id of the object which refers to `from`
@@ -578,63 +576,42 @@ repo_link(const char *from, const char *to)
 	from_entry = git_tree_entry_byname(from_tree, from_last);
 	if (from_entry == NULL)
 		return -EFG_NOLINK;
-	from_oid = *git_tree_entry_id(from_entry);
+	oid = *git_tree_entry_id(from_entry);
 	from_attr = (git_tree_entry_type(from_entry) == GIT_OBJ_BLOB) ?
 		git_tree_entry_attributes(from_entry) : dir_attr;
 	fprintf(stdout, "from_attr = %o\n", from_attr);
 
 	// create a new entry for `to` in the repository
 	strcpy(tmppath, to);
-	tree_id = from_oid;
-	attr = from_attr;
-	while (1) {
-		fprintf(stdout, "Getting parent tree\n");
-		if ((r = l_get_parent_tree(&tree, tmppath)) < 0)
-			return -EFG_NOLINK;	// tmppath is incorrect
-		fprintf(stdout, "Creating tree builder\n");
-		if ((r = git_treebuilder_create(&builder, tree)) < 0)
-			return -EFG_UNKNOWN;	// can't get the treebuilder
-		if ((r = get_last_component(tmppath, last)) < 0)
-			return -EFG_UNKNOWN;
-		if (strcmp(to, tmppath) == 0) {
-			fprintf(stdout, "Adding the link to the tree builder\n");
-			if ((r = git_treebuilder_insert(NULL, builder, last,
-				&tree_id, attr)) < 0)
-				return -EFG_UNKNOWN;
-		} else {
-			tree_id = oid;
-			fprintf(stdout, "Inserting into tree builder\n");
-			if ((r = git_treebuilder_insert(NULL, builder, last,
-				&tree_id, dir_attr)) < 0)
-				return -EFG_UNKNOWN;	// can't link the empty tree to repo
-		}
-		fprintf(stdout, "Writing to the original tree\n");
-		if ((r = git_treebuilder_write(&oid, repo, builder)) < 0)
-			return -EFG_UNKNOWN;
-		if ((r = get_parent_path(NULL, tmppath)) < 0)
-			return -EFG_UNKNOWN;	// if tmppath was root, you shouldn't have
-					// reached it
-		// tmppath is already set to the parent
-		if (strlen(tmppath) == 1)
-			break;	// the parent of tmppath is /, so break now.
-	}
-	
-	// get the parrent tree
-	fprintf(stdout, "Getting the tree from the oid\n");
-	if ((r = git_tree_lookup(&tree, repo, &oid)) < 0)
+	fprintf(stdout, "Getting parent tree\n");
+	if ((r = l_get_parent_tree(&tree, tmppath)) < 0)
+		return -EFG_NOLINK;	// tmppath is incorrect
+	fprintf(stdout, "Creating tree builder\n");
+	if ((r = git_treebuilder_create(&builder, tree)) < 0)
+		return -EFG_UNKNOWN;	// can't get the treebuilder
+	if ((r = get_last_component(tmppath, last)) < 0)
 		return -EFG_UNKNOWN;
-
+	fprintf(stdout, "Adding the link to the tree builder\n");
+	if ((r = git_treebuilder_insert(NULL, builder, last,
+		&oid, from_attr)) < 0)
+		return -EFG_UNKNOWN;
+	fprintf(stdout, "Writing to the original tree\n");
+	if ((r = git_treebuilder_write(&oid, repo, builder)) < 0)
+		return -EFG_UNKNOWN;
+	// free the tree builder
+	git_treebuilder_free(builder);
+	if ((r = get_parent_path(NULL, tmppath)) < 0)
+		return -EFG_UNKNOWN;	// get parent path
+	
 	// do the commit
 	char header[] = "fusegit\nlink\n";
 	char message[2*PATH_MAX_LENGTH + strlen(" -> ") + strlen(header)];
 	sprintf(message, "%s%s -> %s", header, from, to);
 	fprintf(stdout, "Making the commit : %s\n", message);
-	if ((r = l_git_commit_now(tree, message)) < 0)
-		return -EFG_UNKNOWN;
+	if ((r = l_make_commit(tmppath, oid, message)) < 0)
+		return r;
 	fprintf(stdout, "Commit successful\n");
 
-	// free the tree builder
-	git_treebuilder_free(builder);
 	return 0;
 }
 
@@ -695,9 +672,10 @@ repo_unlink(const char *path)
 	fprintf(stdout, "Writing to the original tree\n");
 	if ((r = git_treebuilder_write(&oid, repo, builder)) < 0)
 		return -EFG_UNKNOWN;
+	// free the tree builder
 	git_treebuilder_free(builder);
-	
-	get_parent_path(NULL, tmppath);	// get parent of tmppath
+	if ((r = get_parent_path(NULL, tmppath)) < 0)
+		return -EFG_UNKNOWN;	// get parent path
 	
 	// 2. update the tree above you, till the head.
 	// do the commit
