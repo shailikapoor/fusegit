@@ -31,9 +31,6 @@
 
 static char FG_ROOT[PATH_MAX_LENGTH];
 
-static const char *fg_path = "/fgtmp";  // path for the /fgtmp file
-static const char *fg_str = "Welcome to Fuse GIT";  // content of the /fgtmp file 
-
 
 
 //=============================================================================
@@ -77,9 +74,9 @@ static int fg_getattr(const char *path, struct stat *stbuf)
 	// st_oid  : this is obtained from the tree_entry oid, t_entry->oid
 	int r;
 	
-	fprintf(stdout, "getting attribute of %s\n", path);
+	//fprintf(stdout, "getting attribute of %s\n", path);
 	if ((r = repo_isdir(path))) {
-		fprintf(stdout, "is directory %s\n", path);
+		//fprintf(stdout, "is directory %s\n", path);
 		if ((r = repo_dir_stat(path, stbuf)) < 0)
 			return -ENOENT;
 		//print_file_stats(path, stbuf);
@@ -132,7 +129,7 @@ static int fg_mknod(const char *path, mode_t mode, dev_t rdev)
 static int fg_mkdir(const char *path, mode_t mode)
 {
 	int r;
-	fprintf(stdout, "directory mode : %o\n", mode|S_IFDIR);
+	//fprintf(stdout, "directory mode : %o\n", mode|S_IFDIR);
 	
 	if ((r = repo_mkdir(path, mode|S_IFDIR)) < 0)
 		return -ENOENT;
@@ -270,18 +267,7 @@ static int fg_truncate(const char *path, off_t size)
  */
 static int fg_open(const char *path, struct fuse_file_info *fi)
 {
-	// TODO all the code in this function is temporary and needs to be look
-	// over
-
-	// if the user if asking for anything besides /fgtmp, return  file does not exist
-        if(strcmp(path, fg_path) != 0)
-		return -ENOENT;
-	
-	// if the user wants to open the file for anything else than reading only, return  doesn't have sufficient permissions
-	if((fi->flags & 3) != O_RDONLY)
-		return -EACCES;
-
-	// else open the file
+	// FIXIT for now return 0
 	return 0;
 }
 
@@ -298,29 +284,9 @@ static int fg_open(const char *path, struct fuse_file_info *fi)
  */
 static int fg_read(const char *path, char *buf, size_t size, off_t offset,
                       struct fuse_file_info *fi)
-{       
-	// TODO all the code in this function is temporary and needs to be look
-	// over
-
-	size_t len;
-	(void) fi;
-
-	if(strcmp(path, fg_path) != 0){
-		return -ENOENT;
-	}
-
-	if(strcmp(path, fg_path) == 0){
-		len = strlen(fg_str);
-		if(offset < len){
-			if(offset + size > len)
-				size = len - offset;
-			memcpy(buf, fg_str + offset, size);
-		}else
-			size=0;
-		
-	}
-
-        return size;
+{
+	fprintf(stdout, "FG_READ -----------------------------------------\n");
+	return repo_read(path, buf, size, offset); 	
 }
 
 /**
@@ -458,8 +424,8 @@ static int fg_readdir(const char *path, void *buf, fuse_fill_dir_t filler,
 	// for each of the entries one by one.
 	if ((r = repo_get_children(&children, &children_count, path)) < 0)
 		return -ENOENT;
-	fprintf(stdout, "CHILDREN OBTAINED FROM GIT REPO : %d\n",
-		children_count);
+	//fprintf(stdout, "CHILDREN OBTAINED FROM GIT REPO : %d\n",
+	//	children_count);
 
 	filler(buf, ".", NULL, 0);
 	filler(buf, "..", NULL, 0);
@@ -467,10 +433,10 @@ static int fg_readdir(const char *path, void *buf, fuse_fill_dir_t filler,
 	// the filler function takes buf, name of the entry, struct stat of the
 	// entry and offset.
 	for (i=0; i<children_count; i++) {
-		fprintf(stdout, "adding ");
-		fprintf(stdout, "%s\n", children[i].name);
+		//fprintf(stdout, "adding ");
+		//fprintf(stdout, "%s\n", children[i].name);
 		filler(buf, children[i].name, NULL, 0);
-		fprintf(stdout, "added\n");
+		//fprintf(stdout, "added\n");
 	}
 	free(children);
 
@@ -490,6 +456,34 @@ static int fg_readdir(const char *path, void *buf, fuse_fill_dir_t filler,
 static int fg_access(const char *path, int mask)
 {
         return -ENOSYS;
+}
+
+/**
+ * Create and open a file
+ * 
+ * If the file does not exist, first create it with the specified mode,
+ * and then open it.
+ * 
+ * If this method is not implemented or under Linux kernel versions
+ * earlier than 2.6.15, the mknod() and open() methods will be called
+ * instead.
+ * 
+ * Introduced in version 2.5
+ */
+static int fg_create(const char *path, mode_t mode, struct fuse_file_info *fi)
+{
+	int r;
+	// if the file doesn't exist create a file
+	// check in the git repository if this path exists
+	//if (!repo_path_exists(path)) {
+	//	// TODO path doesn't exist
+	//}
+
+	// open the file
+	// TODO check permissions
+	fprintf(stdout,	"FG_CREATE_------------------------------------------------\n");
+
+	return 0;
 }
 
 #ifdef HAVE_UTIMENSAT
@@ -537,7 +531,7 @@ static struct fuse_operations fg_oper = {
         //.init           = fg_init, // TODO
         //.destroy        = fg_destroy, // TODO
         .access	        = fg_access,
-        //.create         = fg_create, // TODO
+        .create         = fg_create, // TODO
         //.ftruncate      = fg_ftruncate, // TODO
         //.fgetattr       = fg_fgetattr, // TODO
         //.lock           = fg_lock, // TODO
