@@ -74,7 +74,10 @@ static int fg_getattr(const char *path, struct stat *stbuf)
 	// st_oid  : this is obtained from the tree_entry oid, t_entry->oid
 	int r;
 	
-	//fprintf(stdout, "getting attribute of %s\n", path);
+	fprintf(stdout, "checking if path exists: %s\n", path);
+	if (!repo_path_exists(path))
+		return -ENOENT;
+	fprintf(stdout, "getting attribute of %s\n", path);
 	if ((r = repo_isdir(path))) {
 		//fprintf(stdout, "is directory %s\n", path);
 		if ((r = repo_dir_stat(path, stbuf)) < 0)
@@ -84,7 +87,7 @@ static int fg_getattr(const char *path, struct stat *stbuf)
 	}
 	if ((r = repo_stat(strcmp("/", path) ? path : "/.", stbuf)) < 0)
 		return -ENOENT;
-	//print_file_stats(path, stbuf);
+	print_file_stats(path, stbuf);
 	
         return 0;
 }

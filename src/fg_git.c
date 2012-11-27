@@ -9,6 +9,7 @@
 #include "fg_util.h"
 
 // LOCAL
+static const unsigned int INVALID_FILE_MODE = 077777777;
 static git_repository *repo;
 static git_commit *last_commit = NULL;
 
@@ -201,6 +202,52 @@ l_make_commit(const char *path, git_oid oid, const char *message)
 	return 0;
 }
 
+	static size_t
+l_get_file_size(const char *path)
+{
+	int r;
+	git_tree *tree;
+	git_tree_entry * entry;
+	git_oid oid;
+	git_blob *blob;
+	char last[PATH_MAX_LENGTH];
+	
+	if ((r = l_get_parent_tree(&tree, path)) < 0)
+		return -1;
+	if ((r = get_last_component(path, last)) < 0)
+		return -1;
+	entry = git_tree_entry_byname(tree, last);
+	if (entry == NULL)
+		return -1;
+	oid = *git_tree_entry_id(entry);
+	if (git_tree_entry_type(entry) != GIT_OBJ_BLOB)
+		return -1;
+	if ((r = git_blob_lookup(&blob, repo, &oid)) < 0)
+		return -1;
+	return git_blob_rawsize(blob);
+}
+
+	static unsigned int
+l_get_file_mode(const char *path)
+{
+	int r;
+	git_tree *tree;
+	git_tree_entry * entry;
+	git_oid oid;
+	git_blob *blob;
+	char last[PATH_MAX_LENGTH];
+	
+	if ((r = l_get_parent_tree(&tree, path)) < 0)
+		return INVALID_FILE_MODE;
+	if ((r = get_last_component(path, last)) < 0)
+		return INVALID_FILE_MODE;
+	entry = git_tree_entry_byname(tree, last);
+	if (entry == NULL)
+		return INVALID_FILE_MODE;
+
+	return git_tree_entry_attributes(entry);
+}
+
 // ****************************************************************************
 // GLOBAL
 
@@ -227,7 +274,20 @@ repo_setup(const char *repo_address)
 	int
 repo_path_exists(const char *path)
 {
-	// TODO
+	int r;
+	git_tree *tree;
+	git_tree_entry *entry;
+	char last[PATH_MAX_LENGTH];
+	
+	if (strcmp(path, "/") == 0)
+		return 1;
+	if ((r = l_get_parent_tree(&tree, path)) < 0)
+		return 0;
+	if ((r = get_last_component(path, last)) < 0)
+		return 0;
+	entry = git_tree_entry_byname(tree, last);
+	if (entry == NULL)
+		return 0;
 	return 1;
 }
 
@@ -273,7 +333,7 @@ repo_get_children(struct fg_file_node **children, int *count, const char *path)
 }
 
 /**
- *
+ * get the stat for a file
  */
  	int
 repo_stat(const char *path, struct stat *stbuf)
@@ -309,46 +369,24 @@ repo_stat(const char *path, struct stat *stbuf)
 	//		time_t    st_mtime;   /* time of last modification */
 	//		time_t    st_ctime;   /* time of last status change */
 	//	};
-	int r;
-	git_index *index;	// TODO manage memory
-	git_index_entry *index_entry;
-	git_tree *tree;
-	int n;
+	const struct fuse_context *ctx;
 
 	//fprintf(stdout, "GET STAT : %s : STAT : %x\n", path, stbuf);
-	//fprintf(stdout, "TRYING TO GET THE TREE\n");
-	if ((r = l_get_path_tree(&tree, "/")) < 0)
-		return -EFG_UNKNOWN;
-	if ((r = git_repository_index(&index, repo)) < 0)
-		return -EFG_UNKNOWN;
-	//fprintf(stdout, "OBTAINED THE TREE\n");
-	if ((r = git_index_read_tree(index, tree)) < 0)
-		return -EFG_UNKNOWN;
-	//fprintf(stdout, "READING THE TREE IN THE INDEX\n");
-	
-	path += 1;	// remove the leading '/'
-	n = git_index_find(index, path);
-	//fprintf(stdout, "INDEX of %s : %d : TOTAL IN INDEX=%d\n", path, n,
-	//git_index_entrycount(index));
-	if (n < 0)
-		return -EFG_UNKNOWN;
-	index_entry = git_index_get(index, n);
 
-	//fprintf(stdout, "HURRAY!!!!!!!!! %d %x %s %x\n", n, index_entry, path,
-	//index);
-	stbuf->st_dev = index_entry->dev;     /* ID of device containing file */
-	stbuf->st_ino = index_entry->ino;     /* inode number */
-	stbuf->st_mode = index_entry->mode;    /* protection */
+	ctx = fuse_get_context();
+	stbuf->st_dev = 1; // ignored by FUSE index_entry->dev;     /* ID of device containing file */
+	stbuf->st_ino = 1; // index_entry->ino;     /* inode number */
+	stbuf->st_mode = l_get_file_mode(path);    /* protection */
 	stbuf->st_nlink = 1;   /* number of hard links */
-	stbuf->st_uid = index_entry->uid;     /* user ID of owner */
-	stbuf->st_gid = index_entry->gid;     /* group ID of owner */
+	stbuf->st_uid = ctx->uid;     /* user ID of owner */
+	stbuf->st_gid = ctx->gid;     /* group ID of owner */
 	//stbuf->st_rdev = index_entry->rdev;    /* device ID (if special file) */
-	stbuf->st_size = index_entry->file_size;    /* total size, in bytes */
-	//stbuf->st_blksize = index_entry->blksize; /* blocksize for file system I/O */
+	stbuf->st_size = l_get_file_size(path);    /* total size, in bytes */
+	stbuf->st_blksize = 1; // ignored by FUSE index_entry->blksize; /* blocksize for file system I/O */
 	//stbuf->st_blocks = index_entry->blocks;  /* number of 512B blocks allocated */
 	//stbuf->st_atime = index_entry->atime;   /* time of last access */
-	stbuf->st_mtime = index_entry->mtime.seconds;   /* time of last modification */
-	stbuf->st_ctime = index_entry->ctime.seconds;   /* time of last status change */
+	stbuf->st_mtime = 0; // FIXIT   /* time of last modification */
+	stbuf->st_ctime = 0; // FIXIT   /* time of last status change */
 	
 	return 0;
 }
@@ -373,12 +411,15 @@ repo_isdir(const char *path)
 	int
 repo_dir_stat(const char *path, struct stat *stbuf)
 {
-	stbuf->st_dev = 0;     /* ID of device containing file */
-	stbuf->st_ino = 0;     /* inode number */
+	const struct fuse_context *ctx;
+	ctx = fuse_get_context();
+
+	stbuf->st_dev = 1;     /* ID of device containing file */
+	stbuf->st_ino = 1;     /* inode number */
 	stbuf->st_mode = S_IFDIR | 0755;    /* protection */
 	stbuf->st_nlink = 2;   /* number of hard links */
-	stbuf->st_uid = 0;     /* user ID of owner */
-	stbuf->st_gid = 0;     /* group ID of owner */
+	stbuf->st_uid = ctx->uid;     /* user ID of owner */
+	stbuf->st_gid = ctx->gid;     /* group ID of owner */
 	//stbuf->st_rdev = index_entry->rdev;    /* device ID (if special file) */
 	stbuf->st_size = 0;    /* total size, in bytes */
 	//stbuf->st_blksize = index_entry->blksize; /* blocksize for file system I/O */
@@ -669,21 +710,27 @@ repo_read(const char *path, char *buf, size_t size, off_t offset)
 	char *content;
 	size_t rawsize;
 	// to get the parent tree we use the l_get_parent_tree.
+	fprintf(stdout, "get the parent tree\n");
 	if ((r = l_get_parent_tree(&tree, path)) < 0) 
 		return -EFG_UNKNOWN;
 
 	// to get the filename we have the path.
-	if ((r = get_last_component(&path, last)) < 0)
+	fprintf(stdout, "get the last component\n");
+	if ((r = get_last_component(path, last)) < 0)
 		return -EFG_UNKNOWN;
 	// to get the entry we need the filename and parent tree
+	fprintf(stdout, "get the tree entry by name\n");
 	entry = git_tree_entry_byname(tree, last);
 	// to get the entry id , we need the entry
+	fprintf(stdout, "get the tree entry id\n");
 	oid = *git_tree_entry_id(entry);
 	// git_blob_lookup but for this we need entry ID. 
+	fprintf(stdout, "get the blob from tree entry id\n");
 	if ((r = git_blob_lookup(&blob, repo, &oid)) < 0)
 		return -EFG_UNKNOWN;
 		
 	// once we get the blob, read it and store it in the buf
+	fprintf(stdout, "get the blob rawcontent and size\n");
 	content = (char *) git_blob_rawcontent(blob);
 	rawsize = git_blob_rawsize(blob);
 
@@ -691,6 +738,7 @@ repo_read(const char *path, char *buf, size_t size, off_t offset)
 	if ((size + offset) > rawsize)
 		(size = rawsize - offset) > 0 ? size : (size = 0) ;
 	
+	fprintf(stdout, "copy the content to the fuse buffer\n");
 	memcpy(buf, content, size);
 	// return the size of the content we have read
 
