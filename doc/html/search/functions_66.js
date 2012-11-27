@@ -3,6 +3,7 @@ var searchData=
   ['fg_5faccess',['fg_access',['../fg__fuse_8c.html#af0ded5a0adf121e29f380ae143c09f2a',1,'fg_fuse.c']]],
   ['fg_5fchmod',['fg_chmod',['../fg__fuse_8c.html#acc27a1144af3fc84e0083a7d1f40b4a3',1,'fg_fuse.c']]],
   ['fg_5fchown',['fg_chown',['../fg__fuse_8c.html#adc403acb1b19a067ba51f1e15da32a5c',1,'fg_fuse.c']]],
+  ['fg_5fcreate',['fg_create',['../fg__fuse_8c.html#a0b2da63e55a7e638538c1ad1a7403a93',1,'fg_fuse.c']]],
   ['fg_5ffsync',['fg_fsync',['../fg__fuse_8c.html#af705d87d064051e01bdfc588855705f7',1,'fg_fuse.c']]],
   ['fg_5fgetattr',['fg_getattr',['../fg__fuse_8c.html#a42dbbae5136f9ba9f45003e328ffeea6',1,'fg_fuse.c']]],
   ['fg_5flink',['fg_link',['../fg__fuse_8c.html#aae17ec2405554adb32ff05b2ebf479dc',1,'fg_fuse.c']]],

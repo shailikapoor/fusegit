@@ -3,6 +3,7 @@ var searchData=
   ['fg_5faccess',['fg_access',['../fg__fuse_8c.html#af0ded5a0adf121e29f380ae143c09f2a',1,'fg_fuse.c']]],
   ['fg_5fchmod',['fg_chmod',['../fg__fuse_8c.html#acc27a1144af3fc84e0083a7d1f40b4a3',1,'fg_fuse.c']]],
   ['fg_5fchown',['fg_chown',['../fg__fuse_8c.html#adc403acb1b19a067ba51f1e15da32a5c',1,'fg_fuse.c']]],
+  ['fg_5fcreate',['fg_create',['../fg__fuse_8c.html#a0b2da63e55a7e638538c1ad1a7403a93',1,'fg_fuse.c']]],
   ['fg_5ffsync',['fg_fsync',['../fg__fuse_8c.html#af705d87d064051e01bdfc588855705f7',1,'fg_fuse.c']]],
   ['fg_5ffuse_2ec',['fg_fuse.c',['../fg__fuse_8c.html',1,'']]],
   ['fg_5fgetattr',['fg_getattr',['../fg__fuse_8c.html#a42dbbae5136f9ba9f45003e328ffeea6',1,'fg_fuse.c']]],
@@ -18,10 +19,11 @@ var searchData=
   ['fg_5frelease',['fg_release',['../fg__fuse_8c.html#af81df566c92a45a4e50e1046607dcebc',1,'fg_fuse.c']]],
   ['fg_5frename',['fg_rename',['../fg__fuse_8c.html#afa726de3a6920581590e6607613b5fe8',1,'fg_fuse.c']]],
   ['fg_5frmdir',['fg_rmdir',['../fg__fuse_8c.html#a276670d3cb8342d8a432316e8efb7c70',1,'fg_fuse.c']]],
+  ['fg_5froot',['FG_ROOT',['../fg__fuse_8c.html#a7206b2bd2c2b4d0c06def065ffe04871',1,'fg_fuse.c']]],
   ['fg_5fstatfs',['fg_statfs',['../fg__fuse_8c.html#a3b260a1e37083749594c1ac449210b52',1,'fg_fuse.c']]],
   ['fg_5fsymlink',['fg_symlink',['../fg__fuse_8c.html#a2dd88068ebe4b1e7145e385f40a8a73b',1,'fg_fuse.c']]],
   ['fg_5ftruncate',['fg_truncate',['../fg__fuse_8c.html#afaee168a3ef65211e792c8f3b38d76d8',1,'fg_fuse.c']]],
   ['fg_5funlink',['fg_unlink',['../fg__fuse_8c.html#a76c1b29b529df45dec6d376b125b1337',1,'fg_fuse.c']]],
-  ['fg_5fwrite',['fg_write',['../fg__fuse_8c.html#ac6788de7fe8142e55733a7c656015d25',1,'fg_fuse.c']]],
-  ['fuse_5fuse_5fversion',['FUSE_USE_VERSION',['../fg__fuse_8c.html#a0919197af2e154da2c05727b6d87cbda',1,'fg_fuse.c']]]
+  ['fg_5futil_2ec',['fg_util.c',['../fg__util_8c.html',1,'']]],
+  ['fg_5fwrite',['fg_write',['../fg__fuse_8c.html#ac6788de7fe8142e55733a7c656015d25',1,'fg_fuse.c']]]
 ];

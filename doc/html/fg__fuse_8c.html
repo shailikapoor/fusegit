@@ -75,23 +75,24 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 </div>
 <div class="header">
   <div class="summary">
-<a href="#define-members">Defines</a> &#124;
 <a href="#func-members">Functions</a> &#124;
 <a href="#var-members">Variables</a>  </div>
   <div class="headertitle">
 <div class="title">fg_fuse.c File Reference</div>  </div>
 </div><!--header-->
 <div class="contents">
-<div class="textblock"><code>#include &lt;fuse.h&gt;</code><br/>
+<div class="textblock"><code>#include &lt;fuse_opt.h&gt;</code><br/>
+<code>#include &lt;stdio.h&gt;</code><br/>
+<code>#include &lt;stdlib.h&gt;</code><br/>
+<code>#include &lt;string.h&gt;</code><br/>
 <code>#include &lt;errno.h&gt;</code><br/>
-<code>#include &quot;fg_vcs.h&quot;</code><br/>
+<code>#include &lt;unistd.h&gt;</code><br/>
+<code>#include &quot;fg.h&quot;</code><br/>
+<code>#include &quot;fg_repo.h&quot;</code><br/>
+<code>#include &quot;fg_util.h&quot;</code><br/>
 </div><table class="memberdecls">
-<tr><td colspan="2"><h2><a name="define-members"></a>
-Defines</h2></td></tr>
-<tr><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="fg__fuse_8c.html#a0919197af2e154da2c05727b6d87cbda">FUSE_USE_VERSION</a>&#160;&#160;&#160;29</td></tr>
 <tr><td colspan="2"><h2><a name="func-members"></a>
 Functions</h2></td></tr>
-<tr><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="fg__fuse_8c.html#a708a4c1a4d0c4acc4c447310dd4db27f">test</a> (void)</td></tr>
 <tr><td class="memItemLeft" align="right" valign="top">static int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="fg__fuse_8c.html#a42dbbae5136f9ba9f45003e328ffeea6">fg_getattr</a> (const char *path, struct stat *stbuf)</td></tr>
 <tr><td class="memItemLeft" align="right" valign="top">static int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="fg__fuse_8c.html#a03909f37b6771886c3bd070db6a0d289">fg_readlink</a> (const char *path, char *buf, size_t size)</td></tr>
 <tr><td class="memItemLeft" align="right" valign="top">static int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="fg__fuse_8c.html#adc4b96121d51352ed0b5825abafa7f1e">fg_mknod</a> (const char *path, mode_t mode, dev_t rdev)</td></tr>
@@ -112,27 +113,15 @@ Functions</h2></td></tr>
 <tr><td class="memItemLeft" align="right" valign="top">static int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="fg__fuse_8c.html#af705d87d064051e01bdfc588855705f7">fg_fsync</a> (const char *path, int isdatasync, struct fuse_file_info *fi)</td></tr>
 <tr><td class="memItemLeft" align="right" valign="top">static int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="fg__fuse_8c.html#a57fd9632870a3ad1d084b1bee78efff3">fg_readdir</a> (const char *path, void *buf, fuse_fill_dir_t filler, off_t offset, struct fuse_file_info *fi)</td></tr>
 <tr><td class="memItemLeft" align="right" valign="top">static int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="fg__fuse_8c.html#af0ded5a0adf121e29f380ae143c09f2a">fg_access</a> (const char *path, int mask)</td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">static int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="fg__fuse_8c.html#a0b2da63e55a7e638538c1ad1a7403a93">fg_create</a> (const char *path, mode_t mode, struct fuse_file_info *fi)</td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">static void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="fg__fuse_8c.html#a1d627ada007b217c5b24ff2d2a8c8295">get_mountpoint</a> (const char *arg, char *mpoint)</td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">static int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="fg__fuse_8c.html#a171904b660a7e7d6ad6492be0e0c6cbe">proc_mountpoint</a> (void *data, const char *arg, int key, struct fuse_args *outargs)</td></tr>
 <tr><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="fg__fuse_8c.html#a0ddf1224851353fc92bfbff6f499fa97">main</a> (int argc, char *argv[])</td></tr>
 <tr><td colspan="2"><h2><a name="var-members"></a>
 Variables</h2></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">static char&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="fg__fuse_8c.html#a7206b2bd2c2b4d0c06def065ffe04871">FG_ROOT</a> [PATH_MAX_LENGTH]</td></tr>
 <tr><td class="memItemLeft" align="right" valign="top">static struct fuse_operations&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="fg__fuse_8c.html#aa37f56469ba4f848f702784a1aa9448f">fg_oper</a></td></tr>
 </table>
-<hr/><h2>Define Documentation</h2>
-<a class="anchor" id="a0919197af2e154da2c05727b6d87cbda"></a><!-- doxytag: member="fg_fuse.c::FUSE_USE_VERSION" ref="a0919197af2e154da2c05727b6d87cbda" args="" -->
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">#define <a class="el" href="fg__fuse_8c.html#a0919197af2e154da2c05727b6d87cbda">FUSE_USE_VERSION</a>&#160;&#160;&#160;29</td>
-        </tr>
-      </table>
-</div>
-<div class="memdoc">
-<p>Implements the FUSE API function calls</p>
-<p>TODO The backup functionality can be called via `fg_fuse` giving it a parameter like 'restore' or 'backup', to actually restore, or do backup of the filesystem. TODO it is unknown if I can actually know if the call is made from the current file system or not. This is annoying. :( </p>
-
-</div>
-</div>
 <hr/><h2>Function Documentation</h2>
 <a class="anchor" id="af0ded5a0adf121e29f380ae143c09f2a"></a><!-- doxytag: member="fg_fuse.c::fg_access" ref="af0ded5a0adf121e29f380ae143c09f2a" args="(const char *path, int mask)" -->
 <div class="memitem">
@@ -229,6 +218,43 @@ Variables</h2></td></tr>
 
 </div>
 </div>
+<a class="anchor" id="a0b2da63e55a7e638538c1ad1a7403a93"></a><!-- doxytag: member="fg_fuse.c::fg_create" ref="a0b2da63e55a7e638538c1ad1a7403a93" args="(const char *path, mode_t mode, struct fuse_file_info *fi)" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">static int <a class="el" href="fg__fuse_8c.html#a0b2da63e55a7e638538c1ad1a7403a93">fg_create</a> </td>
+          <td>(</td>
+          <td class="paramtype">const char *&#160;</td>
+          <td class="paramname"><em>path</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">mode_t&#160;</td>
+          <td class="paramname"><em>mode</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">struct fuse_file_info *&#160;</td>
+          <td class="paramname"><em>fi</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td><code> [static]</code></td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+<p>Create and open a file</p>
+<p>If the file does not exist, first create it with the specified mode, and then open it.</p>
+<p>If this method is not implemented or under Linux kernel versions earlier than 2.6.15, the mknod() and open() methods will be called instead.</p>
+<p>Introduced in version 2.5 </p>
+
+</div>
+</div>
 <a class="anchor" id="af705d87d064051e01bdfc588855705f7"></a><!-- doxytag: member="fg_fuse.c::fg_fsync" ref="af705d87d064051e01bdfc588855705f7" args="(const char *path, int isdatasync, struct fuse_file_info *fi)" -->
 <div class="memitem">
 <div class="memproto">
@@ -289,8 +315,8 @@ Variables</h2></td></tr>
       </table>
 </div>
 <div class="memdoc">
-<p>Get file attributes.</p>
-<p>Similar to stat(). The 'st_dev' and 'st_blksize' files are ignored. The 'st_ino' field is ignored exceptif the 'use_ino' mount option is given.</p>
+<p>Get file attributes. Returns the metadata about the file specified by the path in a special stat structure.</p>
+<p>Similar to stat(). The 'st_dev' and 'st_blksize' fields are ignored. The 'st_ino' field is ignored exceptif the 'use_ino' mount option is given.</p>
 <p>XXX </p>
 
 </div>
@@ -320,7 +346,7 @@ Variables</h2></td></tr>
 </div>
 <div class="memdoc">
 <p>Create a hard link to a file</p>
-<p>XXX </p>
+<p>FIXIT hard links are set, but when you change the content of the file, a new blob will be created, and this will not reflect in the linked file. So take care to actually move the link along with the file. </p>
 
 </div>
 </div>
@@ -349,8 +375,7 @@ Variables</h2></td></tr>
 </div>
 <div class="memdoc">
 <p>Create a directory</p>
-<p>Note that the mode argument may not have the type specification bits set, i.e. S_ISDIR(mode) can be false. To obtain the correct directory type bits use mode|S_IFDIR</p>
-<p>XXX </p>
+<p>Note that the mode argument may not have the type specification bits set, i.e. S_ISDIR(mode) can be false. To obtain the correct directory type bits use mode|S_IFDIR </p>
 
 </div>
 </div>
@@ -385,7 +410,7 @@ Variables</h2></td></tr>
 </div>
 <div class="memdoc">
 <p>Create a file node</p>
-<p>This is called for creation of all non-directory, non-symlink nodes. If the filesystem defines a fg_create() method, then for regular files that will be called instead.</p>
+<p>This is called for creation of all non-directory, non-symlink nodes. If the filesystem defines a <a class="el" href="fg__fuse_8c.html#a0b2da63e55a7e638538c1ad1a7403a93">fg_create()</a> method, then for regular files that will be called instead.</p>
 <p>XXX </p>
 
 </div>
@@ -513,7 +538,7 @@ Variables</h2></td></tr>
 <div class="memdoc">
 <p>Read directory</p>
 <p>The filesystem may choose between two modes of operation.</p>
-<p>1) The readdir implementation ignores the offset parameter, and passes zero to the filler function's offset. The killer function will not return '1' (unless an error happens), so the whole directory is read in a single readdir operation.</p>
+<p>1) The readdir implementation ignores the offset parameter, and passes zero to the filler function's offset. The filler function will not return '1' (unless an error happens), so the whole directory is read in a single readdir operation.</p>
 <p>2) The readdir implementation keeps track of the offsets of the directory entries. It uses the offset parameter and always passes non-zero offset to the filler function. When the buffer is full (or an error happens) the filler function will return '1'.</p>
 <p>XXX </p>
 
@@ -629,8 +654,7 @@ Variables</h2></td></tr>
       </table>
 </div>
 <div class="memdoc">
-<p>Remove a directory</p>
-<p>XXX </p>
+<p>Remove a directory </p>
 
 </div>
 </div>
@@ -789,6 +813,34 @@ Variables</h2></td></tr>
 
 </div>
 </div>
+<a class="anchor" id="a1d627ada007b217c5b24ff2d2a8c8295"></a><!-- doxytag: member="fg_fuse.c::get_mountpoint" ref="a1d627ada007b217c5b24ff2d2a8c8295" args="(const char *arg, char *mpoint)" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">static void <a class="el" href="fg__fuse_8c.html#a1d627ada007b217c5b24ff2d2a8c8295">get_mountpoint</a> </td>
+          <td>(</td>
+          <td class="paramtype">const char *&#160;</td>
+          <td class="paramname"><em>arg</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">char *&#160;</td>
+          <td class="paramname"><em>mpoint</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td><code> [static]</code></td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+<p>remove any trailing / from the mpoint which is returned </p>
+
+</div>
+</div>
 <a class="anchor" id="a0ddf1224851353fc92bfbff6f499fa97"></a><!-- doxytag: member="fg_fuse.c::main" ref="a0ddf1224851353fc92bfbff6f499fa97" args="(int argc, char *argv[])" -->
 <div class="memitem">
 <div class="memproto">
@@ -816,21 +868,43 @@ Variables</h2></td></tr>
 
 </div>
 </div>
-<a class="anchor" id="a708a4c1a4d0c4acc4c447310dd4db27f"></a><!-- doxytag: member="fg_fuse.c::test" ref="a708a4c1a4d0c4acc4c447310dd4db27f" args="(void)" -->
+<a class="anchor" id="a171904b660a7e7d6ad6492be0e0c6cbe"></a><!-- doxytag: member="fg_fuse.c::proc_mountpoint" ref="a171904b660a7e7d6ad6492be0e0c6cbe" args="(void *data, const char *arg, int key, struct fuse_args *outargs)" -->
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">void <a class="el" href="fg__git_8c.html#a708a4c1a4d0c4acc4c447310dd4db27f">test</a> </td>
+          <td class="memname">static int <a class="el" href="fg__fuse_8c.html#a171904b660a7e7d6ad6492be0e0c6cbe">proc_mountpoint</a> </td>
           <td>(</td>
-          <td class="paramtype">void&#160;</td>
-          <td class="paramname"></td><td>)</td>
+          <td class="paramtype">void *&#160;</td>
+          <td class="paramname"><em>data</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
           <td></td>
+          <td class="paramtype">const char *&#160;</td>
+          <td class="paramname"><em>arg</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>key</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">struct fuse_args *&#160;</td>
+          <td class="paramname"><em>outargs</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td><code> [static]</code></td>
         </tr>
       </table>
 </div>
 <div class="memdoc">
-<p><a class="el" href="fg__git_8c.html">fg_git.c</a> </p>
+<p>Process the mountpoint which the user has provided and then use it to create a git repository in the same parent folder. </p>
 
 </div>
 </div>
@@ -848,13 +922,26 @@ Variables</h2></td></tr>
 
 </div>
 </div>
+<a class="anchor" id="a7206b2bd2c2b4d0c06def065ffe04871"></a><!-- doxytag: member="fg_fuse.c::FG_ROOT" ref="a7206b2bd2c2b4d0c06def065ffe04871" args="[PATH_MAX_LENGTH]" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">char <a class="el" href="fg__fuse_8c.html#a7206b2bd2c2b4d0c06def065ffe04871">FG_ROOT</a>[PATH_MAX_LENGTH]<code> [static]</code></td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+</div>
+</div>
 </div><!-- contents -->
 <!-- window showing the filter options -->
 <div id="MSearchSelectWindow"
      onmouseover="return searchBox.OnSearchSelectShow()"
      onmouseout="return searchBox.OnSearchSelectHide()"
      onkeydown="return searchBox.OnSearchSelectKey(event)">
-<a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(0)"><span class="SelectionMark">&#160;</span>All</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(1)"><span class="SelectionMark">&#160;</span>Files</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(2)"><span class="SelectionMark">&#160;</span>Functions</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(3)"><span class="SelectionMark">&#160;</span>Variables</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(4)"><span class="SelectionMark">&#160;</span>Defines</a></div>
+<a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(0)"><span class="SelectionMark">&#160;</span>All</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(1)"><span class="SelectionMark">&#160;</span>Files</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(2)"><span class="SelectionMark">&#160;</span>Functions</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(3)"><span class="SelectionMark">&#160;</span>Variables</a></div>
 
 <!-- iframe showing the search results (closed by default) -->
 <div id="MSearchResultsWindow">
@@ -866,7 +953,7 @@ Variables</h2></td></tr>
 
 
 <hr class="footer"/><address class="footer"><small>
-Generated on Wed Nov 7 2012 18:56:43 for FuseGit by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Mon Nov 26 2012 20:57:16 for FuseGit by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.7.6.1
 </small></address>

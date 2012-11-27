@@ -75,30 +75,490 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 </div>
 <div class="header">
   <div class="summary">
-<a href="#func-members">Functions</a>  </div>
+<a href="#func-members">Functions</a> &#124;
+<a href="#var-members">Variables</a>  </div>
   <div class="headertitle">
 <div class="title">fg_git.c File Reference</div>  </div>
 </div><!--header-->
 <div class="contents">
 <div class="textblock"><code>#include &lt;stdio.h&gt;</code><br/>
+<code>#include &lt;stdlib.h&gt;</code><br/>
 <code>#include &lt;git2.h&gt;</code><br/>
-<code>#include &quot;fg_vcs.h&quot;</code><br/>
+<code>#include &quot;fg.h&quot;</code><br/>
+<code>#include &quot;fg_repo.h&quot;</code><br/>
+<code>#include &quot;fg_util.h&quot;</code><br/>
 </div><table class="memberdecls">
 <tr><td colspan="2"><h2><a name="func-members"></a>
 Functions</h2></td></tr>
-<tr><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="fg__git_8c.html#a708a4c1a4d0c4acc4c447310dd4db27f">test</a> (void)</td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">static int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="fg__git_8c.html#ae53173daaa6209e61b85fd6d557b4d43">l_get_last_commit</a> (git_commit **commit_p)</td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">static int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="fg__git_8c.html#a5dfa0628c0644dce583a0e90578886d1">l_get_path_tree</a> (git_tree **tree, const char *path)</td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">static int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="fg__git_8c.html#a8e8ea03f72d7f893cd05172c705e6357">l_get_parent_tree</a> (git_tree **tree, const char *path)</td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">static int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="fg__git_8c.html#a9116a8b1960bd77bb249184946405d7e">l_git_commit_now</a> (git_tree *tree, const char *message)</td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">static int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="fg__git_8c.html#ac4f6f650429e5228b43ac9c5715bb51a">l_make_commit</a> (const char *path, git_oid oid, const char *message)</td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="fg__git_8c.html#a134be096a28f9bd88bd2384d0495e29b">repo_setup</a> (const char *repo_address)</td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="fg__git_8c.html#ad9ce2f0014d3d13f779e32d24d96a0e6">repo_path_exists</a> (const char *path)</td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="fg__git_8c.html#a7e0ddc1d74b9b18427fe5fcb7d3e902c">repo_is_file</a> (const char *path)</td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="fg__git_8c.html#afc190d3b183013c3d2132bf5c721ec51">repo_get_children</a> (struct fg_file_node **children, int *count, const char *path)</td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="fg__git_8c.html#acea4f731e66b83fe12e5f3152aab434c">repo_stat</a> (const char *path, struct stat *stbuf)</td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="fg__git_8c.html#ac7cc9cbbbf459abb1ec78c667b292408">repo_isdir</a> (const char *path)</td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="fg__git_8c.html#a9b7c0c22b072db235688ec34ca210ab0">repo_dir_stat</a> (const char *path, struct stat *stbuf)</td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="fg__git_8c.html#adb9a38fe8aca99b825b2685953646045">repo_mkdir</a> (const char *path, unsigned int attr)</td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="fg__git_8c.html#a5daef0bf2f6e0d7a80695911a6739516">repo_rmdir</a> (const char *path)</td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="fg__git_8c.html#af4676db581bc87e7d59a4661c5a6b16e">repo_link</a> (const char *from, const char *to)</td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="fg__git_8c.html#a5d5b1db41fc728cc89067cd6f5d1eecc">repo_unlink</a> (const char *path)</td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="fg__git_8c.html#ae5dd2ad9100bc74997c5e59f59d7eb95">repo_read</a> (const char *path, char *buf, size_t size, off_t offset)</td></tr>
+<tr><td colspan="2"><h2><a name="var-members"></a>
+Variables</h2></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">static git_repository *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="fg__git_8c.html#a1dbc8a606468a770bb30d96e558b4999">repo</a></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">static git_commit *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="fg__git_8c.html#aef4b523b882314cc25bc61a3752bbb3a">last_commit</a> = NULL</td></tr>
 </table>
 <hr/><h2>Function Documentation</h2>
-<a class="anchor" id="a708a4c1a4d0c4acc4c447310dd4db27f"></a><!-- doxytag: member="fg_git.c::test" ref="a708a4c1a4d0c4acc4c447310dd4db27f" args="(void)" -->
+<a class="anchor" id="ae53173daaa6209e61b85fd6d557b4d43"></a><!-- doxytag: member="fg_git.c::l_get_last_commit" ref="ae53173daaa6209e61b85fd6d557b4d43" args="(git_commit **commit_p)" -->
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">void <a class="el" href="fg__git_8c.html#a708a4c1a4d0c4acc4c447310dd4db27f">test</a> </td>
+          <td class="memname">static int <a class="el" href="fg__git_8c.html#ae53173daaa6209e61b85fd6d557b4d43">l_get_last_commit</a> </td>
           <td>(</td>
-          <td class="paramtype">void&#160;</td>
-          <td class="paramname"></td><td>)</td>
+          <td class="paramtype">git_commit **&#160;</td>
+          <td class="paramname"><em>commit_p</em></td><td>)</td>
+          <td><code> [static]</code></td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+</div>
+</div>
+<a class="anchor" id="a8e8ea03f72d7f893cd05172c705e6357"></a><!-- doxytag: member="fg_git.c::l_get_parent_tree" ref="a8e8ea03f72d7f893cd05172c705e6357" args="(git_tree **tree, const char *path)" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">static int <a class="el" href="fg__git_8c.html#a8e8ea03f72d7f893cd05172c705e6357">l_get_parent_tree</a> </td>
+          <td>(</td>
+          <td class="paramtype">git_tree **&#160;</td>
+          <td class="paramname"><em>tree</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
           <td></td>
+          <td class="paramtype">const char *&#160;</td>
+          <td class="paramname"><em>path</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td><code> [static]</code></td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+</div>
+</div>
+<a class="anchor" id="a5dfa0628c0644dce583a0e90578886d1"></a><!-- doxytag: member="fg_git.c::l_get_path_tree" ref="a5dfa0628c0644dce583a0e90578886d1" args="(git_tree **tree, const char *path)" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">static int <a class="el" href="fg__git_8c.html#a5dfa0628c0644dce583a0e90578886d1">l_get_path_tree</a> </td>
+          <td>(</td>
+          <td class="paramtype">git_tree **&#160;</td>
+          <td class="paramname"><em>tree</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const char *&#160;</td>
+          <td class="paramname"><em>path</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td><code> [static]</code></td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+</div>
+</div>
+<a class="anchor" id="a9116a8b1960bd77bb249184946405d7e"></a><!-- doxytag: member="fg_git.c::l_git_commit_now" ref="a9116a8b1960bd77bb249184946405d7e" args="(git_tree *tree, const char *message)" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">static int <a class="el" href="fg__git_8c.html#a9116a8b1960bd77bb249184946405d7e">l_git_commit_now</a> </td>
+          <td>(</td>
+          <td class="paramtype">git_tree *&#160;</td>
+          <td class="paramname"><em>tree</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const char *&#160;</td>
+          <td class="paramname"><em>message</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td><code> [static]</code></td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+</div>
+</div>
+<a class="anchor" id="ac4f6f650429e5228b43ac9c5715bb51a"></a><!-- doxytag: member="fg_git.c::l_make_commit" ref="ac4f6f650429e5228b43ac9c5715bb51a" args="(const char *path, git_oid oid, const char *message)" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">static int <a class="el" href="fg__git_8c.html#ac4f6f650429e5228b43ac9c5715bb51a">l_make_commit</a> </td>
+          <td>(</td>
+          <td class="paramtype">const char *&#160;</td>
+          <td class="paramname"><em>path</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">git_oid&#160;</td>
+          <td class="paramname"><em>oid</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const char *&#160;</td>
+          <td class="paramname"><em>message</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td><code> [static]</code></td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+</div>
+</div>
+<a class="anchor" id="a9b7c0c22b072db235688ec34ca210ab0"></a><!-- doxytag: member="fg_git.c::repo_dir_stat" ref="a9b7c0c22b072db235688ec34ca210ab0" args="(const char *path, struct stat *stbuf)" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">int <a class="el" href="fg__git_8c.html#a9b7c0c22b072db235688ec34ca210ab0">repo_dir_stat</a> </td>
+          <td>(</td>
+          <td class="paramtype">const char *&#160;</td>
+          <td class="paramname"><em>path</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">struct stat *&#160;</td>
+          <td class="paramname"><em>stbuf</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+<p>get the stat for a directory </p>
+
+</div>
+</div>
+<a class="anchor" id="afc190d3b183013c3d2132bf5c721ec51"></a><!-- doxytag: member="fg_git.c::repo_get_children" ref="afc190d3b183013c3d2132bf5c721ec51" args="(struct fg_file_node **children, int *count, const char *path)" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">int <a class="el" href="fg__git_8c.html#afc190d3b183013c3d2132bf5c721ec51">repo_get_children</a> </td>
+          <td>(</td>
+          <td class="paramtype">struct fg_file_node **&#160;</td>
+          <td class="paramname"><em>children</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int *&#160;</td>
+          <td class="paramname"><em>count</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const char *&#160;</td>
+          <td class="paramname"><em>path</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+<p>returns the children of the directory represented by path</p>
+<p>Note : children should be freed from the function which calls it. </p>
+
+</div>
+</div>
+<a class="anchor" id="a7e0ddc1d74b9b18427fe5fcb7d3e902c"></a><!-- doxytag: member="fg_git.c::repo_is_file" ref="a7e0ddc1d74b9b18427fe5fcb7d3e902c" args="(const char *path)" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">int <a class="el" href="fg__git_8c.html#a7e0ddc1d74b9b18427fe5fcb7d3e902c">repo_is_file</a> </td>
+          <td>(</td>
+          <td class="paramtype">const char *&#160;</td>
+          <td class="paramname"><em>path</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+<p>checks if the path is of a file returns 1 if it is file, else 0 </p>
+
+</div>
+</div>
+<a class="anchor" id="ac7cc9cbbbf459abb1ec78c667b292408"></a><!-- doxytag: member="fg_git.c::repo_isdir" ref="ac7cc9cbbbf459abb1ec78c667b292408" args="(const char *path)" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">int <a class="el" href="fg__git_8c.html#ac7cc9cbbbf459abb1ec78c667b292408">repo_isdir</a> </td>
+          <td>(</td>
+          <td class="paramtype">const char *&#160;</td>
+          <td class="paramname"><em>path</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+<p>is the path a directory </p>
+
+</div>
+</div>
+<a class="anchor" id="af4676db581bc87e7d59a4661c5a6b16e"></a><!-- doxytag: member="fg_git.c::repo_link" ref="af4676db581bc87e7d59a4661c5a6b16e" args="(const char *from, const char *to)" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">int <a class="el" href="fg__git_8c.html#af4676db581bc87e7d59a4661c5a6b16e">repo_link</a> </td>
+          <td>(</td>
+          <td class="paramtype">const char *&#160;</td>
+          <td class="paramname"><em>from</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const char *&#160;</td>
+          <td class="paramname"><em>to</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+<p>create a link </p>
+
+</div>
+</div>
+<a class="anchor" id="adb9a38fe8aca99b825b2685953646045"></a><!-- doxytag: member="fg_git.c::repo_mkdir" ref="adb9a38fe8aca99b825b2685953646045" args="(const char *path, unsigned int attr)" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">int <a class="el" href="fg__git_8c.html#adb9a38fe8aca99b825b2685953646045">repo_mkdir</a> </td>
+          <td>(</td>
+          <td class="paramtype">const char *&#160;</td>
+          <td class="paramname"><em>path</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">unsigned int&#160;</td>
+          <td class="paramname"><em>attr</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+<p>make a directory in the given path</p>
+<p>FIXIT check if the directory already exists, if it exists then throw error </p>
+
+</div>
+</div>
+<a class="anchor" id="ad9ce2f0014d3d13f779e32d24d96a0e6"></a><!-- doxytag: member="fg_git.c::repo_path_exists" ref="ad9ce2f0014d3d13f779e32d24d96a0e6" args="(const char *path)" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">int <a class="el" href="fg__git_8c.html#ad9ce2f0014d3d13f779e32d24d96a0e6">repo_path_exists</a> </td>
+          <td>(</td>
+          <td class="paramtype">const char *&#160;</td>
+          <td class="paramname"><em>path</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+<p>checks if the path exists in the repository returns 1 if the path exists, else 0 </p>
+
+</div>
+</div>
+<a class="anchor" id="ae5dd2ad9100bc74997c5e59f59d7eb95"></a><!-- doxytag: member="fg_git.c::repo_read" ref="ae5dd2ad9100bc74997c5e59f59d7eb95" args="(const char *path, char *buf, size_t size, off_t offset)" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">int <a class="el" href="fg__git_8c.html#ae5dd2ad9100bc74997c5e59f59d7eb95">repo_read</a> </td>
+          <td>(</td>
+          <td class="paramtype">const char *&#160;</td>
+          <td class="paramname"><em>path</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">char *&#160;</td>
+          <td class="paramname"><em>buf</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">size_t&#160;</td>
+          <td class="paramname"><em>size</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">off_t&#160;</td>
+          <td class="paramname"><em>offset</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+<p>read a file </p>
+
+</div>
+</div>
+<a class="anchor" id="a5daef0bf2f6e0d7a80695911a6739516"></a><!-- doxytag: member="fg_git.c::repo_rmdir" ref="a5daef0bf2f6e0d7a80695911a6739516" args="(const char *path)" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">int <a class="el" href="fg__git_8c.html#a5daef0bf2f6e0d7a80695911a6739516">repo_rmdir</a> </td>
+          <td>(</td>
+          <td class="paramtype">const char *&#160;</td>
+          <td class="paramname"><em>path</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+<p>remove a empty directory </p>
+
+</div>
+</div>
+<a class="anchor" id="a134be096a28f9bd88bd2384d0495e29b"></a><!-- doxytag: member="fg_git.c::repo_setup" ref="a134be096a28f9bd88bd2384d0495e29b" args="(const char *repo_address)" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">int <a class="el" href="fg__git_8c.html#a134be096a28f9bd88bd2384d0495e29b">repo_setup</a> </td>
+          <td>(</td>
+          <td class="paramtype">const char *&#160;</td>
+          <td class="paramname"><em>repo_address</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+<p>Setup the Git repository at the address repo_address </p>
+
+</div>
+</div>
+<a class="anchor" id="acea4f731e66b83fe12e5f3152aab434c"></a><!-- doxytag: member="fg_git.c::repo_stat" ref="acea4f731e66b83fe12e5f3152aab434c" args="(const char *path, struct stat *stbuf)" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">int <a class="el" href="fg__git_8c.html#acea4f731e66b83fe12e5f3152aab434c">repo_stat</a> </td>
+          <td>(</td>
+          <td class="paramtype">const char *&#160;</td>
+          <td class="paramname"><em>path</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">struct stat *&#160;</td>
+          <td class="paramname"><em>stbuf</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+</div>
+</div>
+<a class="anchor" id="a5d5b1db41fc728cc89067cd6f5d1eecc"></a><!-- doxytag: member="fg_git.c::repo_unlink" ref="a5d5b1db41fc728cc89067cd6f5d1eecc" args="(const char *path)" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">int <a class="el" href="fg__git_8c.html#a5d5b1db41fc728cc89067cd6f5d1eecc">repo_unlink</a> </td>
+          <td>(</td>
+          <td class="paramtype">const char *&#160;</td>
+          <td class="paramname"><em>path</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+<p>unlink a path </p>
+
+</div>
+</div>
+<hr/><h2>Variable Documentation</h2>
+<a class="anchor" id="aef4b523b882314cc25bc61a3752bbb3a"></a><!-- doxytag: member="fg_git.c::last_commit" ref="aef4b523b882314cc25bc61a3752bbb3a" args="" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">git_commit* <a class="el" href="fg__git_8c.html#aef4b523b882314cc25bc61a3752bbb3a">last_commit</a> = NULL<code> [static]</code></td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+</div>
+</div>
+<a class="anchor" id="a1dbc8a606468a770bb30d96e558b4999"></a><!-- doxytag: member="fg_git.c::repo" ref="a1dbc8a606468a770bb30d96e558b4999" args="" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">git_repository* <a class="el" href="fg__git_8c.html#a1dbc8a606468a770bb30d96e558b4999">repo</a><code> [static]</code></td>
         </tr>
       </table>
 </div>
@@ -113,7 +573,7 @@ Functions</h2></td></tr>
      onmouseover="return searchBox.OnSearchSelectShow()"
      onmouseout="return searchBox.OnSearchSelectHide()"
      onkeydown="return searchBox.OnSearchSelectKey(event)">
-<a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(0)"><span class="SelectionMark">&#160;</span>All</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(1)"><span class="SelectionMark">&#160;</span>Files</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(2)"><span class="SelectionMark">&#160;</span>Functions</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(3)"><span class="SelectionMark">&#160;</span>Variables</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(4)"><span class="SelectionMark">&#160;</span>Defines</a></div>
+<a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(0)"><span class="SelectionMark">&#160;</span>All</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(1)"><span class="SelectionMark">&#160;</span>Files</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(2)"><span class="SelectionMark">&#160;</span>Functions</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(3)"><span class="SelectionMark">&#160;</span>Variables</a></div>
 
 <!-- iframe showing the search results (closed by default) -->
 <div id="MSearchResultsWindow">
@@ -125,7 +585,7 @@ Functions</h2></td></tr>
 
 
 <hr class="footer"/><address class="footer"><small>
-Generated on Wed Nov 7 2012 18:56:43 for FuseGit by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Mon Nov 26 2012 20:57:16 for FuseGit by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.7.6.1
 </small></address>

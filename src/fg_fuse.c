@@ -606,7 +606,7 @@ proc_mountpoint(void *data, const char *arg, int key, struct fuse_args *outargs)
 	int
 main(int argc, char *argv[])
 {
-        umask(0); // XXX this provides the bits which will be masked for all the files which are to be created.
+	umask(0); // XXX this provides the bits which will be masked for all the files which are to be created.
 
 	// creating the fuse_args to parse it for the mount-point
 	struct fuse_args args = FUSE_ARGS_INIT(argc, argv);
