@@ -80,7 +80,7 @@ static int fg_getattr(const char *path, struct stat *stbuf)
 		//print_file_stats(path, stbuf);
 		return 0;
 	}
-	if ((r = repo_stat(strcmp("/", path) ? path : "/.", stbuf)) < 0)
+	if ((r = repo_stat(strcmp("/", path) ? path : "/", stbuf)) < 0)
 		return -ENOENT;
 	print_file_stats(path, stbuf);
 	

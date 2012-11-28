@@ -375,6 +375,8 @@ repo_stat(const char *path, struct stat *stbuf)
 	stbuf->st_dev = 1; // ignored by FUSE index_entry->dev;     /* ID of device containing file */
 	stbuf->st_ino = 1; // index_entry->ino;     /* inode number */
 	stbuf->st_mode = l_get_file_mode(path);    /* protection */
+	if (stbuf->st_mode == INVALID_FILE_MODE)
+		return -1;
 	stbuf->st_nlink = 1;   /* number of hard links */
 	stbuf->st_uid = ctx->uid;     /* user ID of owner */
 	stbuf->st_gid = ctx->gid;     /* group ID of owner */
