@@ -257,7 +257,11 @@ static int fg_chown(const char *path, uid_t uid, gid_t gid)
 static int fg_truncate(const char *path, off_t size)
 {
 	DEBUG("FG_TRUNCATE");
-        return -ENOSYS;
+	int r;
+
+	if ((r = repo_truncate(path, size)) < 0)
+		return -ENOENT;
+        return 0;
 }
 
 /**
@@ -535,34 +539,34 @@ static struct fuse_operations fg_oper = {
         .chmod	        = fg_chmod,
         .chown	        = fg_chown,
         .truncate	= fg_truncate,
-        .open	        = fg_open,
+        .open	        = fg_open,	// DONE - FIXIT
         .read	        = fg_read,	// DONE
         .write	        = fg_write,
         .statfs	        = fg_statfs,
-        //.flush          = fg_flush, // TODO
-        .release	= fg_release,
+        //.flush          = fg_flush,	// TODO
+        .release	= fg_release,	// DONE - FIXIT
         .fsync	        = fg_fsync,
 #ifdef HAVE_SETXATTR
         .setxattr	= fg_setxattr,
-        .getxattr	= fg_getxattr, // TODO
+        .getxattr	= fg_getxattr,	// TODO
         .listxattr	= fg_listxattr,
         .removexattr	= fg_removexattr,
 #endif
-        //.opendir        = fg_opendir, // TODO
+        //.opendir        = fg_opendir,	// TODO
         .readdir	= fg_readdir,	// DONE
-        //.releasedir	= fg_releasedir, // TODO
-        //.fsyncdir	= fg_fsyncdir, // TODO
-        //.init           = fg_init, // TODO
-        //.destroy        = fg_destroy, // TODO
+        //.releasedir	= fg_releasedir,	// TODO
+        //.fsyncdir	= fg_fsyncdir,	// TODO
+        //.init           = fg_init,	// TODO
+        //.destroy        = fg_destroy,	// TODO
         .access	        = fg_access,
-        .create         = fg_create, // TODO
-        //.ftruncate      = fg_ftruncate, // TODO
-        //.fgetattr       = fg_fgetattr, // TODO
-        //.lock           = fg_lock, // TODO
-        .utimens	= fg_utimens,
-        //.bmap           = fg_bmap, // TODO
-        //.ioctl          = fg_ioctl, // TODO
-        //.poll           = fg_poll, // TODO
+        .create         = fg_create,	// DONE
+        //.ftruncate      = fg_ftruncate,	// TODO
+        //.fgetattr       = fg_fgetattr,	// TODO
+        //.lock           = fg_lock,	// TODO
+        .utimens	= fg_utimens,	// DONE
+        //.bmap           = fg_bmap,	// TODO
+        //.ioctl          = fg_ioctl,	// TODO
+        //.poll           = fg_poll,	// TODO
 };
 
 /**

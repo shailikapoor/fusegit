@@ -8,14 +8,27 @@
 
 //*****************************************************************************
 // STRUCTURE OF THE GIT Note for each file (git_object)
+// NOTE: All links have the same result when done stat, so the full note will be
+// stored only for the first note. The other notes will have the name of the
+// link they are associated to. So the name of the first link.
+// **Structure for first link**
 // access time
 // modification time
+// !3 - number of links
+// !/path/to/link1
+// !/path/to/link2
+// !/path/to/link3 
+//
+// **Structure for other links**
+// @/path/to/first/link - this link will have a note associated to it which can
+// be used.
 //*****************************************************************************
 
 // LOCAL
 static const unsigned int INVALID_FILE_MODE = 077777777;
 static git_repository *repo;
 static git_commit *last_commit = NULL;
+
 
 	static int
 l_get_last_commit(git_commit **commit_p)
@@ -223,6 +236,7 @@ l_get_file_size(const char *path)
 	git_oid oid;
 	git_blob *blob;
 	char last[PATH_MAX_LENGTH];
+	size_t size;
 	
 	if ((r = l_get_parent_tree(&tree, path)) < 0)
 		return -1;
@@ -236,7 +250,9 @@ l_get_file_size(const char *path)
 		return -1;
 	if ((r = git_blob_lookup(&blob, repo, &oid)) < 0)
 		return -1;
-	return git_blob_rawsize(blob);
+	size = git_blob_rawsize(blob);
+	git_blob_free(blob);
+	return size;
 }
 
 	static unsigned int
@@ -776,8 +792,10 @@ repo_read(const char *path, char *buf, size_t size, off_t offset)
 	
 	DEBUG("copy the content to the fuse buffer");
 	memcpy(buf, content, size);
-	// return the size of the content we have read
 
+	git_blob_free(blob);
+	
+	// return the size of the content we have read
 	return size;
 	
 }
@@ -825,7 +843,7 @@ repo_create_file(const char *path, mode_t mode)
 	
 	// do the commit
 	char header[] = "fusegit\ncreate\n";
-	char message[2*PATH_MAX_LENGTH + strlen(header)];
+	char message[PATH_MAX_LENGTH + strlen(header)];
 	sprintf(message, "%s%s", header, path);
 	//DEBUG("Making the commit : %s", message);
 	if ((r = l_make_commit(tmppath, oid, message)) < 0)
@@ -850,7 +868,7 @@ repo_update_time_ns(const char *path, const struct timespec ts[2])
 	git_signature *author;
 
 	DEBUG("time_note : %ld %ld", ts[0].tv_sec, ts[0].tv_sec);
-	sprintf(time_note, "%ld\n%ld", ts[0].tv_sec*1000, ts[0].tv_sec*1000);
+	sprintf(time_note, "%ld\n%ld\n", ts[0].tv_sec*1000, ts[0].tv_sec*1000);
 
 	// create the note for the git_object corresponding to the path
 	if ((r = l_get_signature_now(&author)) < 0)
@@ -877,3 +895,78 @@ repo_update_time_ns(const char *path, const struct timespec ts[2])
 	DEBUG("CREATED NOTE");
 	return 0;
 }
+
+/**
+ * truncate a file
+ */
+	int
+repo_truncate(const char *path, off_t size)
+{
+	int r;
+	git_oid oid;
+	git_blob *blob;
+	git_tree *tree;
+	const git_tree_entry *entry;
+	git_treebuilder *builder;
+	char buf[size];
+	char *content;
+	unsigned int mode;
+	char tmppath[PATH_MAX_LENGTH];
+	char last[PATH_MAX_LENGTH];
+	strcpy(tmppath, path);
+
+	// get the blob id corresponding to this path
+	if ((r = l_get_path_oid(&oid, path)) < 0)
+		return -EFG_UNKNOWN;
+	if ((r = git_blob_lookup(&blob, repo, &oid)) < 0)
+		return -EFG_UNKNOWN;
+
+	// check if the size is greater than blob size, then just return
+	if (git_blob_rawsize(blob) <= size)
+		return 0;	// Done here, return
+
+	// create a new blob with the required size
+	content = (char *)git_blob_rawcontent(blob);
+	memcpy(buf, content, size);
+	git_blob_free(blob);
+	if ((r = git_blob_create_frombuffer(&oid, repo, buf, size)) < 0)
+		return -EFG_UNKNOWN;
+
+	// get the parent tree
+	if ((r = l_get_parent_tree(&tree, path)) < 0)
+		return -EFG_UNKNOWN;
+
+	// get the treebuilder for the parent tree
+	if ((r = git_treebuilder_create(&builder, tree)) < 0)
+		return -EFG_UNKNOWN;
+
+	// add the blob with the name of the file as a child to the parent
+	if ((r = get_last_component(path, last)) < 0)
+		return -EFG_UNKNOWN;
+	//DEBUG("Adding the link to the tree builder");
+	entry = git_tree_entry_byname(tree, last);
+	mode = git_tree_entry_attributes(entry);
+	if ((r = git_treebuilder_insert(NULL, builder, last,
+		&oid, mode)) < 0)
+		return -EFG_UNKNOWN;
+	//DEBUG("Writing to the original tree");
+	if ((r = git_treebuilder_write(&oid, repo, builder)) < 0)
+		return -EFG_UNKNOWN;
+	// free the tree builder
+	git_treebuilder_free(builder);
+	if ((r = get_parent_path(NULL, tmppath)) < 0)
+		return -EFG_UNKNOWN;	// get parent path
+	
+	// call make commit function with this updated blob id
+	// do the commit
+	char header[] = "fusegit\ntruncate\n";
+	char message[PATH_MAX_LENGTH + strlen(header)];
+	sprintf(message, "%s%s : %ld", header, path, size);
+	//DEBUG("Making the commit : %s", message);
+	if ((r = l_make_commit(tmppath, oid, message)) < 0)
+		return r;
+	//DEBUG("Commit successful");
+
+	return 0;
+}
+

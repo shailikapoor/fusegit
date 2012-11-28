@@ -46,3 +46,5 @@ int repo_read(const char *path, char *buf, size_t size, off_t offset);
 int repo_create_file(const char *path, mode_t mode);
 
 int repo_update_time_ns(const char *path, const struct timespec ts[2]);
+
+int repo_truncate(const char *path, off_t size);
