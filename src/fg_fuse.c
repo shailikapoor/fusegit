@@ -78,7 +78,7 @@ static int fg_getattr(const char *path, struct stat *stbuf)
 	if (!repo_path_exists(path))
 		return -ENOENT;
 	fprintf(stdout, "getting attribute of %s\n", path);
-	if ((r = repo_isdir(path))) {
+	if ((r = repo_is_dir(path))) {
 		//fprintf(stdout, "is directory %s\n", path);
 		if ((r = repo_dir_stat(path, stbuf)) < 0)
 			return -ENOENT;

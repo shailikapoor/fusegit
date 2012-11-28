@@ -298,8 +298,11 @@ repo_path_exists(const char *path)
 	int
 repo_is_file(const char *path)
 {
-	// TODO
-	return 0;
+	if (!repo_path_exists(path))
+		return 0;
+	if (repo_is_dir(path))
+		return 0;
+	return 1;
 }
 
 /**
@@ -395,7 +398,7 @@ repo_stat(const char *path, struct stat *stbuf)
  * is the path a directory
  */
 	int
-repo_isdir(const char *path)
+repo_is_dir(const char *path)
 {
 	int r;
 	git_tree *tree;
