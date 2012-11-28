@@ -475,12 +475,12 @@ static int fg_access(const char *path, int mask)
  */
 static int fg_create(const char *path, mode_t mode, struct fuse_file_info *fi)
 {
-	int r;
+	// int r;
 	// if the file doesn't exist create a file
 	// check in the git repository if this path exists
-	//if (!repo_path_exists(path)) {
+	// if (!repo_path_exists(path)) {
 	//	// TODO path doesn't exist
-	//}
+	// }
 
 	// open the file
 	// TODO check permissions
