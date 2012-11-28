@@ -1,8 +1,6 @@
 /**
  * fg_git.c
  */
-#include <stdio.h>
-#include <stdlib.h>
 #include <git2.h>
 #include "fg.h"
 #include "fg_repo.h"
@@ -42,10 +40,9 @@ l_get_last_commit(git_commit **commit_p)
 l_get_path_tree(git_tree **tree, const char *path)
 {
 	git_oid oid;
-	git_reference *ref;	// TODO how to manage the pointer
 	git_commit *commit;	// TODO how to manage the pointer
 	git_tree *l_tree;	// TODO how to manage the pointer
-	git_tree_entry *tree_entry;	// TODO how to manage the pointer
+	const git_tree_entry *tree_entry;	// TODO how to manage the pointer
 	git_object *object;	// TODO how to manage the pointer
 
 	char name[PATH_MAX_LENGTH];
@@ -117,12 +114,13 @@ l_git_commit_now(git_tree *tree, const char *message)
 	int r;
 	git_oid oid;
 	git_signature *author;
-	git_time_t time;
-	git_commit *parents[1];
+	git_commit *tmp;
+	const git_commit *parents[1];
 
 	if (last_commit == NULL) {
-		if ((r = l_get_last_commit(&parents[0])) < 0)
+		if ((r = l_get_last_commit(&tmp)) < 0)
 			return -EFG_UNKNOWN;
+		parents[0] = tmp;
 	} else {
 		parents[0] = last_commit;
 	}
@@ -160,7 +158,6 @@ l_make_commit(const char *path, git_oid oid, const char *message)
 {
 	int r;
 	git_treebuilder *builder;
-	git_tree_entry *entry;
 	git_tree *tree;
 	unsigned int attr = S_IFDIR | 0755;	// FIXIT HARD CODED
 	char last[PATH_MAX_LENGTH];
@@ -178,7 +175,7 @@ l_make_commit(const char *path, git_oid oid, const char *message)
 		if ((r = get_last_component(tmppath, last)) < 0)
 			return -EFG_UNKNOWN;
 		//fprintf(stdout, "Inserting into tree builder\n");
-		if ((r = git_treebuilder_insert(&entry, builder, last, &oid, attr))
+		if ((r = git_treebuilder_insert(NULL, builder, last, &oid, attr))
 			< 0)
 			return -EFG_UNKNOWN;	// can't link the empty tree to repo
 		//fprintf(stdout, "Writing to the original tree\n");
@@ -207,7 +204,7 @@ l_get_file_size(const char *path)
 {
 	int r;
 	git_tree *tree;
-	git_tree_entry * entry;
+	const git_tree_entry * entry;
 	git_oid oid;
 	git_blob *blob;
 	char last[PATH_MAX_LENGTH];
@@ -232,9 +229,7 @@ l_get_file_mode(const char *path)
 {
 	int r;
 	git_tree *tree;
-	git_tree_entry * entry;
-	git_oid oid;
-	git_blob *blob;
+	const git_tree_entry * entry;
 	char last[PATH_MAX_LENGTH];
 	
 	if ((r = l_get_parent_tree(&tree, path)) < 0)
@@ -276,7 +271,7 @@ repo_path_exists(const char *path)
 {
 	int r;
 	git_tree *tree;
-	git_tree_entry *entry;
+	const git_tree_entry *entry;
 	char last[PATH_MAX_LENGTH];
 	
 	if (strcmp(path, "/") == 0)
@@ -315,7 +310,7 @@ repo_get_children(struct fg_file_node **children, int *count, const char *path)
 {
 	int i, r, n;
 	git_tree *tree;	// TODO check how to manage memory
-	git_tree_entry *entry;	// TODO check how to manage memory
+	const git_tree_entry *entry;	// TODO check how to manage memory
 
 	//fprintf(stdout, "ENTERING THE l_get_path_tree: \"%s\"\n", path);
 	if ((r = l_get_path_tree(&tree, path)) < 0)
@@ -446,7 +441,6 @@ repo_mkdir(const char *path, unsigned int attr)
 	int r;
 	git_treebuilder *builder;
 	git_treebuilder *empty_treebuilder;
-	git_tree_entry *entry;
 	git_tree *tree;
 	git_oid oid;
 	char last[PATH_MAX_LENGTH];
@@ -471,7 +465,7 @@ repo_mkdir(const char *path, unsigned int attr)
 	if ((r = get_last_component(tmppath, last)) < 0)
 		return -EFG_UNKNOWN;
 	//fprintf(stdout, "Inserting into tree builder\n");
-	if ((r = git_treebuilder_insert(&entry, builder, last, &oid, attr))
+	if ((r = git_treebuilder_insert(NULL, builder, last, &oid, attr))
 		< 0)
 		return -EFG_UNKNOWN;	// can't link the empty tree to repo
 	//fprintf(stdout, "Writing to the original tree\n");
@@ -562,8 +556,7 @@ repo_link(const char *from, const char *to)
 	git_treebuilder *builder;
 
 	git_tree *from_tree;
-	git_tree_entry *from_entry;
-	git_oid from_oid;
+	const git_tree_entry *from_entry;
 	char from_last[PATH_MAX_LENGTH];
 	unsigned int from_attr;
 	
@@ -630,7 +623,7 @@ repo_unlink(const char *path)
 	//fprintf(stdout, "In repo_unlink\n");
 	int r;
 	git_treebuilder *builder;
-	git_tree_entry *entry;
+	const git_tree_entry *entry;
 	git_tree *tree;
 	git_oid oid;
 	char last[PATH_MAX_LENGTH];
@@ -708,7 +701,7 @@ repo_read(const char *path, char *buf, size_t size, off_t offset)
 	int r;
 	char last[PATH_MAX_LENGTH];
 	git_tree *tree;
-	git_tree_entry *entry;
+	const git_tree_entry *entry;
 	git_oid oid;
 	char *content;
 	size_t rawsize;

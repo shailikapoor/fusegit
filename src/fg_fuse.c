@@ -15,11 +15,6 @@
 
 //#include <fuse.h>
 #include <fuse_opt.h>	// this is to read the input arguments
-#include <stdio.h>
-#include <stdlib.h>	// for exit()
-#include <string.h>
-#include <errno.h>
-#include <unistd.h>	// this is for getcwd
 #include "fg.h"
 #include "fg_repo.h"
 #include "fg_util.h"
