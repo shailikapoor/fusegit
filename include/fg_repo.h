@@ -42,3 +42,7 @@ int repo_link(const char *from, const char *to);
 int repo_unlink(const char *path);
 
 int repo_read(const char *path, char *buf, size_t size, off_t offset);
+
+int repo_create_file(const char *path, mode_t mode);
+
+int repo_update_time_ns(const char *path, const struct timespec ts[2]);

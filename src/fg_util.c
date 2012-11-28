@@ -3,7 +3,19 @@
 #include <string.h>
 #include "fg.h"
 
+void debug_print(char *msg, ...)
+{    
+	char buf[MAX_FMT_SIZE+2];
 
+	va_list argp;
+        va_start(argp, msg);
+	vsnprintf(buf, MAX_FMT_SIZE, msg, argp);
+	va_end(argp);
+	buf[strlen(buf)+1] = '\0';
+	buf[strlen(buf)] = '\n';
+
+	fprintf(stdout, "%s", buf);
+}
 
 int is_substr(const char *str, const char *sub)
 {
