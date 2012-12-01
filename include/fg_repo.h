@@ -18,7 +18,9 @@ struct repo_file_node {
 
 struct repo_stat_data {
 	char **links;
+	char **expired_links;
 	unsigned int count;
+	unsigned int ecount;
 	unsigned long atime;
 	unsigned long mtime;
 };

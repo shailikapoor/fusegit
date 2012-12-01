@@ -127,11 +127,15 @@ l_git_commit_now(git_tree *tree, const char *message)
 	git_signature *author;
 	git_commit *tmp;
 	const git_commit *parents[1];
+	int num_parents = 1;
 
 	if (last_commit == NULL) {
-		if ((r = l_get_last_commit(&tmp)) < 0)
-			return -EFG_UNKNOWN;
-		parents[0] = tmp;
+		if ((r = l_get_last_commit(&tmp)) < 0) {
+			// NEW REPOSITORY
+			num_parents = 0;
+		} else {
+			parents[0] = tmp;
+		}
 	} else {
 		parents[0] = last_commit;
 	}
@@ -150,7 +154,7 @@ l_git_commit_now(git_tree *tree, const char *message)
 				tree,	// the git_tree object which will be
 					// used as the tree for this commit. 
 					// don't know if NULL is valid
-				1,	// number of parents. Don't know what
+				num_parents,	// number of parents. Don't know what
 					// value should be used here
 				parents)	// array of pointers to the parents
 					// (git_commit *parents[])
@@ -199,12 +203,15 @@ l_make_commit(const char *path, git_oid oid, const char *message)
 
 	// get the parrent tree
 	//DEBUG("Getting the tree from the oid");
+	printf("look up the tree\n");
 	if ((r = git_tree_lookup(&tree, repo, &oid)) < 0)
 		return -EFG_UNKNOWN;
 
+	printf("commit the tree to repo\n");
 	if ((r = l_git_commit_now(tree, message)) < 0)
 		return -EFG_UNKNOWN;
 	//DEBUG("Commit successful");
+	printf("commit successful\n");
 
 	return 0;
 }
@@ -305,7 +312,20 @@ l_update_link_stats(struct repo_stat_data *note_stat_p)
 	git_oid oid;
 	git_oid path_oid;
 	git_signature *author;
-	git_note *note;
+	char *tmppath = note_stat_p->links[0];
+
+	if (note_stat_p->count == 0 && note_stat_p->ecount == 1)
+		tmppath = note_stat_p->expired_links[0];
+	if ((r = l_get_path_oid(&path_oid, tmppath)) < 0)
+		return -1;
+	if ((r = l_get_signature_now(&author)) < 0)
+		return -1;
+
+	DEBUG("REMOVING NOTE");
+	git_note_remove(repo, NULL, author, author, &path_oid);
+
+	if (note_stat_p->count == 0)
+		return 0;	// if no links, then just return
 
 	// get the space required
 	n = 0;
@@ -313,6 +333,7 @@ l_update_link_stats(struct repo_stat_data *note_stat_p)
 	n += 4;	// for !
 	n += PATH_MAX_LENGTH*note_stat_p->count;	// for paths
 
+	// create the note for the git_object corresponding to the path
 	DEBUG("note_data : %ld %ld", note_stat_p->atime, note_stat_p->mtime);
 	sprintf(note_data, "%ld\n%ld\n", note_stat_p->atime, note_stat_p->mtime);
 	sprintf(note_data+strlen(note_data), "!%d\n", note_stat_p->count);
@@ -321,14 +342,6 @@ l_update_link_stats(struct repo_stat_data *note_stat_p)
 			note_stat_p->links[i]);
 	}
 
-	// create the note for the git_object corresponding to the path
-	if ((r = l_get_signature_now(&author)) < 0)
-		return -1;
-	if ((r = l_get_path_oid(&path_oid, note_stat_p->links[0])) < 0)
-		return -1;
-
-	DEBUG("REMOVING NOTE");
-	git_note_remove(repo, NULL, author, author, &path_oid);
 	DEBUG("CREATING NOTE");
 	if ((r = git_note_create(&oid,
 				repo,
@@ -345,25 +358,27 @@ l_update_link_stats(struct repo_stat_data *note_stat_p)
 	for (i=1; i<note_stat_p->count; i++) {
 		if ((r = l_get_path_oid(&path_oid, note_stat_p->links[i])) < 0)
 			return -1;
-		DEBUG("PATH %d : %s", i, note_stat_p->links[i]);
-		if ((r = git_note_read(&note, repo, NULL, &path_oid)) < 0) {
-			// create a note
-			sprintf(note_data, "@%s", note_stat_p->links[0]);
-			DEBUG("CREATING NOTE");
-			if ((r = git_note_create(&oid,
-						repo,
-						author,
-						author,
-						NULL,
-						&path_oid,
-						note_data)) < 0)
-				return -1;
-			DEBUG("NOTE CREATED");
-		} else {
-			DEBUG("FREEING NOTE");
-			git_note_free(note);
-			DEBUG("NOTE FREED");
-		}
+		DEBUG("LINK PATH %d : %s", i, note_stat_p->links[i]);
+		git_note_remove(repo, NULL, author, author, &path_oid);
+		// create a note
+		sprintf(note_data, "@%s", note_stat_p->links[0]);
+		DEBUG("CREATING NOTE");
+		if ((r = git_note_create(&oid,
+					repo,
+					author,
+					author,
+					NULL,
+					&path_oid,
+					note_data)) < 0)
+			return -1;
+		DEBUG("NOTE CREATED");
+	}
+	for (i=0; i<note_stat_p->ecount; i++) {
+		if ((r = l_get_path_oid(&path_oid, note_stat_p->expired_links[i])) < 0)
+			return -1;
+		DEBUG("EXPIRED LINK PATH %d : %s", i, note_stat_p->expired_links[i]);
+		git_note_remove(repo, NULL, author, author, &path_oid);
+		DEBUG("NOTE REMOVED");
 	}
 
 	return 0;
@@ -394,9 +409,12 @@ l_get_note_stats(struct repo_stat_data **note_stat_p, const char *path)
 	if ((r = git_note_read(&note, repo, NULL, &path_oid)) < 0)
 		return -1;
 	message = git_note_message(note);
+	DEBUG("NOTE MESSAGE\n%s", message);
 	// ***allocate space for repo_stat_data
+	DEBUG("allocate space for note_stat_p");
 	*note_stat_p = malloc(sizeof(struct repo_stat_data));
 	// get the atime
+	DEBUG("get the atime");
 	tmp2 = index(message, '\n');
 	ind = tmp2 - message;
 	strncpy(tmp, message, ind);
@@ -406,6 +424,7 @@ l_get_note_stats(struct repo_stat_data **note_stat_p, const char *path)
 	message += ind+1;
 	
 	// get the mtime
+	DEBUG("get the mtime");
 	tmp2 = index(message, '\n');
 	ind = tmp2 - message;
 	strncpy(tmp, message, ind);
@@ -415,6 +434,7 @@ l_get_note_stats(struct repo_stat_data **note_stat_p, const char *path)
 	message += ind+1;
 	
 	// get the number of links
+	DEBUG("get the number of lines");
 	tmp2 = index(message, '\n');
 	ind = tmp2 - message;
 	strncpy(tmp, message, ind);
@@ -422,6 +442,12 @@ l_get_note_stats(struct repo_stat_data **note_stat_p, const char *path)
 	sscanf(tmp, "!%d", &((*note_stat_p)->count));
 	
 	message += ind+1;
+
+	// get the number of expired links
+	DEBUG("get the expired links");
+	// Note : this information is never read from the file
+	(*note_stat_p)->ecount = 0;
+	(*note_stat_p)->expired_links = NULL;
 	
 	// ***allocate space for repo_stat_data -> links
 	(*note_stat_p)->links = malloc((*note_stat_p)->count * sizeof(char *));
@@ -431,6 +457,7 @@ l_get_note_stats(struct repo_stat_data **note_stat_p, const char *path)
 	}
 
 	// get the links
+	DEBUG("get the links");
 	for (i=0; i<(*note_stat_p)->count; i++) {
 		tmp2 = index(message, '\n');
 		ind = tmp2 - message;
@@ -465,7 +492,7 @@ l_get_note_stats_link(struct repo_stat_data **note_stat_p, const char *path)
 		strcpy(tmppath, message+1);
 		// free the note
 		git_note_free(note);
-		DEBUG("getting linked stats");
+		DEBUG("getting linked stats for %s, from %s", path, tmppath);
 		if ((r = l_get_note_stats(note_stat_p, tmppath)) < 0)
 			return -1;
 	} else {
@@ -490,12 +517,35 @@ l_get_note_stats_link(struct repo_stat_data **note_stat_p, const char *path)
 repo_setup(const char *repo_address)
 {
 	int r;
+	git_oid oid;
+	git_treebuilder *empty_treebuilder;
+
 	if ((r = git_repository_init(&repo, repo_address, 1)))
 		return -EFG_UNKNOWN;
 	// TODO test if the repository already exists, if it already exists then
 	// just use it, and don't open a new repository.
 	// TODO use the location specified by the config file to store the
 	// repository in the parent file system
+
+	if (git_repository_is_empty(repo) == 0)	// not empty
+		return 0;
+	if ((r = git_treebuilder_create(&empty_treebuilder, NULL)) < 0)
+		return -EFG_UNKNOWN;	// can't create empty tree builder
+	printf("empty tree builder created\n");
+	if ((r = git_treebuilder_write(&oid, repo, empty_treebuilder)) < 0)
+		return -EFG_UNKNOWN;	// can't insert empty tree into repo
+	printf("tree builder inserted into repo\n");
+	// free the tree builder
+	git_treebuilder_free(empty_treebuilder);
+
+	// do the commit
+	char header[] = "fusegit\nsetup\n";
+	//DEBUG("Making the commit : %s", message);
+	if ((r = l_make_commit("/", oid, header)) < 0)
+		return r;
+	DEBUG("SETUP SUCCESSFUL");
+	printf("setup successful");
+
 	return 0;
 }
 
@@ -892,6 +942,7 @@ repo_unlink(const char *path)
 {
 	//DEBUG("In repo_unlink");
 	int r;
+	int i, j, k;
 	git_treebuilder *builder;
 	const git_tree_entry *entry;
 	git_tree *tree;
@@ -899,6 +950,37 @@ repo_unlink(const char *path)
 	char last[PATH_MAX_LENGTH];
 	char tmppath[PATH_MAX_LENGTH];
 	strcpy(tmppath, path);
+	
+	struct repo_stat_data *note_stat;
+	char **tmp_links;
+	char **tmp_exp_links;
+
+	// update the link stats
+	if ((r = l_get_note_stats_link(&note_stat, path)) < 0)
+		return -EFG_UNKNOWN;
+	note_stat->count -= 1;
+	note_stat->ecount = 1;
+	tmp_links = malloc(note_stat->count * sizeof(char *));
+	tmp_exp_links = malloc(note_stat->ecount * sizeof(char *));
+	for (i=0, j=0, k=0; j<note_stat->count; i++) {
+		if (strcmp(note_stat->links[i], path) == 0) {
+			tmp_exp_links[k] = malloc(PATH_MAX_LENGTH * sizeof(char));
+			strcpy(tmp_exp_links[k], note_stat->links[i]);
+			k++;
+			continue;
+		}
+		tmp_links[j] = malloc(PATH_MAX_LENGTH * sizeof(char));
+		strcpy(tmp_links[j], note_stat->links[i]);
+		j++;
+	}
+	if (note_stat->expired_links)
+		free(note_stat->expired_links);
+	note_stat->expired_links = tmp_exp_links;
+	free(note_stat->links);
+	note_stat->links = tmp_links;
+	if ((r = l_update_link_stats(note_stat)) < 0)
+		return -EFG_UNKNOWN;
+	free_repo_stat_data(note_stat);
 
 	// check if it is a file
 	if ((r = l_get_parent_tree(&tree, tmppath)) < 0)
@@ -1181,6 +1263,9 @@ free_repo_stat_data(struct repo_stat_data *data)
 
 	for (i=0; i<data->count; i++) {
 		free(data->links[i]);
+	}
+	for (i=0; i<data->ecount; i++) {
+		free(data->expired_links[i]);
 	}
 	free(data->links);
 	free(data);
