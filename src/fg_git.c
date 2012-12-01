@@ -516,6 +516,16 @@ l_get_note_stats_link(struct repo_stat_data **note_stat_p, const char *path)
 	return 0;
 }
 
+	static void
+l_free_str_array(char **arr, int size)
+{
+	int i;
+	
+	for (i=0; i<size; i++) {
+		free(arr[i]);
+	}
+	free(arr);
+}
 
 // ****************************************************************************
 // GLOBAL
@@ -986,9 +996,9 @@ repo_unlink(const char *path)
 		j++;
 	}
 	if (note_stat->expired_links)
-		free(note_stat->expired_links);	// FIXIT : incorrect freeing
+		l_free_str_array(note_stat->expired_links, note_stat->ecount);
 	note_stat->expired_links = tmp_exp_links;
-	free(note_stat->links);	// FIXIT : incorrect freeing
+	l_free_str_array(note_stat->links, note_stat->count);
 	note_stat->links = tmp_links;
 	DEBUG("CHECKING EXP LINK : %s", note_stat->expired_links[0]);
 	if ((r = l_update_link_stats(note_stat)) < 0)
@@ -1285,11 +1295,9 @@ free_repo_stat_data(struct repo_stat_data *data)
 		free(data->expired_links[i]);
 	}
 	DEBUG("FREEING LINKS");
-	if (data->count != 0)
-		free(data->links);
+	free(data->links);	// TODO check if this is correct
 	DEBUG("FREEING EXPIRED LINKS");
-	if (data->ecount != 0)
-		free(data->expired_links);
-	DEBUG("FREEING DATA");
+	free(data->expired_links);
+	DEBUG("FREEING DATA");	// TODO check if this is correct
 	free(data);
 }
