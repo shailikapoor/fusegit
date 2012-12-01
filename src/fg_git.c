@@ -957,6 +957,7 @@ repo_create_file(const char *path, mode_t mode)
 	char tmppath[PATH_MAX_LENGTH];
 	char last[PATH_MAX_LENGTH];
 	strcpy(tmppath, path);
+	struct repo_stat_data *note_stat;
 
 	// create a empty blob
 	if ((r = git_blob_create_frombuffer(&oid, repo, "", 0)) < 0)
@@ -989,10 +990,20 @@ repo_create_file(const char *path, mode_t mode)
 	char header[] = "fusegit\ncreate\n";
 	char message[PATH_MAX_LENGTH + strlen(header)];
 	sprintf(message, "%s%s", header, path);
-	//DEBUG("Making the commit : %s", message);
 	if ((r = l_make_commit(tmppath, oid, message)) < 0)
 		return r;
-	//DEBUG("Commit successful");
+
+	// create the link stats
+	note_stat = malloc(sizeof(struct repo_stat_data));
+	note_stat->atime = 0;
+	note_stat->mtime = 0;
+	note_stat->count = 1;
+	note_stat->links = malloc(sizeof(char *));
+	note_stat->links[0] = malloc(PATH_MAX_LENGTH * sizeof(char));
+	strcpy(note_stat->links[0], path);
+	if ((r = l_update_link_stats(note_stat)) < 0)
+		return -1;
+	free_repo_stat_data(note_stat);
 
 	return 0;
 }
