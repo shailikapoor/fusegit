@@ -305,6 +305,7 @@ l_update_link_stats(struct repo_stat_data *note_stat_p)
 	git_oid oid;
 	git_oid path_oid;
 	git_signature *author;
+	git_note *note;
 
 	// get the space required
 	n = 0;
@@ -322,9 +323,9 @@ l_update_link_stats(struct repo_stat_data *note_stat_p)
 
 	// create the note for the git_object corresponding to the path
 	if ((r = l_get_signature_now(&author)) < 0)
-		return -EFG_UNKNOWN;
+		return -1;
 	if ((r = l_get_path_oid(&path_oid, note_stat_p->links[0])) < 0)
-		return -EFG_UNKNOWN;
+		return -1;
 
 	DEBUG("REMOVING NOTE");
 	git_note_remove(repo, NULL, author, author, &path_oid);
@@ -338,7 +339,33 @@ l_update_link_stats(struct repo_stat_data *note_stat_p)
 				note_data)) < 0)
 		return -1;
 	DEBUG("CREATED NOTE");
+
 	// for the other links create a linked note
+	DEBUG("FINDING PATH OF LINKS");
+	for (i=1; i<note_stat_p->count; i++) {
+		if ((r = l_get_path_oid(&path_oid, note_stat_p->links[i])) < 0)
+			return -1;
+		DEBUG("PATH %d : %s", i, note_stat_p->links[i]);
+		if ((r = git_note_read(&note, repo, NULL, &path_oid)) < 0) {
+			// create a note
+			sprintf(note_data, "@%s", note_stat_p->links[0]);
+			DEBUG("CREATING NOTE");
+			if ((r = git_note_create(&oid,
+						repo,
+						author,
+						author,
+						NULL,
+						&path_oid,
+						note_data)) < 0)
+				return -1;
+			DEBUG("NOTE CREATED");
+		} else {
+			DEBUG("FREEING NOTE");
+			git_note_free(note);
+			DEBUG("NOTE FREED");
+		}
+	}
+
 	return 0;
 }
 
@@ -438,11 +465,13 @@ l_get_note_stats_link(struct repo_stat_data **note_stat_p, const char *path)
 		strcpy(tmppath, message+1);
 		// free the note
 		git_note_free(note);
+		DEBUG("getting linked stats");
 		if ((r = l_get_note_stats(note_stat_p, tmppath)) < 0)
 			return -1;
 	} else {
 		// free the note
 		git_note_free(note);
+		DEBUG("getting original stats");
 		if ((r = l_get_note_stats(note_stat_p, path)) < 0)
 			return -1;
 	}
@@ -598,7 +627,7 @@ repo_stat(const char *path, struct stat *stbuf)
 	stbuf->st_blksize = 1; // ignored by FUSE index_entry->blksize; /* blocksize for file system I/O */
 	//stbuf->st_blocks = index_entry->blocks;  /* number of 512B blocks allocated */
 	stbuf->st_atime = file_stat->atime/1000;   /* time of last access */
-	stbuf->st_mtime = file_stat->mtime/1000; // FIXIT   /* time of last modification */
+	stbuf->st_mtime = file_stat->mtime/1000;   /* time of last modification */
 	//stbuf->st_ctime = 0; // FIXIT   /* time of last status change */
 
 	free_repo_stat_data(file_stat);
@@ -773,6 +802,7 @@ repo_link(const char *from, const char *to)
 	// entries which are pointing to the same id. Thus we will have a link
 	// to the same object in the repository, but now we have multiple links.
 	int r;
+	int i;
 	git_treebuilder *builder;
 
 	git_tree *from_tree;
@@ -785,6 +815,9 @@ repo_link(const char *from, const char *to)
 	char last[PATH_MAX_LENGTH];
 	char tmppath[PATH_MAX_LENGTH];
 	unsigned int dir_attr = S_IFDIR | 0755;	// FIXIT HARD CODED
+
+	struct repo_stat_data *note_stat;
+	char **tmp_links;
 
 	// find the id of the object which refers to `from`
 	// return -ENOLINK if this link is not found
@@ -830,6 +863,23 @@ repo_link(const char *from, const char *to)
 	if ((r = l_make_commit(tmppath, oid, message)) < 0)
 		return r;
 	//DEBUG("Commit successful");
+
+	// create the link stats
+	if ((r = l_get_note_stats_link(&note_stat, from)) < 0)
+		return -EFG_UNKNOWN;
+	note_stat->count += 1;
+	tmp_links = malloc(note_stat->count * sizeof(char *));
+	for (i=0; i<note_stat->count-1; i++) {
+		tmp_links[i] = malloc(PATH_MAX_LENGTH * sizeof(char));
+		strcpy(tmp_links[i], note_stat->links[i]);
+	}
+	tmp_links[i] = malloc(PATH_MAX_LENGTH * sizeof(char));
+	strcpy(tmp_links[i], to);
+	free(note_stat->links);
+	note_stat->links = tmp_links;
+	if ((r = l_update_link_stats(note_stat)) < 0)
+		return -EFG_UNKNOWN;
+	free_repo_stat_data(note_stat);
 
 	return 0;
 }
@@ -1045,7 +1095,7 @@ repo_update_time_ns(const char *path, const struct timespec ts[2])
 	note_stat->atime = ts[0].tv_sec*1000;
 	note_stat->mtime = ts[1].tv_sec*1000;
 	if ((r = l_update_link_stats(note_stat)) < 0)
-		return -1;
+		return -EFG_UNKNOWN;
 	free_repo_stat_data(note_stat);
 	return 0;
 }
