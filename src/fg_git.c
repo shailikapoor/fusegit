@@ -575,8 +575,13 @@ repo_stat(const char *path, struct stat *stbuf)
 	//		time_t    st_mtime;   /* time of last modification */
 	//		time_t    st_ctime;   /* time of last status change */
 	//	};
+	DEBUG("GETTING ATTR OF FILE : %s", path);
+	int r;
+	struct repo_stat_data *file_stat;
 	const struct fuse_context *ctx;
-
+	
+	if ((r = l_get_note_stats_link(&file_stat, path)) < 0)
+		return -EFG_UNKNOWN;
 	//DEBUG("GET STAT : %s : STAT : %x", path, stbuf);
 
 	ctx = fuse_get_context();
@@ -584,17 +589,19 @@ repo_stat(const char *path, struct stat *stbuf)
 	stbuf->st_ino = 1; // index_entry->ino;     /* inode number */
 	stbuf->st_mode = l_get_file_mode(path);    /* protection */
 	if (stbuf->st_mode == INVALID_FILE_MODE)
-		return -1;
-	stbuf->st_nlink = 1;   /* number of hard links */
+		return -EFG_UNKNOWN;
+	stbuf->st_nlink = file_stat->count;   /* number of hard links */
 	stbuf->st_uid = ctx->uid;     /* user ID of owner */
 	stbuf->st_gid = ctx->gid;     /* group ID of owner */
 	//stbuf->st_rdev = index_entry->rdev;    /* device ID (if special file) */
 	stbuf->st_size = l_get_file_size(path);    /* total size, in bytes */
 	stbuf->st_blksize = 1; // ignored by FUSE index_entry->blksize; /* blocksize for file system I/O */
 	//stbuf->st_blocks = index_entry->blocks;  /* number of 512B blocks allocated */
-	//stbuf->st_atime = index_entry->atime;   /* time of last access */
-	stbuf->st_mtime = 0; // FIXIT   /* time of last modification */
-	stbuf->st_ctime = 0; // FIXIT   /* time of last status change */
+	stbuf->st_atime = file_stat->atime/1000;   /* time of last access */
+	stbuf->st_mtime = file_stat->mtime/1000; // FIXIT   /* time of last modification */
+	//stbuf->st_ctime = 0; // FIXIT   /* time of last status change */
+
+	free_repo_stat_data(file_stat);
 	
 	return 0;
 }
@@ -607,7 +614,9 @@ repo_is_dir(const char *path)
 {
 	int r;
 	git_tree *tree;
-	
+
+	if (strcmp(path, "/") == 0)
+		return 1;
 	if ((r = l_get_path_tree(&tree, path)) == 0)
 		return 1;	// is a directory
 	return 0;	// is not a directory
@@ -619,6 +628,7 @@ repo_is_dir(const char *path)
 	int
 repo_dir_stat(const char *path, struct stat *stbuf)
 {
+	DEBUG("GETTING ATTR OF DIRECTORY : %s", path);
 	const struct fuse_context *ctx;
 	ctx = fuse_get_context();
 
