@@ -264,6 +264,17 @@ l_get_file_mode(const char *path)
 }
 
 	static int
+l_get_path_blob_oid(git_oid *blob_oid, const char *path)
+{
+	int r;
+
+	if ((r = git_blob_create_frombuffer(blob_oid, repo, path, strlen(path)))
+		< 0)
+		return -1;
+	return 0;
+}
+
+	static int
 l_get_path_oid(git_oid *oid, const char *path)
 {
 	int r;
@@ -310,19 +321,19 @@ l_update_link_stats(struct repo_stat_data *note_stat_p)
 	int i;
 	int n;
 	git_oid oid;
-	git_oid path_oid;
+	git_oid path_blob_oid;
 	git_signature *author;
 	char *tmppath = note_stat_p->links[0];
 
 	if (note_stat_p->count == 0 && note_stat_p->ecount == 1)
 		tmppath = note_stat_p->expired_links[0];
-	if ((r = l_get_path_oid(&path_oid, tmppath)) < 0)
+	if ((r = l_get_path_blob_oid(&path_blob_oid, tmppath)) < 0)
 		return -1;
 	if ((r = l_get_signature_now(&author)) < 0)
 		return -1;
 
 	DEBUG("REMOVING NOTE");
-	git_note_remove(repo, NULL, author, author, &path_oid);
+	git_note_remove(repo, NULL, author, author, &path_blob_oid);
 
 	if (note_stat_p->count == 0)
 		return 0;	// if no links, then just return
@@ -334,7 +345,7 @@ l_update_link_stats(struct repo_stat_data *note_stat_p)
 	n += PATH_MAX_LENGTH*note_stat_p->count;	// for paths
 
 	// create the note for the git_object corresponding to the path
-	DEBUG("note_data : %ld %ld", note_stat_p->atime, note_stat_p->mtime);
+	DEBUG("CREATING NOTE DATA");
 	sprintf(note_data, "%ld\n%ld\n", note_stat_p->atime, note_stat_p->mtime);
 	sprintf(note_data+strlen(note_data), "!%d\n", note_stat_p->count);
 	for (i=0; i<note_stat_p->count; i++) {
@@ -348,7 +359,7 @@ l_update_link_stats(struct repo_stat_data *note_stat_p)
 				author,
 				author,
 				NULL,
-				&path_oid,
+				&path_blob_oid,
 				note_data)) < 0)
 		return -1;
 	DEBUG("CREATED NOTE");
@@ -356,10 +367,10 @@ l_update_link_stats(struct repo_stat_data *note_stat_p)
 	// for the other links create a linked note
 	DEBUG("FINDING PATH OF LINKS");
 	for (i=1; i<note_stat_p->count; i++) {
-		if ((r = l_get_path_oid(&path_oid, note_stat_p->links[i])) < 0)
+		if ((r = l_get_path_blob_oid(&path_blob_oid, note_stat_p->links[i])) < 0)
 			return -1;
 		DEBUG("LINK PATH %d : %s", i, note_stat_p->links[i]);
-		git_note_remove(repo, NULL, author, author, &path_oid);
+		git_note_remove(repo, NULL, author, author, &path_blob_oid);
 		// create a note
 		sprintf(note_data, "@%s", note_stat_p->links[0]);
 		DEBUG("CREATING NOTE");
@@ -368,16 +379,16 @@ l_update_link_stats(struct repo_stat_data *note_stat_p)
 					author,
 					author,
 					NULL,
-					&path_oid,
+					&path_blob_oid,
 					note_data)) < 0)
 			return -1;
 		DEBUG("NOTE CREATED");
 	}
 	for (i=0; i<note_stat_p->ecount; i++) {
-		if ((r = l_get_path_oid(&path_oid, note_stat_p->expired_links[i])) < 0)
+		if ((r = l_get_path_blob_oid(&path_blob_oid, note_stat_p->expired_links[i])) < 0)
 			return -1;
 		DEBUG("EXPIRED LINK PATH %d : %s", i, note_stat_p->expired_links[i]);
-		git_note_remove(repo, NULL, author, author, &path_oid);
+		git_note_remove(repo, NULL, author, author, &path_blob_oid);
 		DEBUG("NOTE REMOVED");
 	}
 
@@ -395,18 +406,18 @@ l_get_note_stats(struct repo_stat_data **note_stat_p, const char *path)
 	// read the note and parse the notes
 	int r;
 	int i;
-	git_oid path_oid;
+	git_oid path_blob_oid;
 	git_note *note;
 	const char *message;
 	char tmp[100];
 	int ind;
 	char *tmp2;
 
-	if ((r = l_get_path_oid(&path_oid, path)) < 0)
+	if ((r = l_get_path_blob_oid(&path_blob_oid, path)) < 0)
 		return -1;
 
 	DEBUG("READING THE NOTE");
-	if ((r = git_note_read(&note, repo, NULL, &path_oid)) < 0)
+	if ((r = git_note_read(&note, repo, NULL, &path_blob_oid)) < 0)
 		return -1;
 	message = git_note_message(note);
 	DEBUG("NOTE MESSAGE\n%s", message);
@@ -477,14 +488,13 @@ l_get_note_stats_link(struct repo_stat_data **note_stat_p, const char *path)
 {
 	int r;
 	const char *message;
-	git_oid path_oid;
+	git_oid path_blob_oid;
 	git_note *note;
 	char tmppath[PATH_MAX_LENGTH];
 
-	if ((r = l_get_path_oid(&path_oid, path)) < 0)
+	if ((r = l_get_path_blob_oid(&path_blob_oid, path)) < 0)
 		return -1;
-
-	if ((r = git_note_read(&note, repo, NULL, &path_oid)) < 0)
+	if ((r = git_note_read(&note, repo, NULL, &path_blob_oid)) < 0)
 		return -1;
 	
 	message = git_note_message(note);
@@ -952,8 +962,8 @@ repo_unlink(const char *path)
 	strcpy(tmppath, path);
 	
 	struct repo_stat_data *note_stat;
-	char **tmp_links;
-	char **tmp_exp_links;
+	char **tmp_links = NULL;
+	char **tmp_exp_links = NULL;
 
 	// update the link stats
 	if ((r = l_get_note_stats_link(&note_stat, path)) < 0)
@@ -962,11 +972,13 @@ repo_unlink(const char *path)
 	note_stat->ecount = 1;
 	tmp_links = malloc(note_stat->count * sizeof(char *));
 	tmp_exp_links = malloc(note_stat->ecount * sizeof(char *));
-	for (i=0, j=0, k=0; j<note_stat->count; i++) {
+	for (i=0, j=0, k=0; i<note_stat->count+1; i++) {
+		DEBUG("COMPARE : %s : %s", note_stat->links[i], path);
 		if (strcmp(note_stat->links[i], path) == 0) {
 			tmp_exp_links[k] = malloc(PATH_MAX_LENGTH * sizeof(char));
 			strcpy(tmp_exp_links[k], note_stat->links[i]);
 			k++;
+			DEBUG("CHECKING EXP LINK WAS WRITTEN");
 			continue;
 		}
 		tmp_links[j] = malloc(PATH_MAX_LENGTH * sizeof(char));
@@ -974,13 +986,16 @@ repo_unlink(const char *path)
 		j++;
 	}
 	if (note_stat->expired_links)
-		free(note_stat->expired_links);
+		free(note_stat->expired_links);	// FIXIT : incorrect freeing
 	note_stat->expired_links = tmp_exp_links;
-	free(note_stat->links);
+	free(note_stat->links);	// FIXIT : incorrect freeing
 	note_stat->links = tmp_links;
+	DEBUG("CHECKING EXP LINK : %s", note_stat->expired_links[0]);
 	if ((r = l_update_link_stats(note_stat)) < 0)
 		return -EFG_UNKNOWN;
+	DEBUG("FREEING MEMORY IN UNLINK for note_stat");
 	free_repo_stat_data(note_stat);
+	DEBUG("FREED MEMORY IN UNLINK for note_stat");
 
 	// check if it is a file
 	if ((r = l_get_parent_tree(&tree, tmppath)) < 0)
@@ -1260,13 +1275,21 @@ repo_truncate(const char *path, off_t size)
 free_repo_stat_data(struct repo_stat_data *data)
 {
 	int i;
-
+	
+	DEBUG("FREEING INDIVIDUAL LINKS");
 	for (i=0; i<data->count; i++) {
 		free(data->links[i]);
 	}
+	DEBUG("FREEING INDIVIDUAL EXPIRED LINKS");
 	for (i=0; i<data->ecount; i++) {
 		free(data->expired_links[i]);
 	}
-	free(data->links);
+	DEBUG("FREEING LINKS");
+	if (data->count != 0)
+		free(data->links);
+	DEBUG("FREEING EXPIRED LINKS");
+	if (data->ecount != 0)
+		free(data->expired_links);
+	DEBUG("FREEING DATA");
 	free(data);
 }
