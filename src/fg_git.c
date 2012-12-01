@@ -419,24 +419,34 @@ l_get_note_stats(struct repo_stat_data **note_stat_p, const char *path)
 }
 
 	static int
-l_get_note_stats_link(struct repo_stat_data **note_stat_p, git_note *note, const char
-	*path)
+l_get_note_stats_link(struct repo_stat_data **note_stat_p, const char *path)
 {
-	// TODO
-	// if the note message starts with '@', get the path, and call
-	// 	l_get_note_stats with the path just read
-	// else call l_get_note_stats with path
 	int r;
 	const char *message;
+	git_oid path_oid;
+	git_note *note;
+	char tmppath[PATH_MAX_LENGTH];
 
+	if ((r = l_get_path_oid(&path_oid, path)) < 0)
+		return -1;
+
+	if ((r = git_note_read(&note, repo, NULL, &path_oid)) < 0)
+		return -1;
+	
 	message = git_note_message(note);
 	if (message[0] == '@') {
-		if ((r = l_get_note_stats(note_stat_p, message+1)) < 0)
+		strcpy(tmppath, message+1);
+		// free the note
+		git_note_free(note);
+		if ((r = l_get_note_stats(note_stat_p, tmppath)) < 0)
 			return -1;
 	} else {
+		// free the note
+		git_note_free(note);
 		if ((r = l_get_note_stats(note_stat_p, path)) < 0)
 			return -1;
 	}
+
 	return 0;
 }
 
@@ -1014,31 +1024,13 @@ repo_create_file(const char *path, mode_t mode)
 	int
 repo_update_time_ns(const char *path, const struct timespec ts[2])
 {
-	// create a note with first number as access time, then a separator '\n'
-	// and then modification time
 	int r;
-	git_oid path_oid;
-	git_signature *author;
-	git_note *note;
 	struct repo_stat_data *note_stat;
 
-	// create the note for the git_object corresponding to the path
-	if ((r = l_get_signature_now(&author)) < 0)
-		return -EFG_UNKNOWN;
-	if ((r = l_get_path_oid(&path_oid, path)) < 0)
+	// get the note for the git_object corresponding to the path
+	if ((r = l_get_note_stats_link(&note_stat, path)) < 0)
 		return -EFG_UNKNOWN;
 
-	DEBUG("READING THE NOTE");
-	if ((r = git_note_read(&note, repo, NULL, &path_oid)) == 0) {
-		// get the note stats for this path
-		DEBUG("note -> %s", git_note_message(note));// note exists
-		if ((r = l_get_note_stats_link(&note_stat, note, path)) < 0) {
-			git_note_free(note);
-			return -EFG_UNKNOWN;
-		}
-		// free the note
-		git_note_free(note);
-	}
 	// read the note_stat and update all the links
 	note_stat->atime = ts[0].tv_sec*1000;
 	note_stat->mtime = ts[1].tv_sec*1000;
