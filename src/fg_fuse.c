@@ -430,7 +430,7 @@ static int fg_readdir(const char *path, void *buf, fuse_fill_dir_t filler,
 	DEBUG("FG_READDIR");
 	char name[PATH_MAX_LENGTH] = ""; // name of the path component
 	int hier = 0; // stores the index in the hierarchy, starting from 0
-	struct fg_file_node *children;
+	struct repo_file_node *children;
 	int children_count;
 	int i, r;
 	

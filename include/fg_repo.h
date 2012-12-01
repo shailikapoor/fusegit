@@ -10,12 +10,18 @@
 // DATA STRUCTURES
 
 
-struct fg_file_node {
+struct repo_file_node {
 	const char *name;
 	const char *path;
 	const struct stat *stbuf;
 };
 
+struct repo_stat_data {
+	char **links;
+	unsigned int count;
+	unsigned long atime;
+	unsigned long mtime;
+};
 
 // FUNCTIONS
 
@@ -27,7 +33,7 @@ int repo_is_dir(const char *path);
 
 int repo_is_file(const char *path);
 
-int repo_get_children(struct fg_file_node **children, int *count, const char *path);
+int repo_get_children(struct repo_file_node **children, int *count, const char *path);
 
 int repo_stat(const char *path, struct stat *stbuf);
 
@@ -48,3 +54,5 @@ int repo_create_file(const char *path, mode_t mode);
 int repo_update_time_ns(const char *path, const struct timespec ts[2]);
 
 int repo_truncate(const char *path, off_t size);
+
+void free_repo_stat_data(struct repo_stat_data *data);

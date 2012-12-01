@@ -6,29 +6,11 @@
 #include "fg_repo.h"
 #include "fg_util.h"
 
-//*****************************************************************************
-// STRUCTURE OF THE GIT Note for each file (git_object)
-// NOTE: All links have the same result when done stat, so the full note will be
-// stored only for the first note. The other notes will have the name of the
-// link they are associated to. So the name of the first link.
-// **Structure for first link**
-// access time
-// modification time
-// !3 - number of links
-// !/path/to/link1
-// !/path/to/link2
-// !/path/to/link3 
-//
-// **Structure for other links**
-// @/path/to/first/link - this link will have a note associated to it which can
-// be used.
-//*****************************************************************************
-
 // LOCAL
 static const unsigned int INVALID_FILE_MODE = 077777777;
 static git_repository *repo;
 static git_commit *last_commit = NULL;
-
+char note_data[PATH_MAX_LENGTH*MAX_HARD_LINKS];
 
 	static int
 l_get_last_commit(git_commit **commit_p)
@@ -297,6 +279,168 @@ l_get_path_oid(git_oid *oid, const char *path)
 	return 0;
 }
 
+//*****************************************************************************
+// STRUCTURE OF THE GIT Note for each file (git_object)
+// NOTE: All links have the same result when done stat, so the full note will be
+// stored only for the first note. The other notes will have the name of the
+// link they are associated to. So the name of the first link.
+// **Structure for first link**
+// access time
+// modification time
+// !3 - number of links
+// !/path/to/link1
+// !/path/to/link2
+// !/path/to/link3 
+//
+// **Structure for other links**
+// @/path/to/first/link<NO NEW LINE> - this link will have a note associated to it which can
+// be used.
+//*****************************************************************************
+	static int
+l_update_link_stats(struct repo_stat_data *note_stat_p)
+{
+	int r;
+	int i;
+	int n;
+	git_oid oid;
+	git_oid path_oid;
+	git_signature *author;
+
+	// get the space required
+	n = 0;
+	n += 100; // approx for atime, mtime, number of links
+	n += 4;	// for !
+	n += PATH_MAX_LENGTH*note_stat_p->count;	// for paths
+
+	DEBUG("note_data : %ld %ld", note_stat_p->atime, note_stat_p->mtime);
+	sprintf(note_data, "%ld\n%ld\n", note_stat_p->atime, note_stat_p->mtime);
+	sprintf(note_data+strlen(note_data), "!%d\n", note_stat_p->count);
+	for (i=0; i<note_stat_p->count; i++) {
+		sprintf(note_data+strlen(note_data), "!%s\n",
+			note_stat_p->links[i]);
+	}
+
+	// create the note for the git_object corresponding to the path
+	if ((r = l_get_signature_now(&author)) < 0)
+		return -EFG_UNKNOWN;
+	if ((r = l_get_path_oid(&path_oid, note_stat_p->links[0])) < 0)
+		return -EFG_UNKNOWN;
+
+	DEBUG("REMOVING NOTE");
+	git_note_remove(repo, NULL, author, author, &path_oid);
+	DEBUG("CREATING NOTE");
+	if ((r = git_note_create(&oid,
+				repo,
+				author,
+				author,
+				NULL,
+				&path_oid,
+				note_data)) < 0)
+		return -1;
+	DEBUG("CREATED NOTE");
+	// for the other links create a linked note
+	return 0;
+}
+
+/**
+ * one should free the note_stat_p after its use is over
+ */
+	static int
+l_get_note_stats(struct repo_stat_data **note_stat_p, const char *path)
+{
+	// TODO
+	// this path has the actual note statistics
+	// read the note and parse the notes
+	int r;
+	int i;
+	git_oid path_oid;
+	git_note *note;
+	const char *message;
+	char tmp[100];
+	int ind;
+	char *tmp2;
+
+	if ((r = l_get_path_oid(&path_oid, path)) < 0)
+		return -1;
+
+	DEBUG("READING THE NOTE");
+	if ((r = git_note_read(&note, repo, NULL, &path_oid)) < 0)
+		return -1;
+	message = git_note_message(note);
+	// ***allocate space for repo_stat_data
+	*note_stat_p = malloc(sizeof(struct repo_stat_data));
+	// get the atime
+	tmp2 = index(message, '\n');
+	ind = tmp2 - message;
+	strncpy(tmp, message, ind);
+	tmp[ind] = '\0';
+	sscanf(tmp, "%ld", &((*note_stat_p)->atime));
+	
+	message += ind+1;
+	
+	// get the mtime
+	tmp2 = index(message, '\n');
+	ind = tmp2 - message;
+	strncpy(tmp, message, ind);
+	tmp[ind] = '\0';
+	sscanf(tmp, "%ld", &((*note_stat_p)->mtime));
+	
+	message += ind+1;
+	
+	// get the number of links
+	tmp2 = index(message, '\n');
+	ind = tmp2 - message;
+	strncpy(tmp, message, ind);
+	tmp[ind] = '\0';
+	sscanf(tmp, "!%d", &((*note_stat_p)->count));
+	
+	message += ind+1;
+	
+	// ***allocate space for repo_stat_data -> links
+	(*note_stat_p)->links = malloc((*note_stat_p)->count * sizeof(char *));
+	// ***allocate space for each repo_stat_data -> links[i]
+	for (i=0; i<(*note_stat_p)->count; i++) {
+		(*note_stat_p)->links[i] = malloc(PATH_MAX_LENGTH * sizeof(char));
+	}
+
+	// get the links
+	for (i=0; i<(*note_stat_p)->count; i++) {
+		tmp2 = index(message, '\n');
+		ind = tmp2 - message;
+		strncpy(tmp, message, ind);
+		tmp[ind] = '\0';
+		sscanf(tmp, "!%s", (*note_stat_p)->links[i]);
+		
+		message += ind+1;
+	}
+
+	git_note_free(note);
+	return 0;
+}
+
+	static int
+l_get_note_stats_link(struct repo_stat_data **note_stat_p, git_note *note, const char
+	*path)
+{
+	// TODO
+	// if the note message starts with '@', get the path, and call
+	// 	l_get_note_stats with the path just read
+	// else call l_get_note_stats with path
+	int r;
+	const char *message;
+
+	message = git_note_message(note);
+	if (message[0] == '@') {
+		if ((r = l_get_note_stats(note_stat_p, message+1)) < 0)
+			return -1;
+	} else {
+		if ((r = l_get_note_stats(note_stat_p, path)) < 0)
+			return -1;
+	}
+	return 0;
+}
+
+
 // ****************************************************************************
 // GLOBAL
 
@@ -360,7 +504,7 @@ repo_is_file(const char *path)
  * Note : children should be freed from the function which calls it.
  */
 	int
-repo_get_children(struct fg_file_node **children, int *count, const char *path)
+repo_get_children(struct repo_file_node **children, int *count, const char *path)
 {
 	int i, r, n;
 	git_tree *tree;	// TODO check how to manage memory
@@ -371,7 +515,7 @@ repo_get_children(struct fg_file_node **children, int *count, const char *path)
 		return -EFG_UNKNOWN;
 	
 	n = git_tree_entrycount(tree);
-	struct fg_file_node *nodes = malloc(n * sizeof(struct fg_file_node));
+	struct repo_file_node *nodes = malloc(n * sizeof(struct repo_file_node));
 	*children = nodes;	// setting the children array
 	*count = n;	// setting the number of children
 
@@ -862,13 +1006,10 @@ repo_update_time_ns(const char *path, const struct timespec ts[2])
 	// create a note with first number as access time, then a separator '\n'
 	// and then modification time
 	int r;
-	char time_note[100];
-	git_oid oid;
 	git_oid path_oid;
 	git_signature *author;
-
-	DEBUG("time_note : %ld %ld", ts[0].tv_sec, ts[0].tv_sec);
-	sprintf(time_note, "%ld\n%ld\n", ts[0].tv_sec*1000, ts[0].tv_sec*1000);
+	git_note *note;
+	struct repo_stat_data *note_stat;
 
 	// create the note for the git_object corresponding to the path
 	if ((r = l_get_signature_now(&author)) < 0)
@@ -877,22 +1018,22 @@ repo_update_time_ns(const char *path, const struct timespec ts[2])
 		return -EFG_UNKNOWN;
 
 	DEBUG("READING THE NOTE");
-	git_note *note;
-	if ((r = git_note_read(&note, repo, NULL, &path_oid)) == 0)
-		DEBUG("note -> %s", git_note_message(note));
-	DEBUG("REMOVING NOTE");
-	// try to remove, if it fails then silently ignore
-	git_note_remove(repo, NULL, author, author, &path_oid);
-	DEBUG("CREATING NOTE: %s", time_note);
-	if ((r = git_note_create(&oid,
-				repo,
-				author,
-				author,
-				NULL,
-				&path_oid,
-				time_note)) < 0)
+	if ((r = git_note_read(&note, repo, NULL, &path_oid)) == 0) {
+		// get the note stats for this path
+		DEBUG("note -> %s", git_note_message(note));// note exists
+		if ((r = l_get_note_stats_link(&note_stat, note, path)) < 0) {
+			git_note_free(note);
+			return -EFG_UNKNOWN;
+		}
+		// free the note
+		git_note_free(note);
+	}
+	// read the note_stat and update all the links
+	note_stat->atime = ts[0].tv_sec*1000;
+	note_stat->mtime = ts[1].tv_sec*1000;
+	if ((r = l_update_link_stats(note_stat)) < 0)
 		return -1;
-	DEBUG("CREATED NOTE");
+	free_repo_stat_data(note_stat);
 	return 0;
 }
 
@@ -970,3 +1111,14 @@ repo_truncate(const char *path, off_t size)
 	return 0;
 }
 
+	void
+free_repo_stat_data(struct repo_stat_data *data)
+{
+	int i;
+
+	for (i=0; i<data->count; i++) {
+		free(data->links[i]);
+	}
+	free(data->links);
+	free(data);
+}
