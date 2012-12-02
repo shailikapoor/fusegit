@@ -203,15 +203,15 @@ l_make_commit(const char *path, git_oid oid, const char *message)
 
 	// get the parrent tree
 	//DEBUG("Getting the tree from the oid");
-	printf("look up the tree\n");
+	//printf("look up the tree\n");
 	if ((r = git_tree_lookup(&tree, repo, &oid)) < 0)
 		return -EFG_UNKNOWN;
 
-	printf("commit the tree to repo\n");
+	//printf("commit the tree to repo\n");
 	if ((r = l_git_commit_now(tree, message)) < 0)
 		return -EFG_UNKNOWN;
 	//DEBUG("Commit successful");
-	printf("commit successful\n");
+	//printf("commit successful\n");
 
 	return 0;
 }
@@ -551,10 +551,10 @@ repo_setup(const char *repo_address)
 		return 0;
 	if ((r = git_treebuilder_create(&empty_treebuilder, NULL)) < 0)
 		return -EFG_UNKNOWN;	// can't create empty tree builder
-	printf("empty tree builder created\n");
+	//printf("empty tree builder created\n");
 	if ((r = git_treebuilder_write(&oid, repo, empty_treebuilder)) < 0)
 		return -EFG_UNKNOWN;	// can't insert empty tree into repo
-	printf("tree builder inserted into repo\n");
+	//printf("tree builder inserted into repo\n");
 	// free the tree builder
 	git_treebuilder_free(empty_treebuilder);
 
@@ -564,7 +564,7 @@ repo_setup(const char *repo_address)
 	if ((r = l_make_commit("/", oid, header)) < 0)
 		return r;
 	DEBUG("SETUP SUCCESSFUL");
-	printf("setup successful");
+	//printf("setup successful");
 
 	return 0;
 }
@@ -1215,6 +1215,7 @@ repo_truncate(const char *path, off_t size)
 {
 	int r;
 	git_oid oid;
+	git_oid tree_oid;
 	git_blob *blob;
 	git_tree *tree;
 	const git_tree_entry *entry;
@@ -1261,7 +1262,7 @@ repo_truncate(const char *path, off_t size)
 		&oid, mode)) < 0)
 		return -EFG_UNKNOWN;
 	//DEBUG("Writing to the original tree");
-	if ((r = git_treebuilder_write(&oid, repo, builder)) < 0)
+	if ((r = git_treebuilder_write(&tree_oid, repo, builder)) < 0)
 		return -EFG_UNKNOWN;
 	// free the tree builder
 	git_treebuilder_free(builder);
@@ -1274,7 +1275,7 @@ repo_truncate(const char *path, off_t size)
 	char message[PATH_MAX_LENGTH + strlen(header)];
 	sprintf(message, "%s%s : %ld", header, path, size);
 	//DEBUG("Making the commit : %s", message);
-	if ((r = l_make_commit(tmppath, oid, message)) < 0)
+	if ((r = l_make_commit(tmppath, tree_oid, message)) < 0)
 		return r;
 	//DEBUG("Commit successful");
 
@@ -1300,4 +1301,98 @@ free_repo_stat_data(struct repo_stat_data *data)
 	free(data->expired_links);
 	DEBUG("FREEING DATA");	// TODO check if this is correct
 	free(data);
+}
+
+/**
+ * write to a file
+ * 
+ * FIXIT : currently the file system keeps the data to be written in memroy and
+ * writes it to the file subsequently. But this will fail for large files.
+ */
+	int
+repo_write(const char *path, const char *buf, size_t size, off_t offset)
+{
+	int r;
+	int i;
+	git_oid oid;
+	git_oid tree_oid;
+	git_blob *blob;
+	git_tree *tree;
+	const git_tree_entry *entry;
+	git_treebuilder *builder;
+	char write_buf[size+offset];
+	char *blob_content;
+	unsigned int mode;
+	//char tmppath[PATH_MAX_LENGTH];
+	char *tmppath;
+	char last[PATH_MAX_LENGTH];
+	struct repo_stat_data *stat_data;
+	//strcpy(tmppath, path);
+
+	// get the blob corresponding to this path
+	if ((r = l_get_path_oid(&oid, path)) < 0)
+		return -EFG_UNKNOWN;
+	if ((r = git_blob_lookup(&blob, repo, &oid)) < 0)
+		return -EFG_UNKNOWN;
+
+	if (offset == 0) {
+	// if the offset is 0
+	// create a blob with the buf and size, and make path to point to it
+		memcpy(write_buf, buf, size);
+	} else {
+	// if the offset is not 0
+	// obtain the blob for the path, create a new blob with the appended
+	// content and make path to point to it
+		blob_content = (char *)git_blob_rawcontent(blob);
+		memcpy(write_buf, blob_content, offset);
+		memcpy(write_buf+offset, buf, size);
+	}
+	git_blob_free(blob);
+
+	if ((r = l_get_note_stats_link(&stat_data, path)) < 0)
+		return -EFG_UNKNOWN;
+
+	// create a new blob with the required size
+	if ((r = git_blob_create_frombuffer(&oid, repo, write_buf, offset+size)) < 0)
+		return -EFG_UNKNOWN;
+
+	for (i=0; i<stat_data->count; i++) {
+		tmppath = stat_data->links[i];
+		// get the parent tree
+		if ((r = l_get_parent_tree(&tree, tmppath)) < 0)
+			return -EFG_UNKNOWN;
+
+		// get the treebuilder for the parent tree
+		if ((r = git_treebuilder_create(&builder, tree)) < 0)
+			return -EFG_UNKNOWN;
+
+		// add the blob with the name of the file as a child to the parent
+		if ((r = get_last_component(tmppath, last)) < 0)
+			return -EFG_UNKNOWN;
+		//DEBUG("Adding the link to the tree builder");
+		entry = git_tree_entry_byname(tree, last);
+		mode = git_tree_entry_attributes(entry);
+		if ((r = git_treebuilder_insert(NULL, builder, last,
+			&oid, mode)) < 0)
+			return -EFG_UNKNOWN;
+		//DEBUG("Writing to the original tree");
+		if ((r = git_treebuilder_write(&tree_oid, repo, builder)) < 0)
+			return -EFG_UNKNOWN;
+		// free the tree builder
+		git_treebuilder_free(builder);
+		if ((r = get_parent_path(NULL, tmppath)) < 0)
+			return -EFG_UNKNOWN;	// get parent path
+		
+		// call make commit function with this updated blob id
+		// do the commit
+		char header[] = "fusegit\nwrite\n";
+		char message[PATH_MAX_LENGTH + strlen(header) + 10];
+		sprintf(message, "%slink: %s : %ld", header, tmppath, size);
+		//DEBUG("Making the commit : %s", message);
+		if ((r = l_make_commit(tmppath, tree_oid, message)) < 0)
+			return r;
+		//DEBUG("Commit successful");
+	}
+
+	return size;
 }
