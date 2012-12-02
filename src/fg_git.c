@@ -2,6 +2,7 @@
  * fg_git.c
  */
 #include <git2.h>
+#include <assert.h>
 #include "fg.h"
 #include "fg_repo.h"
 #include "fg_util.h"
@@ -11,6 +12,17 @@ static const unsigned int INVALID_FILE_MODE = 077777777;
 static git_repository *repo;
 static git_commit *last_commit = NULL;
 char note_data[PATH_MAX_LENGTH*MAX_HARD_LINKS];
+
+	void
+l_init_repo_stat_data(struct repo_stat_data **note_stat)
+{
+	*note_stat = malloc(sizeof(struct repo_stat_data));
+	(*note_stat)->atime = 0;
+	(*note_stat)->mtime = 0;
+	(*note_stat)->count = 1;
+	(*note_stat)->ecount = 0;
+	(*note_stat)->expired_links = NULL;
+}
 
 	static int
 l_get_last_commit(git_commit **commit_p)
@@ -325,6 +337,8 @@ l_update_link_stats(struct repo_stat_data *note_stat_p)
 	git_signature *author;
 	char *tmppath = note_stat_p->links[0];
 
+	DEBUG("COUNT = %d", note_stat_p->count);
+	DEBUG("ECOUNT = %d", note_stat_p->ecount);
 	if (note_stat_p->count == 0 && note_stat_p->ecount == 1)
 		tmppath = note_stat_p->expired_links[0];
 	if ((r = l_get_path_blob_oid(&path_blob_oid, tmppath)) < 0)
@@ -384,6 +398,7 @@ l_update_link_stats(struct repo_stat_data *note_stat_p)
 			return -1;
 		DEBUG("NOTE CREATED");
 	}
+	assert(note_stat_p->ecount == 0 || note_stat_p->ecount == 1);
 	for (i=0; i<note_stat_p->ecount; i++) {
 		if ((r = l_get_path_blob_oid(&path_blob_oid, note_stat_p->expired_links[i])) < 0)
 			return -1;
@@ -423,7 +438,7 @@ l_get_note_stats(struct repo_stat_data **note_stat_p, const char *path)
 	DEBUG("NOTE MESSAGE\n%s", message);
 	// ***allocate space for repo_stat_data
 	DEBUG("allocate space for note_stat_p");
-	*note_stat_p = malloc(sizeof(struct repo_stat_data));
+	l_init_repo_stat_data(note_stat_p);
 	// get the atime
 	DEBUG("get the atime");
 	tmp2 = index(message, '\n');
@@ -1171,10 +1186,7 @@ repo_create_file(const char *path, mode_t mode)
 		return r;
 
 	// create the link stats
-	note_stat = malloc(sizeof(struct repo_stat_data));
-	note_stat->atime = 0;
-	note_stat->mtime = 0;
-	note_stat->count = 1;
+	l_init_repo_stat_data(&note_stat);
 	note_stat->links = malloc(sizeof(char *));
 	note_stat->links[0] = malloc(PATH_MAX_LENGTH * sizeof(char));
 	strcpy(note_stat->links[0], path);
