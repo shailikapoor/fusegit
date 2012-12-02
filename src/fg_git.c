@@ -1296,9 +1296,11 @@ free_repo_stat_data(struct repo_stat_data *data)
 		free(data->expired_links[i]);
 	}
 	DEBUG("FREEING LINKS");
-	free(data->links);	// TODO check if this is correct
+	if (data->count)
+		free(data->links);	// TODO check if this is correct
 	DEBUG("FREEING EXPIRED LINKS");
-	free(data->expired_links);
+	if (data->ecount)
+		free(data->expired_links);
 	DEBUG("FREEING DATA");	// TODO check if this is correct
 	free(data);
 }
