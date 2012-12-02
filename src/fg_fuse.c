@@ -367,7 +367,7 @@ static int fg_release(const char *path, struct fuse_file_info *fi)
 static int fg_fsync(const char *path, int isdatasync,
                        struct fuse_file_info *fi)
 {
-	DEBUG("FG_FSYNC");
+	DEBUG("FG_FSYNC : metadata?%d", isdatasync?0:1);
         return -ENOSYS;
 }
 

@@ -3,6 +3,7 @@
  */
 #include <git2.h>
 #include <assert.h>
+#include <time.h>
 #include "fg.h"
 #include "fg_repo.h"
 #include "fg_util.h"
@@ -16,9 +17,13 @@ char note_data[PATH_MAX_LENGTH*MAX_HARD_LINKS];
 	void
 l_init_repo_stat_data(struct repo_stat_data **note_stat)
 {
+	time_t now;
+
+	time(&now);
+	DEBUG("CURRENT TIME IS : %ld", now);
 	*note_stat = malloc(sizeof(struct repo_stat_data));
-	(*note_stat)->atime = 0;
-	(*note_stat)->mtime = 0;
+	(*note_stat)->atime = now*1000;
+	(*note_stat)->mtime = now*1000;
 	(*note_stat)->count = 1;
 	(*note_stat)->ecount = 0;
 	(*note_stat)->expired_links = NULL;
