@@ -1214,6 +1214,7 @@ repo_update_time_ns(const char *path, const struct timespec ts[2])
 repo_truncate(const char *path, off_t size)
 {
 	int r;
+	int i;
 	git_oid oid;
 	git_oid tree_oid;
 	git_blob *blob;
@@ -1221,11 +1222,11 @@ repo_truncate(const char *path, off_t size)
 	const git_tree_entry *entry;
 	git_treebuilder *builder;
 	char buf[size];
-	char *content;
+	char *blob_content;
 	unsigned int mode;
-	char tmppath[PATH_MAX_LENGTH];
+	char *tmppath;
 	char last[PATH_MAX_LENGTH];
-	strcpy(tmppath, path);
+	struct repo_stat_data *stat_data;
 
 	// get the blob id corresponding to this path
 	if ((r = l_get_path_oid(&oid, path)) < 0)
@@ -1238,46 +1239,53 @@ repo_truncate(const char *path, off_t size)
 		return 0;	// Done here, return
 
 	// create a new blob with the required size
-	content = (char *)git_blob_rawcontent(blob);
-	memcpy(buf, content, size);
+	blob_content = (char *)git_blob_rawcontent(blob);
+	memcpy(buf, blob_content, size);
 	git_blob_free(blob);
+
+	if ((r = l_get_note_stats_link(&stat_data, path)) < 0)
+		return -EFG_UNKNOWN;
+
 	if ((r = git_blob_create_frombuffer(&oid, repo, buf, size)) < 0)
 		return -EFG_UNKNOWN;
 
-	// get the parent tree
-	if ((r = l_get_parent_tree(&tree, path)) < 0)
-		return -EFG_UNKNOWN;
+	for (i=0; i<stat_data->count; i++) {
+		tmppath = stat_data->links[i];
+		// get the parent tree
+		if ((r = l_get_parent_tree(&tree, tmppath)) < 0)
+			return -EFG_UNKNOWN;
 
-	// get the treebuilder for the parent tree
-	if ((r = git_treebuilder_create(&builder, tree)) < 0)
-		return -EFG_UNKNOWN;
+		// get the treebuilder for the parent tree
+		if ((r = git_treebuilder_create(&builder, tree)) < 0)
+			return -EFG_UNKNOWN;
 
-	// add the blob with the name of the file as a child to the parent
-	if ((r = get_last_component(path, last)) < 0)
-		return -EFG_UNKNOWN;
-	//DEBUG("Adding the link to the tree builder");
-	entry = git_tree_entry_byname(tree, last);
-	mode = git_tree_entry_attributes(entry);
-	if ((r = git_treebuilder_insert(NULL, builder, last,
-		&oid, mode)) < 0)
-		return -EFG_UNKNOWN;
-	//DEBUG("Writing to the original tree");
-	if ((r = git_treebuilder_write(&tree_oid, repo, builder)) < 0)
-		return -EFG_UNKNOWN;
-	// free the tree builder
-	git_treebuilder_free(builder);
-	if ((r = get_parent_path(NULL, tmppath)) < 0)
-		return -EFG_UNKNOWN;	// get parent path
-	
-	// call make commit function with this updated blob id
-	// do the commit
-	char header[] = "fusegit\ntruncate\n";
-	char message[PATH_MAX_LENGTH + strlen(header)];
-	sprintf(message, "%s%s : %ld", header, path, size);
-	//DEBUG("Making the commit : %s", message);
-	if ((r = l_make_commit(tmppath, tree_oid, message)) < 0)
-		return r;
-	//DEBUG("Commit successful");
+		// add the blob with the name of the file as a child to the parent
+		if ((r = get_last_component(tmppath, last)) < 0)
+			return -EFG_UNKNOWN;
+		//DEBUG("Adding the link to the tree builder");
+		entry = git_tree_entry_byname(tree, last);
+		mode = git_tree_entry_attributes(entry);
+		if ((r = git_treebuilder_insert(NULL, builder, last,
+			&oid, mode)) < 0)
+			return -EFG_UNKNOWN;
+		//DEBUG("Writing to the original tree");
+		if ((r = git_treebuilder_write(&tree_oid, repo, builder)) < 0)
+			return -EFG_UNKNOWN;
+		// free the tree builder
+		git_treebuilder_free(builder);
+		if ((r = get_parent_path(NULL, tmppath)) < 0)
+			return -EFG_UNKNOWN;	// get parent path
+		
+		// call make commit function with this updated blob id
+		// do the commit
+		char header[] = "fusegit\ntruncate\n";
+		char message[PATH_MAX_LENGTH + strlen(header) + 10];
+		sprintf(message, "%slink: %s : %ld", header, tmppath, size);
+		//DEBUG("Making the commit : %s", message);
+		if ((r = l_make_commit(tmppath, tree_oid, message)) < 0)
+			return r;
+		//DEBUG("Commit successful");
+	}
 
 	return 0;
 }
@@ -1325,11 +1333,9 @@ repo_write(const char *path, const char *buf, size_t size, off_t offset)
 	char write_buf[size+offset];
 	char *blob_content;
 	unsigned int mode;
-	//char tmppath[PATH_MAX_LENGTH];
 	char *tmppath;
 	char last[PATH_MAX_LENGTH];
 	struct repo_stat_data *stat_data;
-	//strcpy(tmppath, path);
 
 	// get the blob corresponding to this path
 	if ((r = l_get_path_oid(&oid, path)) < 0)
