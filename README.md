@@ -31,11 +31,12 @@ Implementation
 --------------
 `FUSE` is in the name, so we are obviously using it. This means that the file 
 system is in user space. This is a prototype version and we want to keep 
-things simple.
+things simple. We use version `2.9.2`.
 
 `libgit2` will be used to get the Git functionality. This library is still 
 under active development. I hope we don't end up requiring a feature which is 
-still under development. This is a risk we might have to take right now.
+still under development. This is a risk we might have to take right now. We use
+version `0.17.0`.
 
 Please see the [wiki](http://github.com/varun729/fusegit/wiki) to track the progress.
 
