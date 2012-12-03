@@ -129,7 +129,25 @@ static struct fuse_operations hello_oper = {
 	.read		= hello_read,
 };
 
+
+int hello_proc(void *data, const char *arg, int key, struct fuse_args *outargs)
+{
+	printf("key: %d, arg: %s\n", key, arg);
+	return 1;
+}
+
 int main(int argc, char *argv[])
 {
-	return fuse_main(argc, argv, &hello_oper, NULL);
+
+	struct fuse_args args = FUSE_ARGS_INIT(argc, argv);
+	struct fuse_opt opts[] = {
+		FUSE_OPT_KEY("-b ", 1),
+		FUSE_OPT_KEY("-r ", 2),
+		FUSE_OPT_END
+	};
+
+	fuse_opt_parse(&args, NULL, opts, hello_proc);
+
+	return 0;
+	//return fuse_main(argc, argv, &hello_oper, NULL);
 }
