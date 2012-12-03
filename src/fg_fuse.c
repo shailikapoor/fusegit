@@ -598,33 +598,45 @@ get_mountpoint(const char *arg, char *mpoint)
  * a git repository in the same parent folder.
  */
 	static int
-proc_mountpoint(void *data, const char *arg, int key, struct fuse_args *outargs)
+fusegit_proc(void *data, const char *arg, int key, struct fuse_args *outargs)
 {
 	int r;
-	static int times_called = 0;
-	if (times_called++ > 0)
-		return -1;
-	
-	// Now that we have checked that this is the only output we expect, i.e.
-	// this is the mountpoint of our filesystem. Check if a git repository
-	// already exists for this or not.
-	// If (git repository exists for this mountpoint)
-	// 	setup the file system to use the git repository
-	// Else
-	// 	create a git repository and setup the file system to use the git
-	// 	repository.
 	char repo[PATH_MAX_LENGTH];
-	get_mountpoint(arg, repo);
-	strcpy(FG_ROOT, repo);
-	DEBUG("mountpoint is %s", repo);
-	if (strlen(repo) + strlen(".repo") >= PATH_MAX_LENGTH-1)
-		exit(-1);
-	strcpy(repo+strlen(repo), ".repo");
-	DEBUG("repository is %s", repo);
+	//static int times_called = 0;
+	//if (times_called++ > 0)
+	//	return -1;
+	DEBUG("KEY = %d", key);
+	DEBUG("ARG = %s", arg);
+	switch(key) {
+	case FUSE_OPT_KEY_NONOPT:
+		// Now that we have checked that this is the only output we expect, i.e.
+		// this is the mountpoint of our filesystem. Check if a git repository
+		// already exists for this or not.
+		// If (git repository exists for this mountpoint)
+		// 	setup the file system to use the git repository
+		// Else
+		// 	create a git repository and setup the file system to use the git
+		// 	repository.
+		get_mountpoint(arg, repo);
+		strcpy(FG_ROOT, repo);
+		DEBUG("mountpoint is %s", repo);
+		if (strlen(repo) + strlen(".repo") >= PATH_MAX_LENGTH-1)
+			exit(-1);
+		strcpy(repo+strlen(repo), ".repo");
+		DEBUG("repository is %s", repo);
 
-	// Now we have obtained the address of the repository, we can set it
-	if ((r = repo_setup(repo)) < 0)
-		exit(r);
+		// Now we have obtained the address of the repository, we can set it
+		if ((r = repo_setup(repo)) < 0)
+			exit(r);
+		DEBUG("success");
+		break;
+	case 1:
+		DEBUG("ARG = %s", arg);
+	//	DEBUG("DATA = %s", data);
+		return 1;
+	default:
+		return -1;
+	}
 
 	return 0;
 }
@@ -636,8 +648,10 @@ main(int argc, char *argv[])
 
 	// creating the fuse_args to parse it for the mount-point
 	struct fuse_args args = FUSE_ARGS_INIT(argc, argv);
-	struct fuse_opt matching_opts[] = { FUSE_OPT_KEY("foo", 0) };
-	fuse_opt_parse(&args, NULL, matching_opts, (fuse_opt_proc_t)proc_mountpoint);
+	struct fuse_opt matching_opts[] = { FUSE_OPT_KEY("-b %s", 1) };
+	fuse_opt_parse(&args, NULL, matching_opts, (fuse_opt_proc_t)fusegit_proc);
+
+	fuse_opt_free_args(&args);
 
         return fuse_main(argc, argv, &fg_oper, NULL);
 }
