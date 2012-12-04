@@ -15,7 +15,16 @@
 				// of just one
 #define MAX_FMT_SIZE 4096
 
+enum fg_opts {
+	FG_OPT_BACKUP = 1,
+	FG_OPT_RESTORE,
+	FG_OPT_MOUNT,
+	FG_OPT_DEBUG,
+};
+
 void debug_print(char *fmt, ...);
+
+int fg_fuse_main(int argc, char *argv[]);
 
 #ifdef DEBUG_PRINT_ENABLED
 #define DEBUG debug_print

@@ -143,6 +143,7 @@ int main(int argc, char *argv[])
 	struct fuse_opt opts[] = {
 		FUSE_OPT_KEY("-b ", 1),
 		FUSE_OPT_KEY("-r ", 2),
+		FUSE_OPT_KEY("-o ", 3),
 		FUSE_OPT_END
 	};
 

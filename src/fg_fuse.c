@@ -21,7 +21,6 @@
 
 
 
-static char FG_ROOT[PATH_MAX_LENGTH];
 
 
 
@@ -569,89 +568,9 @@ static struct fuse_operations fg_oper = {
         //.poll           = fg_poll,	// TODO
 };
 
-/**
- * remove any trailing / from the mpoint which is returned
- */
-	static void
-get_mountpoint(const char *arg, char *mpoint)
-{
-	char cwd[PATH_MAX_LENGTH];
-	if (getcwd(cwd, sizeof(cwd)) != NULL)
-		DEBUG("current working directory: %s", cwd);
-	DEBUG("function is called for %s", arg);
-
-	const char *y = cwd;
-	while ((*mpoint = *y)) {
-		mpoint++;
-		y++;
-	}
-	y = arg;
-	*mpoint = '/'; mpoint++;
-	while ((*mpoint = *y)) {
-		mpoint++;
-		y++;
-	}
-}
-
-/**
- * Process the mountpoint which the user has provided and then use it to create
- * a git repository in the same parent folder.
- */
-	static int
-fusegit_proc(void *data, const char *arg, int key, struct fuse_args *outargs)
-{
-	int r;
-	char repo[PATH_MAX_LENGTH];
-	//static int times_called = 0;
-	//if (times_called++ > 0)
-	//	return -1;
-	DEBUG("KEY = %d", key);
-	DEBUG("ARG = %s", arg);
-	switch(key) {
-	case FUSE_OPT_KEY_NONOPT:
-		// Now that we have checked that this is the only output we expect, i.e.
-		// this is the mountpoint of our filesystem. Check if a git repository
-		// already exists for this or not.
-		// If (git repository exists for this mountpoint)
-		// 	setup the file system to use the git repository
-		// Else
-		// 	create a git repository and setup the file system to use the git
-		// 	repository.
-		get_mountpoint(arg, repo);
-		strcpy(FG_ROOT, repo);
-		DEBUG("mountpoint is %s", repo);
-		if (strlen(repo) + strlen(".repo") >= PATH_MAX_LENGTH-1)
-			exit(-1);
-		strcpy(repo+strlen(repo), ".repo");
-		DEBUG("repository is %s", repo);
-
-		// Now we have obtained the address of the repository, we can set it
-		if ((r = repo_setup(repo)) < 0)
-			exit(r);
-		DEBUG("success");
-		break;
-	case 1:
-		DEBUG("ARG = %s", arg);
-	//	DEBUG("DATA = %s", data);
-		return 1;
-	default:
-		return -1;
-	}
-
-	return 0;
-}
-
 	int
-main(int argc, char *argv[])
+fg_fuse_main(int argc, char *argv[])
 {
-	umask(0); // XXX this provides the bits which will be masked for all the files which are to be created.
-
-	// creating the fuse_args to parse it for the mount-point
-	struct fuse_args args = FUSE_ARGS_INIT(argc, argv);
-	struct fuse_opt matching_opts[] = { FUSE_OPT_KEY("-b %s", 1) };
-	fuse_opt_parse(&args, NULL, matching_opts, (fuse_opt_proc_t)fusegit_proc);
-
-	fuse_opt_free_args(&args);
 
         return fuse_main(argc, argv, &fg_oper, NULL);
 }
