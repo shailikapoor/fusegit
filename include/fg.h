@@ -31,7 +31,7 @@ enum fg_opts {
 
 void debug_print(char *fmt, ...);
 
-int fg_fuse_main(int argc, char *argv[]);
+int fg_fuse_main(int argc, char *argv[], char *mount);
 
 #ifdef DEBUG_PRINT_ENABLED
 #define DEBUG debug_print

@@ -40,30 +40,6 @@ usage(void)
 }
 
 /**
- * remove any trailing / from the mpoint which is returned
- */
-	static void
-get_mountpoint(const char *arg, char *mpoint)
-{
-	char cwd[PATH_MAX_LENGTH];
-	if (getcwd(cwd, sizeof(cwd)) != NULL)
-		DEBUG("current working directory: %s", cwd);
-	DEBUG("function is called for %s", arg);
-
-	const char *y = cwd;
-	while ((*mpoint = *y)) {
-		mpoint++;
-		y++;
-	}
-	y = arg;
-	*mpoint = '/'; mpoint++;
-	while ((*mpoint = *y)) {
-		mpoint++;
-		y++;
-	}
-}
-
-/**
  * Process the mountpoint which the user has provided and then use it to create
  * a git repository in the same parent folder.
  * 
@@ -176,17 +152,7 @@ main(int argc, char *argv[])
 		usage();
 		return r;
 	}
-	/*
-		get_mountpoint(arg, mount);
-		if (strlen(mount) + strlen(".repo") >= PATH_MAX_LENGTH-1)
-			return -1;
-		strcpy(mount+strlen(mount), ".repo");
 
-		// Now we have obtained the address of the repository, we can set it
-		if ((r = repo_setup(mount)) < 0)
-			return -1;
-		DEBUG("success");
-	*/
 	int i;
 	for (i=0; i<args.argc; i++) {
 		DEBUG("argument %d: %s", i, args.argv[i]);
@@ -196,6 +162,14 @@ main(int argc, char *argv[])
 	switch(config_opts.task) {
 	case FG_MOUNT:
 		DEBUG("mounting...%s", config_opts.mount);
+		argc = 2;
+		argv[1] = config_opts.mount;
+		if (config_opts.debug) {
+			argc++;
+			argv[2] = "-d";
+		}
+		if ((r = fg_fuse_main(argc, argv, config_opts.mount)) < 0)
+			return -1;
 		break;
 	case FG_BACKUP:
 		DEBUG("backing up...%s", config_opts.backup);
@@ -205,8 +179,6 @@ main(int argc, char *argv[])
 		break;
 	}
 
-	//if ((r = fg_fuse_main(argc, argv)) < 0)
-	//	return -1;
 	if (config_opts.mount) free(config_opts.mount);
 	if (config_opts.backup) free(config_opts.backup);
 	if (config_opts.restore) free(config_opts.restore);
