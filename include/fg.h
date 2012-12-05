@@ -15,11 +15,18 @@
 				// of just one
 #define MAX_FMT_SIZE 4096
 
+enum fg_task {
+	FG_MOUNT = 1,
+	FG_BACKUP,
+	FG_RESTORE,
+};
+
 enum fg_opts {
 	FG_OPT_BACKUP = 1,
 	FG_OPT_RESTORE,
 	FG_OPT_MOUNT,
 	FG_OPT_DEBUG,
+	FG_OPT_INVALID,
 };
 
 void debug_print(char *fmt, ...);

@@ -7,9 +7,10 @@
 
 
 struct fg_config_opts {
+	enum fg_task task;
 	const char *backup;
 	const char *restore;
-	const char *repo_path;
+	const char *mount;
 	int debug;
 };
 
@@ -72,38 +73,67 @@ get_mountpoint(const char *arg, char *mpoint)
 fusegit_proc(void *data, const char *arg, int key, struct fuse_args *outargs)
 {
 	struct fg_config_opts *opts = (struct fg_config_opts *)data;
+	int off;
 	switch(key) {
 	case FG_OPT_MOUNT:
 		DEBUG("THIS SHOULD BE MOUNTPOINT: %s", arg);
-		if (opts->repo_path)
+		if (opts->mount)
 			return -1;
-		opts->repo_path = arg;
-		DEBUG("MOUNTPOINT: success");
-		return 0;
+		off = 2;
+		if (arg[1] == '-')
+			off = strlen("--mount");
+		opts->mount = arg+off;
+		opts->task = FG_MOUNT;
+		DEBUG("MOUNTPOINT: success: %s", opts->mount);
+		return 1;
 	case FG_OPT_BACKUP:
 		DEBUG("BACKUP THIS MOUNTPOINT: %s", arg);
 		if (opts->backup)
 			return -1;
-		opts->backup = arg;
-		DEBUG("BACKUP: success");
-		return 0;
+		off = 2;
+		if (arg[1] == '-')
+			off = strlen("--backup");
+		opts->backup = arg+off;
+		opts->task = FG_BACKUP;
+		DEBUG("BACKUP: success: %s", opts->backup);
+		return 1;
 	case FG_OPT_RESTORE:
 		DEBUG("RESTORE THIS MOUNTPOINT: %s", arg);
 		if (opts->restore)
 			return -1;
-		opts->restore = arg;
-		DEBUG("RESTORE: success");
-		return 0;
+		off = 2;
+		if (arg[1] == '-')
+			off = strlen("--restore");
+		opts->restore = arg+off;
+		opts->task = FG_RESTORE;
+		DEBUG("RESTORE: success: %s", opts->restore);
+		return 1;
 	case FG_OPT_DEBUG:
 		DEBUG("DEBUG");
 		if (opts->debug)
 			return -1;
 		opts->debug = 1;
 		DEBUG("DEBUG: success");
-		return 0;
+		return 1;
+	case FG_OPT_INVALID:
+		return -1;
 	}
 	// no other option is allowed
 	return -1;
+}
+
+	int
+validate_args(struct fg_config_opts *config_opts)
+{
+	int backup = config_opts->backup ? 1 : 0;
+	int restore = config_opts->restore ? 1 : 0;
+	int mount = config_opts->mount ? 1 : 0;
+
+	int sum = backup + restore + mount;
+
+	if (sum != 1)
+		return -1;
+	return 0;
 }
 
 	int
@@ -111,8 +141,8 @@ main(int argc, char *argv[])
 {
 	int r;
 	struct fuse_args args = FUSE_ARGS_INIT(argc, argv);
-	struct fg_config_opts config_opts = { .backup = NULL, .restore = NULL,
-		.repo_path = NULL, .debug = 0 };
+	struct fg_config_opts config_opts = { .task = FG_MOUNT, .backup = NULL, .restore = NULL,
+		.mount = NULL, .debug = 0 };
 	struct fuse_opt matching_opts[] = {
 		FUSE_OPT_KEY("-b ", FG_OPT_BACKUP),
 		FUSE_OPT_KEY("-r ", FG_OPT_RESTORE),
@@ -122,6 +152,15 @@ main(int argc, char *argv[])
 		FUSE_OPT_KEY("--restore ", FG_OPT_RESTORE),
 		FUSE_OPT_KEY("--mount ", FG_OPT_MOUNT),
 		FUSE_OPT_KEY("--debug", FG_OPT_DEBUG),
+		FUSE_OPT_KEY("-mount ", FG_OPT_INVALID),
+		FUSE_OPT_KEY("-backup ", FG_OPT_INVALID),
+		FUSE_OPT_KEY("-restore ", FG_OPT_INVALID),
+		FUSE_OPT_KEY("--mount=", FG_OPT_INVALID),
+		FUSE_OPT_KEY("--backup=", FG_OPT_INVALID),
+		FUSE_OPT_KEY("--restore=", FG_OPT_INVALID),
+		FUSE_OPT_KEY("-m=", FG_OPT_INVALID),
+		FUSE_OPT_KEY("-b=", FG_OPT_INVALID),
+		FUSE_OPT_KEY("-r=", FG_OPT_INVALID),
 		FUSE_OPT_END
 	};
 	
@@ -130,14 +169,18 @@ main(int argc, char *argv[])
 		usage();
 		return r;
 	}
+	if ((r = validate_args(&config_opts)) < 0) {
+		usage();
+		return r;
+	}
 	/*
-		get_mountpoint(arg, repo_path);
-		if (strlen(repo_path) + strlen(".repo") >= PATH_MAX_LENGTH-1)
+		get_mountpoint(arg, mount);
+		if (strlen(mount) + strlen(".repo") >= PATH_MAX_LENGTH-1)
 			return -1;
-		strcpy(repo_path+strlen(repo_path), ".repo");
+		strcpy(mount+strlen(mount), ".repo");
 
 		// Now we have obtained the address of the repository, we can set it
-		if ((r = repo_setup(repo_path)) < 0)
+		if ((r = repo_setup(mount)) < 0)
 			return -1;
 		DEBUG("success");
 	*/
@@ -146,6 +189,18 @@ main(int argc, char *argv[])
 		DEBUG("argument %d: %s", i, args.argv[i]);
 	}
 	fuse_opt_free_args(&args);
+
+	switch(config_opts.task) {
+	case FG_MOUNT:
+		DEBUG("mounting... %s", config_opts.mount);
+		break;
+	case FG_BACKUP:
+		DEBUG("backing up...%s", config_opts.backup);
+		break;
+	case FG_RESTORE:
+		DEBUG("restoring...%s", config_opts.restore);
+		break;
+	}
 
         return 0;
 	//return fg_fuse_main(argc, argv);
