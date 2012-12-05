@@ -8,9 +8,9 @@
 
 struct fg_config_opts {
 	enum fg_task task;
-	const char *backup;
-	const char *restore;
-	const char *mount;
+	char *backup;
+	char *restore;
+	char *mount;
 	int debug;
 };
 
@@ -82,10 +82,11 @@ fusegit_proc(void *data, const char *arg, int key, struct fuse_args *outargs)
 		off = 2;
 		if (arg[1] == '-')
 			off = strlen("--mount");
-		opts->mount = arg+off;
+		opts->mount = malloc(strlen(arg));
+		strcpy(opts->mount, arg+off);
 		opts->task = FG_MOUNT;
 		DEBUG("MOUNTPOINT: success: %s", opts->mount);
-		return 1;
+		return 0;
 	case FG_OPT_BACKUP:
 		DEBUG("BACKUP THIS MOUNTPOINT: %s", arg);
 		if (opts->backup)
@@ -93,10 +94,11 @@ fusegit_proc(void *data, const char *arg, int key, struct fuse_args *outargs)
 		off = 2;
 		if (arg[1] == '-')
 			off = strlen("--backup");
-		opts->backup = arg+off;
+		opts->backup = malloc(strlen(arg));
+		strcpy(opts->backup, arg+off);
 		opts->task = FG_BACKUP;
 		DEBUG("BACKUP: success: %s", opts->backup);
-		return 1;
+		return 0;
 	case FG_OPT_RESTORE:
 		DEBUG("RESTORE THIS MOUNTPOINT: %s", arg);
 		if (opts->restore)
@@ -104,17 +106,18 @@ fusegit_proc(void *data, const char *arg, int key, struct fuse_args *outargs)
 		off = 2;
 		if (arg[1] == '-')
 			off = strlen("--restore");
-		opts->restore = arg+off;
+		opts->restore = malloc(strlen(arg));
+		strcpy(opts->restore, arg+off);
 		opts->task = FG_RESTORE;
 		DEBUG("RESTORE: success: %s", opts->restore);
-		return 1;
+		return 0;
 	case FG_OPT_DEBUG:
 		DEBUG("DEBUG");
 		if (opts->debug)
 			return -1;
 		opts->debug = 1;
 		DEBUG("DEBUG: success");
-		return 1;
+		return 0;
 	case FG_OPT_INVALID:
 		return -1;
 	}
@@ -192,7 +195,7 @@ main(int argc, char *argv[])
 
 	switch(config_opts.task) {
 	case FG_MOUNT:
-		DEBUG("mounting... %s", config_opts.mount);
+		DEBUG("mounting...%s", config_opts.mount);
 		break;
 	case FG_BACKUP:
 		DEBUG("backing up...%s", config_opts.backup);
@@ -202,6 +205,10 @@ main(int argc, char *argv[])
 		break;
 	}
 
+	//if ((r = fg_fuse_main(argc, argv)) < 0)
+	//	return -1;
+	if (config_opts.mount) free(config_opts.mount);
+	if (config_opts.backup) free(config_opts.backup);
+	if (config_opts.restore) free(config_opts.restore);
         return 0;
-	//return fg_fuse_main(argc, argv);
 }
