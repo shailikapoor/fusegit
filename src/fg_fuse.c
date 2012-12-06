@@ -191,14 +191,23 @@ static int fg_symlink(const char *from, const char *to)
 }
 
 /**
- * Rename a file
+ * Rename a file (or directory)
  * 
  * XXX 
  */
 static int fg_rename(const char *from, const char *to)
 {
 	DEBUG("FG_RENAME");
-        return -ENOSYS;
+	int r;
+
+	if (repo_is_dir(from)) {
+		if ((r = repo_rename_dir(from, to)) < 0)
+			return -1;
+	} else {
+		if ((r = repo_rename_file(from, to)) < 0)
+			return -1;
+	}
+        return 0;
 }
 
 /**
@@ -618,3 +627,4 @@ fg_fuse_main(int argc, char *argv[], char *mount)
 	}
         return fuse_main(argc, argv, &fg_oper, NULL);
 }
+

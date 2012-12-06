@@ -60,3 +60,7 @@ int repo_truncate(const char *path, off_t size);
 void free_repo_stat_data(struct repo_stat_data *data);
 
 int repo_write(const char *path, const char *buf, size_t size, off_t offset);
+
+int repo_rename_file(const char *from, const char *to);
+
+int repo_rename_dir(const char *from, const char *to);

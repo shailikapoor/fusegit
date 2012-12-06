@@ -159,6 +159,8 @@ main(int argc, char *argv[])
 	}
 	fuse_opt_free_args(&args);
 
+	DEBUG("*** IMPLEMENT THE repo_rename_file and repo_rename_dir functions");
+	/*
 	switch(config_opts.task) {
 	case FG_MOUNT:
 		DEBUG("mounting...%s", config_opts.mount);
@@ -178,6 +180,7 @@ main(int argc, char *argv[])
 		DEBUG("restoring...%s", config_opts.restore);
 		break;
 	}
+	*/
 
 	if (config_opts.mount) free(config_opts.mount);
 	if (config_opts.backup) free(config_opts.backup);
