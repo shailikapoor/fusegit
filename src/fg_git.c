@@ -9,6 +9,7 @@
 #include "fg_util.h"
 
 // LOCAL
+static char REF_NAME[PATH_MAX_LENGTH] = "refs/heads/master";
 static const unsigned int INVALID_FILE_MODE = 077777777;
 static git_repository *repo;
 static git_commit *last_commit = NULL;
@@ -34,17 +35,22 @@ l_get_last_commit(git_commit **commit_p)
 {
 	int r;
 	git_oid oid;
-	git_reference *ref;
+	//git_reference *ref;
+	const char *ref_name;
 	// obtaining the head
 	//DEBUG("OBTAINING THE HEAD");
-	if ((r = git_repository_head(&ref, repo)) < 0)
-		return -EFG_UNKNOWN;
+	//if ((r = git_repository_head(&ref, repo)) < 0)
+	//	return -EFG_UNKNOWN;
 
 	// obtaining the commit id from the reference
 	//DEBUG("OBTAINING commit id from the reference");
-	if ((r = git_reference_name_to_oid(&oid, repo, git_reference_name(ref)))
+	//ref_name = git_reference_name(ref);
+	ref_name = REF_NAME;
+	if ((r = git_reference_name_to_oid(&oid, repo, ref_name))
 		< 0)
 		return -EFG_UNKNOWN;
+
+	//git_reference_free(ref);
 
 	// obtaining the commit from the commit id
 	//DEBUG("OBTAINING commit from the commit id");
@@ -331,6 +337,15 @@ l_get_path_oid(git_oid *oid, const char *path)
 // @/path/to/first/link<NO NEW LINE> - this link will have a note associated to it which can
 // be used.
 //*****************************************************************************
+	static void
+l_get_note_name(char *out_name, const char *in_name)
+{
+	out_name[0] = '\0';
+	strcat(out_name, REF_NAME);
+	strcat(out_name, ":");
+	strcat(out_name, in_name);
+}
+
 	static int
 l_update_link_stats(struct repo_stat_data *note_stat_p)
 {
@@ -341,12 +356,14 @@ l_update_link_stats(struct repo_stat_data *note_stat_p)
 	git_oid path_blob_oid;
 	git_signature *author;
 	char *tmppath = note_stat_p->links[0];
+	char tmppath_ref_name[PATH_MAX_LENGTH];
 
 	DEBUG("COUNT = %d", note_stat_p->count);
 	DEBUG("ECOUNT = %d", note_stat_p->ecount);
 	if (note_stat_p->count == 0 && note_stat_p->ecount == 1)
 		tmppath = note_stat_p->expired_links[0];
-	if ((r = l_get_path_blob_oid(&path_blob_oid, tmppath)) < 0)
+	l_get_note_name(tmppath_ref_name, tmppath);
+	if ((r = l_get_path_blob_oid(&path_blob_oid, tmppath_ref_name)) < 0)
 		return -1;
 	if ((r = l_get_signature_now(&author)) < 0)
 		return -1;
@@ -386,7 +403,8 @@ l_update_link_stats(struct repo_stat_data *note_stat_p)
 	// for the other links create a linked note
 	DEBUG("FINDING PATH OF LINKS");
 	for (i=1; i<note_stat_p->count; i++) {
-		if ((r = l_get_path_blob_oid(&path_blob_oid, note_stat_p->links[i])) < 0)
+		l_get_note_name(tmppath_ref_name, note_stat_p->links[i]);
+		if ((r = l_get_path_blob_oid(&path_blob_oid, tmppath_ref_name)) < 0)
 			return -1;
 		DEBUG("LINK PATH %d : %s", i, note_stat_p->links[i]);
 		git_note_remove(repo, NULL, author, author, &path_blob_oid);
@@ -405,7 +423,8 @@ l_update_link_stats(struct repo_stat_data *note_stat_p)
 	}
 	assert(note_stat_p->ecount == 0 || note_stat_p->ecount == 1);
 	for (i=0; i<note_stat_p->ecount; i++) {
-		if ((r = l_get_path_blob_oid(&path_blob_oid, note_stat_p->expired_links[i])) < 0)
+		l_get_note_name(tmppath_ref_name, note_stat_p->expired_links[i]);
+		if ((r = l_get_path_blob_oid(&path_blob_oid, tmppath_ref_name)) < 0)
 			return -1;
 		DEBUG("EXPIRED LINK PATH %d : %s", i, note_stat_p->expired_links[i]);
 		git_note_remove(repo, NULL, author, author, &path_blob_oid);
@@ -432,8 +451,10 @@ l_get_note_stats(struct repo_stat_data **note_stat_p, const char *path)
 	char tmp[100];
 	int ind;
 	char *tmp2;
+	char tmppath_ref_name[PATH_MAX_LENGTH];
 
-	if ((r = l_get_path_blob_oid(&path_blob_oid, path)) < 0)
+	l_get_note_name(tmppath_ref_name, path);
+	if ((r = l_get_path_blob_oid(&path_blob_oid, tmppath_ref_name)) < 0)
 		return -1;
 
 	DEBUG("READING THE NOTE");
@@ -511,8 +532,10 @@ l_get_note_stats_link(struct repo_stat_data **note_stat_p, const char *path)
 	git_oid path_blob_oid;
 	git_note *note;
 	char tmppath[PATH_MAX_LENGTH];
+	char tmppath_ref_name[PATH_MAX_LENGTH];
 
-	if ((r = l_get_path_blob_oid(&path_blob_oid, path)) < 0)
+	l_get_note_name(tmppath_ref_name, path);
+	if ((r = l_get_path_blob_oid(&path_blob_oid, tmppath_ref_name)) < 0)
 		return -1;
 	if ((r = git_note_read(&note, repo, NULL, &path_blob_oid)) < 0)
 		return -1;
