@@ -18,8 +18,9 @@ int main(int argc, char **argv){
 		printf("Directory was created!\n");
 	}
 	else{
-		printf("Directory was NOT created!\n");
-		exit(1);
+		printf("Creating new directory : Failed\n");
+		printf ("Error no is : %d\n", errno);
+		printf("Error description is : %s\n",strerror(errno));
 	}
 	return 0;
 
