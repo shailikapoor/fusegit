@@ -64,3 +64,7 @@ int repo_write(const char *path, const char *buf, size_t size, off_t offset);
 int repo_rename_file(const char *from, const char *to);
 
 int repo_rename_dir(const char *from, const char *to);
+
+int repo_backup(const char *snapshot);
+
+int repo_restore(const char *snapshot);

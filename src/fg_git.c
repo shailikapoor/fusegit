@@ -15,6 +15,11 @@ static git_repository *repo;
 static git_commit *last_commit = NULL;
 char note_data[PATH_MAX_LENGTH*MAX_HARD_LINKS];
 
+struct copy_ref {
+	char *from;
+	char *to;
+};
+
 	void
 l_init_repo_stat_data(struct repo_stat_data **note_stat)
 {
@@ -49,7 +54,7 @@ l_get_last_commit(git_commit **commit_p)
 	if ((r = git_reference_name_to_oid(&oid, repo, ref_name))
 		< 0)
 		return -EFG_UNKNOWN;
-
+	DEBUG("got the oid for the last commit");
 	//git_reference_free(ref);
 
 	// obtaining the commit from the commit id
@@ -287,11 +292,12 @@ l_get_file_mode(const char *path)
 }
 
 	static int
-l_get_path_blob_oid(git_oid *blob_oid, const char *path)
+l_get_path_blob_oid(git_oid *blob_oid, const char *buffer)
 {
 	int r;
 
-	if ((r = git_blob_create_frombuffer(blob_oid, repo, path, strlen(path)))
+	if ((r = git_blob_create_frombuffer(blob_oid, repo, buffer,
+		strlen(buffer)))
 		< 0)
 		return -1;
 	return 0;
@@ -338,10 +344,10 @@ l_get_path_oid(git_oid *oid, const char *path)
 // be used.
 //*****************************************************************************
 	static void
-l_get_note_name(char *out_name, const char *in_name)
+l_get_note_name(char *out_name, const char *in_name, const char *prefix)
 {
 	out_name[0] = '\0';
-	strcat(out_name, REF_NAME);
+	strcat(out_name, prefix);
 	strcat(out_name, ":");
 	strcat(out_name, in_name);
 }
@@ -362,7 +368,7 @@ l_update_link_stats(struct repo_stat_data *note_stat_p)
 	DEBUG("ECOUNT = %d", note_stat_p->ecount);
 	if (note_stat_p->count == 0 && note_stat_p->ecount == 1)
 		tmppath = note_stat_p->expired_links[0];
-	l_get_note_name(tmppath_ref_name, tmppath);
+	l_get_note_name(tmppath_ref_name, tmppath, REF_NAME);
 	if ((r = l_get_path_blob_oid(&path_blob_oid, tmppath_ref_name)) < 0)
 		return -1;
 	if ((r = l_get_signature_now(&author)) < 0)
@@ -403,7 +409,8 @@ l_update_link_stats(struct repo_stat_data *note_stat_p)
 	// for the other links create a linked note
 	DEBUG("FINDING PATH OF LINKS");
 	for (i=1; i<note_stat_p->count; i++) {
-		l_get_note_name(tmppath_ref_name, note_stat_p->links[i]);
+		l_get_note_name(tmppath_ref_name, note_stat_p->links[i],
+		REF_NAME);
 		if ((r = l_get_path_blob_oid(&path_blob_oid, tmppath_ref_name)) < 0)
 			return -1;
 		DEBUG("LINK PATH %d : %s", i, note_stat_p->links[i]);
@@ -423,7 +430,8 @@ l_update_link_stats(struct repo_stat_data *note_stat_p)
 	}
 	assert(note_stat_p->ecount == 0 || note_stat_p->ecount == 1);
 	for (i=0; i<note_stat_p->ecount; i++) {
-		l_get_note_name(tmppath_ref_name, note_stat_p->expired_links[i]);
+		l_get_note_name(tmppath_ref_name, note_stat_p->expired_links[i],
+			REF_NAME);
 		if ((r = l_get_path_blob_oid(&path_blob_oid, tmppath_ref_name)) < 0)
 			return -1;
 		DEBUG("EXPIRED LINK PATH %d : %s", i, note_stat_p->expired_links[i]);
@@ -431,6 +439,7 @@ l_update_link_stats(struct repo_stat_data *note_stat_p)
 		DEBUG("NOTE REMOVED");
 	}
 
+	git_signature_free(author);
 	return 0;
 }
 
@@ -453,7 +462,7 @@ l_get_note_stats(struct repo_stat_data **note_stat_p, const char *path)
 	char *tmp2;
 	char tmppath_ref_name[PATH_MAX_LENGTH];
 
-	l_get_note_name(tmppath_ref_name, path);
+	l_get_note_name(tmppath_ref_name, path, REF_NAME);
 	if ((r = l_get_path_blob_oid(&path_blob_oid, tmppath_ref_name)) < 0)
 		return -1;
 
@@ -534,7 +543,7 @@ l_get_note_stats_link(struct repo_stat_data **note_stat_p, const char *path)
 	char tmppath[PATH_MAX_LENGTH];
 	char tmppath_ref_name[PATH_MAX_LENGTH];
 
-	l_get_note_name(tmppath_ref_name, path);
+	l_get_note_name(tmppath_ref_name, path, REF_NAME);
 	if ((r = l_get_path_blob_oid(&path_blob_oid, tmppath_ref_name)) < 0)
 		return -1;
 	if ((r = git_note_read(&note, repo, NULL, &path_blob_oid)) < 0)
@@ -568,6 +577,54 @@ l_free_str_array(char **arr, int size)
 		free(arr[i]);
 	}
 	free(arr);
+}
+
+	static int
+l_callback_copy_note_attr(const char *root, git_tree_entry *entry, void
+	*payload)
+{
+	int r;
+	struct copy_ref *copy_data = payload;
+	git_oid oid;
+	git_oid path_blob_oid;
+	git_note *note;
+	git_signature *author;
+	char *tag_name = copy_data->to;
+	char *ref_name = copy_data->from;
+	char name[PATH_MAX_LENGTH] = "";
+	char tmppath_ref_name[PATH_MAX_LENGTH];
+	const char *message;
+	strcat(name, "/");
+	strcat(name, root);
+	strcat(name, git_tree_entry_name(entry));
+
+	// get the note from the repository
+	l_get_note_name(tmppath_ref_name, name, ref_name);
+	if ((r = l_get_path_blob_oid(&path_blob_oid, tmppath_ref_name)) < 0)
+		return -1;
+	if ((r = git_note_read(&note, repo, NULL, &path_blob_oid)) < 0)
+		return -1;
+	message = git_note_message(note);
+
+	// create a note for the tag
+	l_get_note_name(tmppath_ref_name, name, tag_name);
+	if ((r = l_get_path_blob_oid(&path_blob_oid, tmppath_ref_name)) < 0)
+		return -1;
+	if ((r = l_get_signature_now(&author)) < 0)
+		return -1;
+	if ((r = git_note_create(&oid,
+				repo,
+				author,
+				author,
+				NULL,
+				&path_blob_oid,
+				message)) < 0)
+		return -1;
+
+	git_note_free(note);
+	git_signature_free(author);
+	DEBUG("root = %s, entry = %s, payload = %s", root, name, tag_name);
+	return 0;
 }
 
 // ****************************************************************************
@@ -1435,7 +1492,7 @@ repo_write(const char *path, const char *buf, size_t size, off_t offset)
 		// do the commit
 		char header[] = "fusegit\nwrite\n";
 		char message[PATH_MAX_LENGTH + strlen(header) + 10];
-		sprintf(message, "%slink: %s : %ld", header, tmppath, size);
+		sprintf(message, "%s%s", header, path);
 		//DEBUG("Making the commit : %s", message);
 		if ((r = l_make_commit(tmppath, tree_oid, message)) < 0)
 			return r;
@@ -1484,3 +1541,156 @@ repo_rename_dir(const char *from, const char *to)
 	return 0;
 }
 
+/**
+ * take a backup
+ *
+ * TODO Right now the REF_NAME is hardcoded. But when taking backup this has to be
+ * obtained from a config file. So read it.
+ */
+	int
+repo_backup(const char *snapshot)
+{
+	int r;
+	git_oid oid;
+	git_commit *commit_p;
+	git_signature *author;
+	git_tag *tag;
+	git_tree *tree;
+	char *tag_name;
+	char message[100];
+	struct copy_ref copy_data;
+	
+	// get the latest commit of the repository
+	if ((r = l_get_last_commit(&commit_p)) < 0)
+		return -EFG_UNKNOWN;
+
+	// create the tag
+	if ((r = l_get_signature_now(&author)) < 0)
+		return -EFG_UNKNOWN;
+	sprintf(message, "fusegit\nBACKUP\n%s", snapshot);
+	
+	if ((r = git_tag_create(&oid, repo, snapshot, commit_p, author, message,
+		0)) < 0)
+		return -EFG_UNKNOWN;
+	
+	if ((r = git_tag_lookup(&tag, repo, &oid)) < 0)
+		return -EFG_UNKNOWN;
+	tag_name = git_tag_name(tag);
+	DEBUG("BACKUP TAG NAME:%s", tag_name);
+	git_tag_free(tag);
+
+	// recursively get each of the elements in this tag and store a
+	// copy of the note for each of the files
+
+	// get the header tree
+	if ((r = l_get_last_commit(&commit_p)) < 0)
+		return -EFG_UNKNOWN;
+	oid = *git_commit_id(commit_p);
+	
+	oid = *git_commit_tree_oid(commit_p);
+
+	if ((r = git_tree_lookup(&tree, repo, &oid)) < 0)
+		return -EFG_UNKNOWN;
+
+	// do a tree walk using libgit2 and then copy the note for each
+	// element in the tree
+	DEBUG("tree callback");
+	// NOTE : PRE-ORDER tree traversal is not implemented in libgit2
+	copy_data.from = REF_NAME;
+	copy_data.to = tag_name;
+	if ((r = git_tree_walk(tree, l_callback_copy_note_attr, GIT_TREEWALK_POST,
+		&copy_data)) < 0) {
+		DEBUG("error in callback");
+		return -EFG_UNKNOWN;
+	}
+	
+	// free the repository
+	git_commit_free(commit_p);
+	git_repository_free(repo);
+	git_signature_free(author);
+	return 0;
+}
+
+/**
+ * restore the repository
+ */
+	int
+repo_restore(const char *snapshot)
+{
+	int r;
+	int i;
+
+	// testing if HEAD can be changed
+	git_reference *ref;
+	git_reference *tag_ref;
+	git_oid oid;
+	git_strarray array;
+	git_tag *tag;
+	git_commit *new_head_commit;
+	git_commit *commit_p;
+	git_tree *tree;
+	char tag_name[PATH_MAX_LENGTH];
+	char idstr[PATH_MAX_LENGTH];
+	struct copy_ref copy_data;
+
+	strcpy(tag_name, "refs/tags/");
+	strcat(tag_name, snapshot);
+
+	if ((r = git_reference_list(&array, repo, GIT_REF_LISTALL)) < 0)
+		return -1;
+	for (i=0; i<array.count; i++) {
+		DEBUG("REFERENCE %d: %s", i, array.strings[i]);
+	}
+
+	if ((r = git_repository_head(&ref, repo)) < 0)
+		return -EFG_UNKNOWN;
+	DEBUG("obtained the head");
+	DEBUG("looking for tag: %s", tag_name);
+	if ((r = git_reference_lookup(&tag_ref, repo, tag_name)) < 0)
+		return -EFG_UNKNOWN;
+	DEBUG("obtained the tag");
+	oid = *git_reference_oid(tag_ref);
+
+	if ((r = git_tag_lookup(&tag, repo, &oid)) < 0)
+		return -EFG_UNKNOWN;
+	DEBUG("tag type: %d (GIT_OBJ_BAD=%d)", git_tag_type(tag), GIT_OBJ_BAD);
+
+	if ((r = git_tag_peel(&new_head_commit, tag)) < 0)
+		return -EFG_UNKNOWN;
+	oid = *git_commit_id(new_head_commit);
+	git_oid_tostr(idstr, GIT_OID_HEXSZ+1, &oid);
+	DEBUG("commit id: %s", idstr);
+	if ((r = git_reference_set_oid(ref, &oid)) < 0)
+		return -EFG_UNKNOWN;
+	//if ((r = git_reference_reload(ref)) < 0)
+	//	return -EFG_UNKNOWN;
+
+	// update the notes
+	DEBUG("updating the notes");
+	// get the header tree
+	if ((r = l_get_last_commit(&commit_p)) < 0)
+		return -EFG_UNKNOWN;
+	DEBUG("obtained the last commit");
+	//oid = *git_commit_id(commit_p);
+	
+	oid = *git_commit_tree_oid(commit_p);
+
+	if ((r = git_tree_lookup(&tree, repo, &oid)) < 0)
+		return -EFG_UNKNOWN;
+
+	// do a tree walk using libgit2 and then copy the note for each
+	// element in the tree
+	DEBUG("tree callback");
+	strcpy(tag_name, git_tag_name(tag));
+	DEBUG("TAG NAME FOR NOTES COPY: %s", tag_name);
+	// NOTE : PRE-ORDER tree traversal is not implemented in libgit2
+	copy_data.from = tag_name;
+	copy_data.to = REF_NAME;
+	if ((r = git_tree_walk(tree, l_callback_copy_note_attr, GIT_TREEWALK_POST,
+		&copy_data)) < 0) {
+		DEBUG("error in callback");
+		return -EFG_UNKNOWN;
+	}
+	DEBUG("branch changed");
+	return 0;
+}

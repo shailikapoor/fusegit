@@ -26,12 +26,13 @@ enum fg_opts {
 	FG_OPT_RESTORE,
 	FG_OPT_MOUNT,
 	FG_OPT_DEBUG,
+	FG_OPT_NAME,
 	FG_OPT_INVALID,
 };
 
 void debug_print(char *fmt, ...);
 
-int fg_fuse_main(int argc, char *argv[], char *mount);
+int fg_fuse_main(int argc, char *argv[]);
 
 #ifdef DEBUG_PRINT_ENABLED
 #define DEBUG debug_print

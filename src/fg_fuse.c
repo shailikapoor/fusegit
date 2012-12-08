@@ -577,51 +577,10 @@ static struct fuse_operations fg_oper = {
         //.poll           = fg_poll,	// TODO
 };
 
-/**
- * remove any trailing / from the mount which is returned
- */
-	static void
-get_mountpoint(char *mount)
-{
-	//char cwd[PATH_MAX_LENGTH];
-	//if (getcwd(cwd, sizeof(cwd)) != NULL)
-	//	DEBUG("current working directory: %s", cwd);
-	//DEBUG("function is called for %s", arg);
-
-	//const char *y = cwd;
-	//while ((*mount = *y)) {
-	//	mount++;
-	//	y++;
-	//}
-	//y = arg;
-	//*mount = '/'; mount++;
-	//while ((*mount = *y)) {
-	//	mount++;
-	//	y++;
-	//}
-	int len = strlen(mount);
-	while (mount[len-1] == '/') {
-		mount[len-1] = '\0';
-		len = strlen(mount);
-	}
-}
-
 	int
-fg_fuse_main(int argc, char *argv[], char *mount)
+fg_fuse_main(int argc, char *argv[])
 {
-	int r;
 	int i;
-	char mount_repo[PATH_MAX_LENGTH];
-	get_mountpoint(mount);
-	if (strlen(mount) + strlen(".repo") >= PATH_MAX_LENGTH-1)
-		return -1;
-	strcpy(mount_repo, mount);
-	strcpy(mount_repo+strlen(mount), ".repo");
-
-	// Now we have obtained the address of the repository, we can set it
-	if ((r = repo_setup(mount_repo)) < 0)
-		return -1;
-	DEBUG("REPOSITORY IS SUCCESS");
 	for (i=0; i<argc; i++) {
 		DEBUG("arg %d: %s", i, argv[i]);
 	}
