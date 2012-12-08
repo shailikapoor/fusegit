@@ -469,10 +469,10 @@ static int fg_readdir(const char *path, void *buf, fuse_fill_dir_t filler,
 	for (i=0; i<children_count; i++) {
 		fprintf(stdout, "adding ");
 		fprintf(stdout, "%s\n", children[i].name);
-		filler(buf, children[i].name, NULL, 0);
+		filler(buf, children[i].name, NULL, 0);	// FIXIT NULL
 		fprintf(stdout, "added\n");
 	}
-	free(children);
+	free(children);	// children is obtained by calling malloc in repo_get_children
 
         return 0;
 }
@@ -490,6 +490,24 @@ static int fg_readdir(const char *path, void *buf, fuse_fill_dir_t filler,
 static int fg_access(const char *path, int mask)
 {
         return -ENOSYS;
+}
+
+/**
+ * Create and open a file
+ *
+ * If the file does not exist, first create it with the specified
+ * mode, and then open it.
+ *
+ * If this method is not implemented or under Linux kernel
+ * versions earlier than 2.6.15, the mknod() and open() methods
+ * will be called instead.
+ *
+ * Introduced in version 2.5
+ */
+static int fg_create(const char *path, mode_t mode, struct fuse_file_info *fi)
+{
+
+	return 0;
 }
 
 #ifdef HAVE_UTIMENSAT
@@ -537,7 +555,7 @@ static struct fuse_operations fg_oper = {
         //.init           = fg_init, // TODO
         //.destroy        = fg_destroy, // TODO
         .access	        = fg_access,
-        //.create         = fg_create, // TODO
+        .create         = fg_create,
         //.ftruncate      = fg_ftruncate, // TODO
         //.fgetattr       = fg_fgetattr, // TODO
         //.lock           = fg_lock, // TODO
