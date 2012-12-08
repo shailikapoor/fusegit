@@ -1557,17 +1557,12 @@ repo_write(const char *path, const char *buf, size_t size, off_t offset)
 	int
 repo_rename_file(const char *from, const char *to)
 {
-	// TODO
-	// get the note for the file
-	// search the object id for the file
-	// create a new link for the file in the 'to' path tree
-	// remove the link from the 'from' path tree
-	// manage the links:
-	//	1. If the file is the main link, then after copying is finished
-	//	change the note contents for all the other links.
-	//	2. If the file is not the main link, then just add a new note
-	//	for this file, with the original link file as the content. Also
-	//	remove the original note object.
+	int r;
+
+	if ((r = repo_link(from, to)) < 0)
+		return -EFG_UNKNOWN;
+	if ((r = repo_unlink(from)) < 0)
+		return -EFG_UNKNOWN;
 	return 0;
 }
 
@@ -1578,16 +1573,18 @@ repo_rename_file(const char *from, const char *to)
 repo_rename_dir(const char *from, const char *to)
 {
 	// TODO
-	// ALARM! This is going to be very bad
-	// Renaming the folder will almost be the same task, just you don't need
-	// to worry about the links, since linking is not supported for the
+	// TODO ALARM! This is going to be very bad
+	// TODO Renaming the folder will almost be the same task, just you don't need
+	// TODO to worry about the links, since linking is not supported for the
 	// directories.
-	// BUT, what about the files in the directory. Since the path for the
-	// directories is now changed, and their attributes are saved for a note
-	// for a different path. All the attributes have to be reassigned, and
-	// you need to write the attributes for the file all over again. So a
-	// different data structure needs to be designed for the attributes.
-	return 0;
+	// TODO BUT, what about the files in the directory. Since the path for the
+	// TODO directories is now changed, and their attributes are saved for a note
+	// TODO for a different path. All the attributes have to be reassigned, and
+	// TODO you need to write the attributes for the file all over again. So a
+	// TODO different data structure needs to be designed for the attributes.
+	// TODO The above issue is not fixed and the below code is a bad
+	// workaround.
+	return -1;
 }
 
 /**
