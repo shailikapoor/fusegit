@@ -31,6 +31,7 @@ l_init_repo_stat_data(struct repo_stat_data **note_stat)
 	(*note_stat)->atime = now*1000;
 	(*note_stat)->mtime = now*1000;
 	(*note_stat)->count = 1;
+	(*note_stat)->links = NULL;
 	(*note_stat)->ecount = 0;
 	(*note_stat)->expired_links = NULL;
 }
@@ -353,6 +354,25 @@ l_get_note_name(char *out_name, const char *in_name, const char *prefix)
 }
 
 	static int
+l_remove_link_stats(const char *path)
+{
+	int r;
+	git_oid path_blob_oid;
+	git_signature *author;
+	char tmppath_ref_name[PATH_MAX_LENGTH];
+
+	l_get_note_name(tmppath_ref_name, path, REF_NAME);
+	if ((r = l_get_path_blob_oid(&path_blob_oid, tmppath_ref_name)) < 0)
+		return -1;
+	if ((r = l_get_signature_now(&author)) < 0)
+		return -1;
+	if ((r = git_note_remove(repo, NULL, author, author, &path_blob_oid)) <
+		0)
+		return -1;
+	return 0;
+}
+
+	static int
 l_update_link_stats(struct repo_stat_data *note_stat_p)
 {
 	int r;
@@ -374,7 +394,7 @@ l_update_link_stats(struct repo_stat_data *note_stat_p)
 	if ((r = l_get_signature_now(&author)) < 0)
 		return -1;
 
-	DEBUG("REMOVING NOTE");
+	DEBUG("SILENTLY REMOVING NOTE(error not thrown on error)");
 	git_note_remove(repo, NULL, author, author, &path_blob_oid);
 
 	if (note_stat_p->count == 0)
@@ -639,6 +659,7 @@ repo_setup(const char *repo_address)
 	int r;
 	git_oid oid;
 	git_treebuilder *empty_treebuilder;
+	struct repo_stat_data *note_stat;
 
 	if ((r = git_repository_init(&repo, repo_address, 1)))
 		return -EFG_UNKNOWN;
@@ -665,6 +686,15 @@ repo_setup(const char *repo_address)
 		return r;
 	DEBUG("SETUP SUCCESSFUL");
 	//printf("setup successful");
+	
+	// create the link stats
+	l_init_repo_stat_data(&note_stat);
+	note_stat->links = malloc(1 * sizeof(char *));
+	note_stat->links[0] = malloc(PATH_MAX_LENGTH * sizeof(char));
+	strcpy(note_stat->links[0], "/");
+	if ((r = l_update_link_stats(note_stat)) < 0)
+		return -EFG_UNKNOWN;
+	free_repo_stat_data(note_stat);
 
 	return 0;
 }
@@ -828,12 +858,17 @@ repo_is_dir(const char *path)
 repo_dir_stat(const char *path, struct stat *stbuf)
 {
 	DEBUG("GETTING ATTR OF DIRECTORY : %s", path);
+	int r;
+	struct repo_stat_data *file_stat;
 	const struct fuse_context *ctx;
+
 	ctx = fuse_get_context();
+	if ((r = l_get_note_stats_link(&file_stat, path)) < 0)
+		return -EFG_UNKNOWN;
 
 	stbuf->st_dev = 1;     /* ID of device containing file */
 	stbuf->st_ino = 1;     /* inode number */
-	stbuf->st_mode = S_IFDIR | 0755;    /* protection */
+	stbuf->st_mode = S_IFDIR | 0755;  // FIXIT  /* protection */
 	stbuf->st_nlink = 2;   /* number of hard links */
 	stbuf->st_uid = ctx->uid;     /* user ID of owner */
 	stbuf->st_gid = ctx->gid;     /* group ID of owner */
@@ -841,9 +876,9 @@ repo_dir_stat(const char *path, struct stat *stbuf)
 	stbuf->st_size = 0;    /* total size, in bytes */
 	//stbuf->st_blksize = index_entry->blksize; /* blocksize for file system I/O */
 	//stbuf->st_blocks = index_entry->blocks;  /* number of 512B blocks allocated */
-	//stbuf->st_atime = index_entry->atime;   /* time of last access */
-	stbuf->st_mtime = 0;   /* time of last modification */
-	stbuf->st_ctime = 0;   /* time of last status change */
+	stbuf->st_atime = file_stat->atime/1000;   /* time of last access */
+	stbuf->st_mtime = file_stat->mtime/1000;   /* time of last modification */
+	//stbuf->st_ctime = 0;   /* time of last status change */
 	
 	return 0;
 }
@@ -865,6 +900,7 @@ repo_mkdir(const char *path, unsigned int attr)
 	char last[PATH_MAX_LENGTH];
 	char tmppath[PATH_MAX_LENGTH];
 	strcpy(tmppath, path);
+	struct repo_stat_data *note_stat;
 	
 	//DEBUG("Getting parent tree");
 	if ((r = l_get_parent_tree(&tree, tmppath)) < 0)
@@ -903,6 +939,15 @@ repo_mkdir(const char *path, unsigned int attr)
 	if ((r = l_make_commit(tmppath, oid, message)) < 0)
 		return r;
 	//DEBUG("Commit successful");
+
+	// create the link stats
+	l_init_repo_stat_data(&note_stat);
+	note_stat->links = malloc(1 * sizeof(char *));
+	note_stat->links[0] = malloc(PATH_MAX_LENGTH * sizeof(char));
+	strcpy(note_stat->links[0], path);
+	if ((r = l_update_link_stats(note_stat)) < 0)
+		return -EFG_UNKNOWN;
+	free_repo_stat_data(note_stat);
 
 	return 0;
 }
@@ -956,6 +1001,10 @@ repo_rmdir(const char *path)
 	if ((r = l_make_commit(tmppath, oid, message)) < 0)
 		return r;
 	//DEBUG("Commit successful");
+
+	// remove the link stats
+	if ((r = l_remove_link_stats(path)) < 0)
+		return -EFG_UNKNOWN;
 
 	return 0;
 }
@@ -1272,11 +1321,11 @@ repo_create_file(const char *path, mode_t mode)
 
 	// create the link stats
 	l_init_repo_stat_data(&note_stat);
-	note_stat->links = malloc(sizeof(char *));
+	note_stat->links = malloc(1 * sizeof(char *));
 	note_stat->links[0] = malloc(PATH_MAX_LENGTH * sizeof(char));
 	strcpy(note_stat->links[0], path);
 	if ((r = l_update_link_stats(note_stat)) < 0)
-		return -1;
+		return -EFG_UNKNOWN;
 	free_repo_stat_data(note_stat);
 
 	return 0;
@@ -1637,7 +1686,7 @@ repo_restore(const char *snapshot)
 	strcat(tag_name, snapshot);
 
 	if ((r = git_reference_list(&array, repo, GIT_REF_LISTALL)) < 0)
-		return -1;
+		return -EFG_UNKNOWN;
 	for (i=0; i<array.count; i++) {
 		DEBUG("REFERENCE %d: %s", i, array.strings[i]);
 	}

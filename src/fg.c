@@ -180,6 +180,8 @@ setup(char *mount)
  * both mount and backup.
  * TODO The repo file is right now hardcoded, but should be read from a config
  * file, so that it can be customized.
+ * 
+ * TODO how to handle umask
  */
 	int
 main(int argc, char *argv[])
