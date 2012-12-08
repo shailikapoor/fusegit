@@ -196,6 +196,11 @@ l_git_commit_now(git_tree *tree, const char *message)
 	return 0;
 }
 
+/**
+ * @param path path which was changed and has to be committed
+ * @param oid the object id of the tree which is at path
+ * @param message message of the commit
+ */
 	static int
 l_make_commit(const char *path, git_oid oid, const char *message)
 {
@@ -597,54 +602,6 @@ l_free_str_array(char **arr, int size)
 		free(arr[i]);
 	}
 	free(arr);
-}
-
-	static int
-l_callback_copy_note_attr(const char *root, git_tree_entry *entry, void
-	*payload)
-{
-	int r;
-	struct copy_ref *copy_data = payload;
-	git_oid oid;
-	git_oid path_blob_oid;
-	git_note *note;
-	git_signature *author;
-	char *tag_name = copy_data->to;
-	char *ref_name = copy_data->from;
-	char name[PATH_MAX_LENGTH] = "";
-	char tmppath_ref_name[PATH_MAX_LENGTH];
-	const char *message;
-	strcat(name, "/");
-	strcat(name, root);
-	strcat(name, git_tree_entry_name(entry));
-
-	// get the note from the repository
-	l_get_note_name(tmppath_ref_name, name, ref_name);
-	if ((r = l_get_path_blob_oid(&path_blob_oid, tmppath_ref_name)) < 0)
-		return -1;
-	if ((r = git_note_read(&note, repo, NULL, &path_blob_oid)) < 0)
-		return -1;
-	message = git_note_message(note);
-
-	// create a note for the tag
-	l_get_note_name(tmppath_ref_name, name, tag_name);
-	if ((r = l_get_path_blob_oid(&path_blob_oid, tmppath_ref_name)) < 0)
-		return -1;
-	if ((r = l_get_signature_now(&author)) < 0)
-		return -1;
-	if ((r = git_note_create(&oid,
-				repo,
-				author,
-				author,
-				NULL,
-				&path_blob_oid,
-				message)) < 0)
-		return -1;
-
-	git_note_free(note);
-	git_signature_free(author);
-	DEBUG("root = %s, entry = %s, payload = %s", root, name, tag_name);
-	return 0;
 }
 
 // ****************************************************************************
@@ -1566,6 +1523,68 @@ repo_rename_file(const char *from, const char *to)
 	return 0;
 }
 
+	static int
+l_callback_rename_dir_cleanup(const char *root, git_tree_entry *entry, void
+	*payload)
+{
+	int r;
+	struct copy_ref *copy_data = payload; // from:from parent, to:to parent
+	char name[PATH_MAX_LENGTH] = "";
+	strcpy(name, copy_data->from);
+	strcat(name, "/");
+	strcat(name, root);
+	strcat(name, git_tree_entry_name(entry));
+	// remove the original note
+	if ((r = l_remove_link_stats(name)) < 0)
+		return -1;
+	return 0;
+}
+
+	static int
+l_callback_rename_dir(const char *root, git_tree_entry *entry, void *payload)
+{	
+	int r;
+	int i;
+	struct copy_ref *copy_data = payload; // from:from parent, to:to parent
+	char from_name[PATH_MAX_LENGTH] = "";
+	char to_name[PATH_MAX_LENGTH] = "";
+	struct repo_stat_data *note_stat_p;
+	strcpy(from_name, copy_data->from);
+	strcat(from_name, "/");
+	strcat(from_name, root);
+	strcat(from_name, git_tree_entry_name(entry));
+	strcpy(to_name, copy_data->to);
+	strcat(to_name, "/");
+	strcat(to_name, root);
+	strcat(to_name, git_tree_entry_name(entry));
+
+	// get the note from the repository
+	/*
+	l_get_note_name(tmppath_ref_name, from_name, REF_NAME);
+	if ((r = l_get_path_blob_oid(&from_path_blob_oid, tmppath_ref_name)) < 0)
+		return -1;
+	if ((r = git_note_read(&note, repo, NULL, &from_path_blob_oid)) < 0)
+		return -1;
+	message = git_note_message(note);
+	*/
+	// NOTE: if for some file, you don't get the notes, then it has been
+	// fixed
+	// TODO : do proper testing for this feature, when you have links
+	if ((r = l_get_note_stats_link(&note_stat_p, from_name)) < 0)
+		return -1;
+
+	for (i=0; i<note_stat_p->count; i++) {
+		if (strcmp(note_stat_p->links[i], from_name) == 0) {
+			strcpy(note_stat_p->links[i], to_name);
+			break;
+		}
+	}
+	if ((r = l_update_link_stats(note_stat_p)) < 0)
+		return -1;
+
+	return 0;
+}
+
 /**
  * rename a directory
  */
@@ -1584,7 +1603,165 @@ repo_rename_dir(const char *from, const char *to)
 	// TODO different data structure needs to be designed for the attributes.
 	// TODO The above issue is not fixed and the below code is a bad
 	// workaround.
-	return -1;
+	int r;
+	int i;
+	git_oid oid;
+	git_tree *tree;
+	git_tree *from_parent_tree;
+	git_tree *to_parent_tree;
+	git_treebuilder *from_parent_builder;
+	git_treebuilder *to_parent_builder;
+	char last[PATH_MAX_LENGTH];
+	char from_parent[PATH_MAX_LENGTH];
+	char to_parent[PATH_MAX_LENGTH];
+	char header[100];
+	char message[3*PATH_MAX_LENGTH];
+	unsigned int dir_attr = S_IFDIR | 0755;	// FIXIT HARD CODED
+	struct copy_ref copy_data;
+	struct repo_stat_data *note_stat_p;
+
+	// get the tree entry of from.
+	if ((r = l_get_path_tree(&tree, from)) < 0)
+		return -EFG_UNKNOWN;
+	oid = *git_tree_id(tree);
+
+	// get the parent tree of to, then get its tree builder.
+	if ((r = get_parent_path(to, to_parent)) < 0)
+		return -EFG_UNKNOWN;
+	if ((r = l_get_parent_tree(&to_parent_tree, to)) < 0)
+		return -EFG_UNKNOWN;
+	if ((r = git_treebuilder_create(&to_parent_builder, to_parent_tree)) <
+		0)
+		return -EFG_UNKNOWN;
+
+	// add the from treeentry to parent of to. Commit this change as the
+	// first step of rename_dir
+	if ((r = get_last_component(to, last)) < 0)
+		return -EFG_UNKNOWN;
+	if ((r = git_treebuilder_insert(NULL, to_parent_builder, last, &oid,
+		dir_attr))
+		< 0)
+		return -EFG_UNKNOWN;
+	if ((r = git_treebuilder_write(&oid, repo, to_parent_builder)) < 0)
+		return -EFG_UNKNOWN;
+	// do the commit
+	strcpy(header, "fusegit\nrename_dir Step1(copy the contents)\n");
+	sprintf(message, "%s%s -> %s", header, from, to);
+	if ((r = l_make_commit(to_parent, oid, message)) < 0)
+		return -EFG_UNKNOWN;
+
+	// free the tree builder
+	git_treebuilder_free(to_parent_builder);
+
+	// get the parent tree of from, then get its tree builder.
+	if ((r = get_parent_path(from, from_parent)) < 0)
+		return -EFG_UNKNOWN;
+	if ((r = l_get_parent_tree(&from_parent_tree, from)) < 0)
+		return -EFG_UNKNOWN;
+	if ((r = git_treebuilder_create(&from_parent_builder, from_parent_tree)) <
+		0)
+		return -EFG_UNKNOWN;
+
+	// remove the tree entry of from, from this tree builder.
+	if ((r = get_last_component(from, last)) < 0)
+		return -EFG_UNKNOWN;
+	if ((r = git_treebuilder_remove(from_parent_builder, last)) < 0)
+		return -EFG_UNKNOWN;
+	if ((r = git_treebuilder_write(&oid, repo, from_parent_builder)) < 0)
+		return -EFG_UNKNOWN;
+
+	// commit this change as the second step of rename_dir
+	// do the commit
+	strcpy(header, "fusegit\nrename_dir Step2(remove the fromm)\n");
+	sprintf(message, "%s%s -> %s", header, from, to);
+	if ((r = l_make_commit(from_parent, oid, message)) < 0)
+		return -EFG_UNKNOWN;
+
+	// free the tree builder
+	git_treebuilder_free(from_parent_builder);
+
+	// copying the notes
+	// pass the parent paths to the callback function, and modify the notes
+	// for each entry in the tree which is moved.
+	DEBUG("tree callback");
+	// NOTE : PRE-ORDER tree traversal is not implemented in libgit2
+	copy_data.from = from_parent;
+	copy_data.to = to_parent;
+	if ((r = git_tree_walk(tree, l_callback_rename_dir, GIT_TREEWALK_POST,
+		&copy_data)) < 0) {
+		DEBUG("error in callback");
+		return -EFG_UNKNOWN;
+	}
+	if ((r = git_tree_walk(tree, l_callback_rename_dir_cleanup, GIT_TREEWALK_POST,
+		&copy_data)) < 0) {
+		DEBUG("error in callback");
+		return -EFG_UNKNOWN;
+	}
+
+	// copy the directories note attributes
+	if ((r = l_get_note_stats_link(&note_stat_p, from)) < 0)
+		return -1;
+
+	for (i=0; i<note_stat_p->count; i++) {
+		if (strcmp(note_stat_p->links[i], from) == 0) {
+			strcpy(note_stat_p->links[i], to);
+			break;
+		}
+	}
+	if ((r = l_update_link_stats(note_stat_p)) < 0)
+		return -1;
+	if ((r = l_remove_link_stats(from)) < 0)
+		return -1;
+
+	return 0;
+}
+
+	static int
+l_callback_copy_note_attr(const char *root, git_tree_entry *entry, void
+	*payload)
+{
+	int r;
+	struct copy_ref *copy_data = payload;
+	git_oid oid;
+	git_oid path_blob_oid;
+	git_note *note;
+	git_signature *author;
+	char *tag_name = copy_data->to;
+	char *ref_name = copy_data->from;
+	char name[PATH_MAX_LENGTH] = "";
+	char tmppath_ref_name[PATH_MAX_LENGTH];
+	const char *message;
+	strcat(name, "/");
+	strcat(name, root);
+	strcat(name, git_tree_entry_name(entry));
+
+	// get the note from the repository
+	l_get_note_name(tmppath_ref_name, name, ref_name);
+	if ((r = l_get_path_blob_oid(&path_blob_oid, tmppath_ref_name)) < 0)
+		return -1;
+	if ((r = git_note_read(&note, repo, NULL, &path_blob_oid)) < 0)
+		return -1;
+	message = git_note_message(note);
+
+	// create a note for the tag
+	l_get_note_name(tmppath_ref_name, name, tag_name);
+	if ((r = l_get_path_blob_oid(&path_blob_oid, tmppath_ref_name)) < 0)
+		return -1;
+	if ((r = l_get_signature_now(&author)) < 0)
+		return -1;
+	if ((r = git_note_create(&oid,
+				repo,
+				author,
+				author,
+				NULL,
+				&path_blob_oid,
+				message)) < 0)
+		return -1;
+
+	git_note_free(note);
+	git_signature_free(author);
+	DEBUG("root = %s, entry = %s, payload = %s", root, name, tag_name);
+	return 0;
 }
 
 /**
@@ -1672,7 +1849,7 @@ repo_restore(const char *snapshot)
 	git_oid oid;
 	git_strarray array;
 	git_tag *tag;
-	git_commit *new_head_commit;
+	git_object *new_head_commit_object;
 	git_commit *commit_p;
 	git_tree *tree;
 	char tag_name[PATH_MAX_LENGTH];
@@ -1701,9 +1878,9 @@ repo_restore(const char *snapshot)
 		return -EFG_UNKNOWN;
 	DEBUG("tag type: %d (GIT_OBJ_BAD=%d)", git_tag_type(tag), GIT_OBJ_BAD);
 
-	if ((r = git_tag_peel(&new_head_commit, tag)) < 0)
+	if ((r = git_tag_peel(&new_head_commit_object, tag)) < 0)
 		return -EFG_UNKNOWN;
-	oid = *git_commit_id(new_head_commit);
+	oid = *git_object_id(new_head_commit_object);
 	git_oid_tostr(idstr, GIT_OID_HEXSZ+1, &oid);
 	DEBUG("commit id: %s", idstr);
 	if ((r = git_reference_set_oid(ref, &oid)) < 0)
