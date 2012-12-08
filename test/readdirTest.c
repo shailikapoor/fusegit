@@ -21,12 +21,13 @@ int main(int argc, char **argv){
 		printf ("Error no is : %d\n", errno);
 		printf("Error description is : %s\n",strerror(errno));
 	}
-	
-	while(dptr=readdir(dirp))
+	else
 	{
-		printf("%s\n",dptr->d_name);
+		while(dptr=readdir(dirp))
+		{
+			printf("%s\n",dptr->d_name);
+		}
 	}
-	
 	return 0;
 
 }
