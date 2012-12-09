@@ -1751,6 +1751,8 @@ l_callback_copy_note_attr(const char *root, git_tree_entry *entry, void
 	strcat(name, root);
 	strcat(name, git_tree_entry_name(entry));
 
+	DEBUG("root = %s, entry = %s, payload = %s, from = %s, to = %s", root,
+		name, tag_name, copy_data->from, copy_data->to);
 	// get the note from the repository
 	l_get_note_name(tmppath_ref_name, name, ref_name);
 	if ((r = l_get_path_blob_oid(&path_blob_oid, tmppath_ref_name)) < 0)
@@ -1795,7 +1797,9 @@ repo_backup(const char *snapshot)
 	git_signature *author;
 	git_tag *tag;
 	git_tree *tree;
-	char *tag_name;
+	git_object *object;
+	const char *tag_name;
+	char tag_name_copy[PATH_MAX_LENGTH];
 	char message[100];
 	struct copy_ref copy_data;
 	
@@ -1808,13 +1812,17 @@ repo_backup(const char *snapshot)
 		return -EFG_UNKNOWN;
 	sprintf(message, "fusegit\nBACKUP\n%s", snapshot);
 	
-	if ((r = git_tag_create(&oid, repo, snapshot, commit_p, author, message,
+	oid = *git_commit_id(commit_p);
+	if ((r = git_object_lookup(&object, repo, &oid, GIT_OBJ_ANY)) < 0)
+		return -EFG_UNKNOWN;
+	if ((r = git_tag_create(&oid, repo, snapshot, object, author, message,
 		0)) < 0)
 		return -EFG_UNKNOWN;
 	
 	if ((r = git_tag_lookup(&tag, repo, &oid)) < 0)
 		return -EFG_UNKNOWN;
 	tag_name = git_tag_name(tag);
+	strcpy(tag_name_copy, tag_name);
 	DEBUG("BACKUP TAG NAME:%s", tag_name);
 	git_tag_free(tag);
 
@@ -1836,7 +1844,7 @@ repo_backup(const char *snapshot)
 	DEBUG("tree callback");
 	// NOTE : PRE-ORDER tree traversal is not implemented in libgit2
 	copy_data.from = REF_NAME;
-	copy_data.to = tag_name;
+	copy_data.to = tag_name_copy;
 	if ((r = git_tree_walk(tree, l_callback_copy_note_attr, GIT_TREEWALK_POST,
 		&copy_data)) < 0) {
 		DEBUG("error in callback");
