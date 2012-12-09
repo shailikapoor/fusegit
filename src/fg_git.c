@@ -561,6 +561,7 @@ l_get_note_stats(struct repo_stat_data **note_stat_p, const char *path)
 	static int
 l_get_note_stats_link(struct repo_stat_data **note_stat_p, const char *path)
 {
+	DEBUG("** l_get_note_stats_link %s", path);
 	int r;
 	const char *message;
 	git_oid path_blob_oid;
@@ -768,7 +769,7 @@ repo_stat(const char *path, struct stat *stbuf)
 	
 	if ((r = l_get_note_stats_link(&file_stat, path)) < 0)
 		return -EFG_UNKNOWN;
-	//DEBUG("GET STAT : %s : STAT : %x", path, stbuf);
+	DEBUG("obtained the note stats");
 
 	ctx = fuse_get_context();
 	stbuf->st_dev = 1; // ignored by FUSE index_entry->dev;     /* ID of device containing file */
@@ -1550,11 +1551,13 @@ l_callback_rename_dir(const char *root, git_tree_entry *entry, void *payload)
 	char to_name[PATH_MAX_LENGTH] = "";
 	struct repo_stat_data *note_stat_p;
 	strcpy(from_name, copy_data->from);
-	strcat(from_name, "/");
+	if (strcmp(copy_data->from, "/") != 0)
+		strcat(from_name, "/");
 	strcat(from_name, root);
 	strcat(from_name, git_tree_entry_name(entry));
 	strcpy(to_name, copy_data->to);
-	strcat(to_name, "/");
+	if (strcmp(copy_data->to, "/") != 0)
+		strcat(to_name, "/");
 	strcat(to_name, root);
 	strcat(to_name, git_tree_entry_name(entry));
 
@@ -1570,6 +1573,7 @@ l_callback_rename_dir(const char *root, git_tree_entry *entry, void *payload)
 	// NOTE: if for some file, you don't get the notes, then it has been
 	// fixed
 	// TODO : do proper testing for this feature, when you have links
+	DEBUG("copying the notes from %s to %s", from_name, to_name);
 	if ((r = l_get_note_stats_link(&note_stat_p, from_name)) < 0)
 		return -1;
 
@@ -1581,6 +1585,7 @@ l_callback_rename_dir(const char *root, git_tree_entry *entry, void *payload)
 	}
 	if ((r = l_update_link_stats(note_stat_p)) < 0)
 		return -1;
+	DEBUG("copying successful");
 
 	return 0;
 }
@@ -1685,8 +1690,8 @@ repo_rename_dir(const char *from, const char *to)
 	// for each entry in the tree which is moved.
 	DEBUG("tree callback");
 	// NOTE : PRE-ORDER tree traversal is not implemented in libgit2
-	copy_data.from = from_parent;
-	copy_data.to = to_parent;
+	copy_data.from = from; //from_parent;
+	copy_data.to = to; //to_parent;
 	if ((r = git_tree_walk(tree, l_callback_rename_dir, GIT_TREEWALK_POST,
 		&copy_data)) < 0) {
 		DEBUG("error in callback");
