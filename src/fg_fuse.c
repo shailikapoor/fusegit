@@ -243,7 +243,11 @@ static int fg_link(const char *from, const char *to)
 static int fg_chmod(const char *path, mode_t mode)
 {
 	DEBUG("FG_CHMOD");
-        return -ENOSYS;
+	int r;
+
+	if ((r = repo_chmod(path, mode)) < 0)
+		return -ENOLINK;
+        return 0;
 }
 
 /**

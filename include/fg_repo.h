@@ -68,3 +68,5 @@ int repo_rename_dir(const char *from, const char *to);
 int repo_backup(const char *snapshot);
 
 int repo_restore(const char *snapshot);
+
+int repo_chmod(const char *path, mode_t mode);

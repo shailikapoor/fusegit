@@ -206,8 +206,9 @@ l_make_commit(const char *path, git_oid oid, const char *message)
 {
 	int r;
 	git_treebuilder *builder;
+	const git_tree_entry *entry;
 	git_tree *tree;
-	unsigned int attr = S_IFDIR | 0755;	// FIXIT HARD CODED
+	unsigned int attr;
 	char last[PATH_MAX_LENGTH];
 	char tmppath[PATH_MAX_LENGTH];
 	strcpy(tmppath, path);
@@ -223,6 +224,8 @@ l_make_commit(const char *path, git_oid oid, const char *message)
 		if ((r = get_last_component(tmppath, last)) < 0)
 			return -EFG_UNKNOWN;
 		//DEBUG("Inserting into tree builder");
+		entry = git_tree_entry_byname(tree, last);
+		attr = git_tree_entry_attributes(entry);
 		if ((r = git_treebuilder_insert(NULL, builder, last, &oid, attr))
 			< 0)
 			return -EFG_UNKNOWN;	// can't link the empty tree to repo
@@ -826,7 +829,9 @@ repo_dir_stat(const char *path, struct stat *stbuf)
 
 	stbuf->st_dev = 1;     /* ID of device containing file */
 	stbuf->st_ino = 1;     /* inode number */
-	stbuf->st_mode = S_IFDIR | 0755;  // FIXIT  /* protection */
+	stbuf->st_mode = l_get_file_mode(path);    /* protection */
+	if (stbuf->st_mode == INVALID_FILE_MODE)
+		stbuf->st_mode = S_IFDIR | 0755;  // FIXIT  /* protection */
 	stbuf->st_nlink = 2;   /* number of hard links */
 	stbuf->st_uid = ctx->uid;     /* user ID of owner */
 	stbuf->st_gid = ctx->gid;     /* group ID of owner */
@@ -844,7 +849,6 @@ repo_dir_stat(const char *path, struct stat *stbuf)
 /**
  * make a directory in the given path
  * 
- * FIXIT check if the directory already exists, if it exists then throw error
  */
 	int
 repo_mkdir(const char *path, unsigned int attr)
@@ -991,7 +995,6 @@ repo_link(const char *from, const char *to)
 	git_oid oid;
 	char last[PATH_MAX_LENGTH];
 	char tmppath[PATH_MAX_LENGTH];
-	unsigned int dir_attr = S_IFDIR | 0755;	// FIXIT HARD CODED
 
 	struct repo_stat_data *note_stat;
 	char **tmp_links;
@@ -1006,8 +1009,7 @@ repo_link(const char *from, const char *to)
 	if (from_entry == NULL)
 		return -EFG_NOLINK;
 	oid = *git_tree_entry_id(from_entry);
-	from_attr = (git_tree_entry_type(from_entry) == GIT_OBJ_BLOB) ?
-		git_tree_entry_attributes(from_entry) : dir_attr;
+	from_attr = git_tree_entry_attributes(from_entry);
 	//DEBUG("from_attr = %o", from_attr);
 
 	// create a new entry for `to` in the repository
@@ -1612,19 +1614,37 @@ repo_rename_dir(const char *from, const char *to)
 	int i;
 	git_oid oid;
 	git_tree *tree;
+	const git_tree_entry *from_entry;
 	git_tree *from_parent_tree;
 	git_tree *to_parent_tree;
 	git_treebuilder *from_parent_builder;
 	git_treebuilder *to_parent_builder;
 	char last[PATH_MAX_LENGTH];
+	char from_copy[PATH_MAX_LENGTH];
+	char to_copy[PATH_MAX_LENGTH];
 	char from_parent[PATH_MAX_LENGTH];
 	char to_parent[PATH_MAX_LENGTH];
 	char header[100];
 	char message[3*PATH_MAX_LENGTH];
-	unsigned int dir_attr = S_IFDIR | 0755;	// FIXIT HARD CODED
+	unsigned int dir_attr;
 	struct copy_ref copy_data;
 	struct repo_stat_data *note_stat_p;
 
+	strcpy(from_copy, from);
+	strcpy(to_copy, to);
+
+	// get the parent tree of from, then get its tree builder.
+	if ((r = get_parent_path(from, from_parent)) < 0)
+		return -EFG_UNKNOWN;
+	if ((r = l_get_parent_tree(&from_parent_tree, from)) < 0)
+		return -EFG_UNKNOWN;
+	if ((r = git_treebuilder_create(&from_parent_builder, from_parent_tree)) <
+		0)
+		return -EFG_UNKNOWN;
+	if ((r = get_last_component(from, last)) < 0)
+		return -EFG_UNKNOWN;
+	from_entry = git_tree_entry_byname(from_parent_tree, last);
+	dir_attr = git_tree_entry_attributes(from_entry);
 	// get the tree entry of from.
 	if ((r = l_get_path_tree(&tree, from)) < 0)
 		return -EFG_UNKNOWN;
@@ -1658,15 +1678,6 @@ repo_rename_dir(const char *from, const char *to)
 	// free the tree builder
 	git_treebuilder_free(to_parent_builder);
 
-	// get the parent tree of from, then get its tree builder.
-	if ((r = get_parent_path(from, from_parent)) < 0)
-		return -EFG_UNKNOWN;
-	if ((r = l_get_parent_tree(&from_parent_tree, from)) < 0)
-		return -EFG_UNKNOWN;
-	if ((r = git_treebuilder_create(&from_parent_builder, from_parent_tree)) <
-		0)
-		return -EFG_UNKNOWN;
-
 	// remove the tree entry of from, from this tree builder.
 	if ((r = get_last_component(from, last)) < 0)
 		return -EFG_UNKNOWN;
@@ -1690,8 +1701,8 @@ repo_rename_dir(const char *from, const char *to)
 	// for each entry in the tree which is moved.
 	DEBUG("tree callback");
 	// NOTE : PRE-ORDER tree traversal is not implemented in libgit2
-	copy_data.from = from; //from_parent;
-	copy_data.to = to; //to_parent;
+	copy_data.from = from_copy; //from_parent;
+	copy_data.to = to_copy; //to_parent;
 	if ((r = git_tree_walk(tree, l_callback_rename_dir, GIT_TREEWALK_POST,
 		&copy_data)) < 0) {
 		DEBUG("error in callback");
@@ -1922,3 +1933,55 @@ repo_restore(const char *snapshot)
 	DEBUG("branch changed");
 	return 0;
 }
+
+/**
+ * change file permissions
+ */
+	int
+repo_chmod(const char *path, mode_t mode)
+{
+	int r;
+	git_oid oid;
+	git_tree *tree;
+	git_treebuilder	*builder;
+	const git_tree_entry *entry;
+	char tmppath[PATH_MAX_LENGTH];
+	char last[PATH_MAX_LENGTH];
+	strcpy(tmppath, path);
+
+	// get the parent tree
+	if ((r = l_get_parent_tree(&tree, path)) < 0)
+		return -EFG_UNKNOWN;
+
+	// get the treebuilder for the parent tree
+	if ((r = git_treebuilder_create(&builder, tree)) < 0)
+		return -EFG_UNKNOWN;
+
+	// add the blob with the name of the file as a child to the parent
+	if ((r = get_last_component(path, last)) < 0)
+		return -EFG_UNKNOWN;
+
+	entry = git_tree_entry_byname(tree, last);
+	oid = *git_tree_entry_id(entry);
+	//DEBUG("Adding the link to the tree builder");
+	if ((r = git_treebuilder_insert(NULL, builder, last,
+		&oid, (unsigned int)mode)) < 0)
+		return -EFG_UNKNOWN;
+	//DEBUG("Writing to the original tree");
+	if ((r = git_treebuilder_write(&oid, repo, builder)) < 0)
+		return -EFG_UNKNOWN;
+	// free the tree builder
+	git_treebuilder_free(builder);
+	if ((r = get_parent_path(NULL, tmppath)) < 0)
+		return -EFG_UNKNOWN;	// get parent path
+	
+	// do the commit
+	char header[] = "fusegit\nchmod\n";
+	char message[PATH_MAX_LENGTH + strlen(header)];
+	sprintf(message, "%s%s", header, path);
+	if ((r = l_make_commit(tmppath, oid, message)) < 0)
+		return r;
+
+	return 0;
+}
+
