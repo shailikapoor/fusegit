@@ -433,12 +433,12 @@ static int fg_readdir(const char *path, void *buf, fuse_fill_dir_t filler,
 	// the filler function takes buf, name of the entry, struct stat of the
 	// entry and offset.
 	for (i=0; i<children_count; i++) {
-		//fprintf(stdout, "adding ");
-		//fprintf(stdout, "%s\n", children[i].name);
-		filler(buf, children[i].name, NULL, 0);
-		//fprintf(stdout, "added\n");
+		fprintf(stdout, "adding ");
+		fprintf(stdout, "%s\n", children[i].name);
+		filler(buf, children[i].name, NULL, 0);	// FIXIT NULL
+		fprintf(stdout, "added\n");
 	}
-	free(children);
+	free(children);	// children is obtained by calling malloc in repo_get_children
 
         return 0;
 }
@@ -472,16 +472,6 @@ static int fg_access(const char *path, int mask)
  */
 static int fg_create(const char *path, mode_t mode, struct fuse_file_info *fi)
 {
-	int r;
-	// if the file doesn't exist create a file
-	// check in the git repository if this path exists
-	//if (!repo_path_exists(path)) {
-	//	// TODO path doesn't exist
-	//}
-
-	// open the file
-	// TODO check permissions
-	fprintf(stdout,	"FG_CREATE_------------------------------------------------\n");
 
 	return 0;
 }
@@ -531,7 +521,7 @@ static struct fuse_operations fg_oper = {
         //.init           = fg_init, // TODO
         //.destroy        = fg_destroy, // TODO
         .access	        = fg_access,
-        .create         = fg_create, // TODO
+        .create         = fg_create,
         //.ftruncate      = fg_ftruncate, // TODO
         //.fgetattr       = fg_fgetattr, // TODO
         //.lock           = fg_lock, // TODO
