@@ -13,7 +13,7 @@ static char REF_NAME[PATH_MAX_LENGTH] = "refs/heads/master";
 static const unsigned int INVALID_FILE_MODE = 077777777;
 static git_repository *repo;
 static git_commit *last_commit = NULL;
-char note_data[PATH_MAX_LENGTH*MAX_HARD_LINKS];
+char note_data[PATH_MAX_LENGTH*(MAX_HARD_LINKS+1)];
 
 struct copy_ref {
 	char *from;
@@ -24,12 +24,16 @@ struct copy_ref {
 l_init_repo_stat_data(struct repo_stat_data **note_stat)
 {
 	time_t now;
+	const struct fuse_context *ctx;
 
+	ctx = fuse_get_context();
 	time(&now);
 	DEBUG("CURRENT TIME IS : %ld", now);
 	*note_stat = malloc(sizeof(struct repo_stat_data));
 	(*note_stat)->atime = now*1000;
 	(*note_stat)->mtime = now*1000;
+	(*note_stat)->uid = ctx->uid;
+	(*note_stat)->gid = ctx->gid;
 	(*note_stat)->count = 1;
 	(*note_stat)->links = NULL;
 	(*note_stat)->ecount = 0;
@@ -343,6 +347,8 @@ l_get_path_oid(git_oid *oid, const char *path)
 // **Structure for first link**
 // access time
 // modification time
+// $uid
+// $gid
 // !3 - number of links
 // !/path/to/link1
 // !/path/to/link2
@@ -381,7 +387,7 @@ l_remove_link_stats(const char *path)
 }
 
 	static int
-l_update_link_stats(struct repo_stat_data *note_stat_p)
+l_update_link_stats(const struct repo_stat_data *note_stat_p)
 {
 	int r;
 	int i;
@@ -417,6 +423,8 @@ l_update_link_stats(struct repo_stat_data *note_stat_p)
 	// create the note for the git_object corresponding to the path
 	DEBUG("CREATING NOTE DATA");
 	sprintf(note_data, "%ld\n%ld\n", note_stat_p->atime, note_stat_p->mtime);
+	sprintf(note_data+strlen(note_data), "$%d\n", note_stat_p->uid);
+	sprintf(note_data+strlen(note_data), "$%d\n", note_stat_p->gid);
 	sprintf(note_data+strlen(note_data), "!%d\n", note_stat_p->count);
 	for (i=0; i<note_stat_p->count; i++) {
 		sprintf(note_data+strlen(note_data), "!%s\n",
@@ -522,6 +530,26 @@ l_get_note_stats(struct repo_stat_data **note_stat_p, const char *path)
 	
 	message += ind+1;
 	
+	// get the uid
+	DEBUG("get the uid");
+	tmp2 = index(message, '\n');
+	ind = tmp2 - message;
+	strncpy(tmp, message, ind);
+	tmp[ind] = '\0';
+	sscanf(tmp, "$%d", &((*note_stat_p)->uid));
+	
+	message += ind+1;
+	
+	// get the gid
+	DEBUG("get the gid");
+	tmp2 = index(message, '\n');
+	ind = tmp2 - message;
+	strncpy(tmp, message, ind);
+	tmp[ind] = '\0';
+	sscanf(tmp, "$%d", &((*note_stat_p)->gid));
+	
+	message += ind+1;
+
 	// get the number of links
 	DEBUG("get the number of lines");
 	tmp2 = index(message, '\n');
@@ -768,21 +796,19 @@ repo_stat(const char *path, struct stat *stbuf)
 	DEBUG("GETTING ATTR OF FILE : %s", path);
 	int r;
 	struct repo_stat_data *file_stat;
-	const struct fuse_context *ctx;
 	
 	if ((r = l_get_note_stats_link(&file_stat, path)) < 0)
 		return -EFG_UNKNOWN;
 	DEBUG("obtained the note stats");
 
-	ctx = fuse_get_context();
 	stbuf->st_dev = 1; // ignored by FUSE index_entry->dev;     /* ID of device containing file */
 	stbuf->st_ino = 1; // index_entry->ino;     /* inode number */
 	stbuf->st_mode = l_get_file_mode(path);    /* protection */
 	if (stbuf->st_mode == INVALID_FILE_MODE)
 		return -EFG_UNKNOWN;
 	stbuf->st_nlink = file_stat->count;   /* number of hard links */
-	stbuf->st_uid = ctx->uid;     /* user ID of owner */
-	stbuf->st_gid = ctx->gid;     /* group ID of owner */
+	stbuf->st_uid = file_stat->uid;     /* user ID of owner */
+	stbuf->st_gid = file_stat->gid;     /* group ID of owner */
 	//stbuf->st_rdev = index_entry->rdev;    /* device ID (if special file) */
 	stbuf->st_size = l_get_file_size(path);    /* total size, in bytes */
 	stbuf->st_blksize = 1; // ignored by FUSE index_entry->blksize; /* blocksize for file system I/O */
@@ -821,9 +847,7 @@ repo_dir_stat(const char *path, struct stat *stbuf)
 	DEBUG("GETTING ATTR OF DIRECTORY : %s", path);
 	int r;
 	struct repo_stat_data *file_stat;
-	const struct fuse_context *ctx;
 
-	ctx = fuse_get_context();
 	if ((r = l_get_note_stats_link(&file_stat, path)) < 0)
 		return -EFG_UNKNOWN;
 
@@ -833,8 +857,8 @@ repo_dir_stat(const char *path, struct stat *stbuf)
 	if (stbuf->st_mode == INVALID_FILE_MODE)
 		stbuf->st_mode = S_IFDIR | 0755;  // FIXIT  /* protection */
 	stbuf->st_nlink = 2;   /* number of hard links */
-	stbuf->st_uid = ctx->uid;     /* user ID of owner */
-	stbuf->st_gid = ctx->gid;     /* group ID of owner */
+	stbuf->st_uid = file_stat->uid;     /* user ID of owner */
+	stbuf->st_gid = file_stat->gid;     /* group ID of owner */
 	//stbuf->st_rdev = index_entry->rdev;    /* device ID (if special file) */
 	stbuf->st_size = 0;    /* total size, in bytes */
 	//stbuf->st_blksize = index_entry->blksize; /* blocksize for file system I/O */
@@ -1993,3 +2017,20 @@ repo_chmod(const char *path, mode_t mode)
 	return 0;
 }
 
+/**
+ * change owner
+ */
+	int
+repo_chown(const char *path, uid_t uid, gid_t gid)
+{
+	int r;
+	struct repo_stat_data *stat_data;
+
+	if ((r = l_get_note_stats_link(&stat_data, path)) < 0)
+		return -EFG_UNKNOWN;
+	stat_data->uid = uid;
+	stat_data->gid = gid;
+	if ((r = l_update_link_stats(stat_data)) < 0)
+		return -EFG_UNKNOWN;
+	return 0;
+}

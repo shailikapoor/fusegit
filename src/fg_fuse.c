@@ -258,7 +258,11 @@ static int fg_chmod(const char *path, mode_t mode)
 static int fg_chown(const char *path, uid_t uid, gid_t gid)
 {
 	DEBUG("FG_CHOWN");
-        return -ENOSYS;
+	int r;
+
+	if ((r = repo_chown(path, uid, gid)) < 0)
+		return -ENOLINK;
+        return 0;
 }
 
 /**

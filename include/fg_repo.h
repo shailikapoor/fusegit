@@ -21,6 +21,8 @@ struct repo_stat_data {
 	unsigned int ecount;
 	unsigned long atime;
 	unsigned long mtime;
+	uid_t uid;
+	gid_t gid;
 	char **links;
 	char **expired_links;
 };
@@ -70,3 +72,5 @@ int repo_backup(const char *snapshot);
 int repo_restore(const char *snapshot);
 
 int repo_chmod(const char *path, mode_t mode);
+
+int repo_chown(const char *path, uid_t uid, gid_t gid);
