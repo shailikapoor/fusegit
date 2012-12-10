@@ -82,7 +82,7 @@ void createFile(const char *file_path)
 /* After the file is created, Write to the file */
 void writeFile(const char *file_path, const char *data)
 {
-	printf("***START : create file\n");
+	printf("***START : write file\n");
 
 	FILE *fp;
 
@@ -97,7 +97,7 @@ void writeFile(const char *file_path, const char *data)
 /* Read from the file*/
 void readFile(const char *file_path, const char *expected)
 {
-	printf("***START : create file\n");
+	printf("***START : read file\n");
 	
 	FILE *fp;
 	char data[1024];
@@ -136,12 +136,12 @@ void copyFile(const char *from, const char *to, const char *expected)
 	fclose(f2);
 	printf("Copy complete: Testing: ");
 	f2 = fopen(to, "r");
-	fscanf(f2, "%s", data);
+	fgets(data, 1084, f2);
 
 	if (strcmp(data, expected) == 0)
-		printf("Correct copy\n");
+		printf("Correct copy: %s\n", data);
 	else
-		printf("Incorrect copy\n");
+		printf("Incorrect copy: %s\n", data);
  
 	fclose(f1);
 	fclose(f2);

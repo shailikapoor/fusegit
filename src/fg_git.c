@@ -768,8 +768,8 @@ error:
 l_write_to_disk(struct repo_file_handle *handle, const char *operation)
 {
 	int err = -1;
-	DEBUG("handle LOCKED");
-	pthread_mutex_lock(&handle->lock);
+	//DEBUG("handle LOCKED: %s", operation);
+	//pthread_mutex_lock(&handle->lock);
 	const char *path = handle->path;
 	const char *buf = handle->buf;
 	size_t size = handle->size;
@@ -855,12 +855,12 @@ l_write_to_disk(struct repo_file_handle *handle, const char *operation)
 	}
 
 //success:
-	DEBUG("handle UNLOCKED");
-	pthread_mutex_unlock(&handle->lock);
+	//DEBUG("handle UNLOCKED");
+	//pthread_mutex_unlock(&handle->lock);
 	return size;
 error:
-	DEBUG("handle UNLOCKED");
-	pthread_mutex_unlock(&handle->lock);
+	//DEBUG("handle UNLOCKED");
+	//pthread_mutex_unlock(&handle->lock);
 	return err;
 }
 
@@ -897,7 +897,7 @@ l_copy_data_from_buffer(const char *buf, struct repo_file_handle *handle, size_t
 	if (size > 0) {
 		DEBUG("******* writing in memory");
 		memcpy(handle->buf + (off-handle->off), buf, size);
-		handle->size = size;
+		handle->size = off + size - handle->off;
 		handle->dirty = 1;
 	}
 	return 0;
