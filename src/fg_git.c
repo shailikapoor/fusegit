@@ -492,7 +492,6 @@ error:
 	static int
 l_get_note_stats(struct repo_stat_data **note_stat_p, const char *path)
 {
-	pthread_mutex_lock(&note_lock);
 	// TODO
 	// this path has the actual note statistics
 	// read the note and parse the notes
@@ -508,11 +507,11 @@ l_get_note_stats(struct repo_stat_data **note_stat_p, const char *path)
 
 	l_get_note_name(tmppath_ref_name, path, REF_NAME);
 	if ((r = l_get_path_blob_oid(&path_blob_oid, tmppath_ref_name)) < 0)
-		goto error;//return -1;
+		return -1;
 
 	DEBUG("READING THE NOTE");
 	if ((r = git_note_read(&note, repo, NULL, &path_blob_oid)) < 0)
-		goto error;//return -1;
+		return -1;
 	message = git_note_message(note);
 	DEBUG("NOTE MESSAGE\n%s", message);
 	// ***allocate space for repo_stat_data
@@ -594,19 +593,13 @@ l_get_note_stats(struct repo_stat_data **note_stat_p, const char *path)
 	}
 
 	git_note_free(note);
-//success:
-	pthread_mutex_unlock(&note_lock);
 	return 0;
-error:
-	pthread_mutex_unlock(&note_lock);
-	return -1;
 }
 
 	static int
 l_get_note_stats_link(struct repo_stat_data **note_stat_p, const char *path)
 {
 	DEBUG("** l_get_note_stats_link %s", path);
-	pthread_mutex_lock(&note_lock);
 	int r;
 	const char *message;
 	git_oid path_blob_oid;
@@ -616,9 +609,9 @@ l_get_note_stats_link(struct repo_stat_data **note_stat_p, const char *path)
 
 	l_get_note_name(tmppath_ref_name, path, REF_NAME);
 	if ((r = l_get_path_blob_oid(&path_blob_oid, tmppath_ref_name)) < 0)
-		goto error;//return -1;
+		return -1;
 	if ((r = git_note_read(&note, repo, NULL, &path_blob_oid)) < 0)
-		goto error;//return -1;
+		return -1;
 	
 	message = git_note_message(note);
 	if (message[0] == '@') {
@@ -627,21 +620,16 @@ l_get_note_stats_link(struct repo_stat_data **note_stat_p, const char *path)
 		git_note_free(note);
 		DEBUG("getting linked stats for %s, from %s", path, tmppath);
 		if ((r = l_get_note_stats(note_stat_p, tmppath)) < 0)
-			goto error;//return -1;
+			return -1;
 	} else {
 		// free the note
 		git_note_free(note);
 		DEBUG("getting original stats");
 		if ((r = l_get_note_stats(note_stat_p, path)) < 0)
-			goto error;//return -1;
+			return -1;
 	}
 
-//success:
-	pthread_mutex_unlock(&note_lock);
 	return 0;
-error:
-	pthread_mutex_unlock(&note_lock);
-	return -1;
 }
 
 	static void
