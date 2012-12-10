@@ -7,6 +7,7 @@
 #include <stdarg.h>
 #include <errno.h>
 #include <unistd.h>
+#include <pthread.h>
 
 //#define DEBUG_PRINT_ENABLED 1
 #define	PATH_MAX_LENGTH	1024

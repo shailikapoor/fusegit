@@ -14,6 +14,7 @@ static const unsigned int INVALID_FILE_MODE = 077777777;
 static git_repository *repo;
 static git_commit *last_commit = NULL;
 char note_data[PATH_MAX_LENGTH*(MAX_HARD_LINKS+1)];
+pthread_mutex_t note_lock;
 
 struct copy_ref {
 	char *from;
@@ -389,6 +390,7 @@ l_remove_link_stats(const char *path)
 	static int
 l_update_link_stats(const struct repo_stat_data *note_stat_p)
 {
+	pthread_mutex_lock(&note_lock);
 	int r;
 	int i;
 	int n;
@@ -404,15 +406,15 @@ l_update_link_stats(const struct repo_stat_data *note_stat_p)
 		tmppath = note_stat_p->expired_links[0];
 	l_get_note_name(tmppath_ref_name, tmppath, REF_NAME);
 	if ((r = l_get_path_blob_oid(&path_blob_oid, tmppath_ref_name)) < 0)
-		return -1;
+		goto error;//return -1;
 	if ((r = l_get_signature_now(&author)) < 0)
-		return -1;
+		goto error;//return -1;
 
 	DEBUG("SILENTLY REMOVING NOTE(error not thrown on error)");
 	git_note_remove(repo, NULL, author, author, &path_blob_oid);
 
 	if (note_stat_p->count == 0)
-		return 0;	// if no links, then just return
+		goto success;//return 0;	// if no links, then just return
 
 	// get the space required
 	n = 0;
@@ -439,7 +441,7 @@ l_update_link_stats(const struct repo_stat_data *note_stat_p)
 				NULL,
 				&path_blob_oid,
 				note_data)) < 0)
-		return -1;
+		goto error;//return -1;
 	DEBUG("CREATED NOTE");
 
 	// for the other links create a linked note
@@ -448,7 +450,7 @@ l_update_link_stats(const struct repo_stat_data *note_stat_p)
 		l_get_note_name(tmppath_ref_name, note_stat_p->links[i],
 		REF_NAME);
 		if ((r = l_get_path_blob_oid(&path_blob_oid, tmppath_ref_name)) < 0)
-			return -1;
+			goto error;//return -1;
 		DEBUG("LINK PATH %d : %s", i, note_stat_p->links[i]);
 		git_note_remove(repo, NULL, author, author, &path_blob_oid);
 		// create a note
@@ -461,7 +463,7 @@ l_update_link_stats(const struct repo_stat_data *note_stat_p)
 					NULL,
 					&path_blob_oid,
 					note_data)) < 0)
-			return -1;
+			goto error;//return -1;
 		DEBUG("NOTE CREATED");
 	}
 	assert(note_stat_p->ecount == 0 || note_stat_p->ecount == 1);
@@ -469,14 +471,19 @@ l_update_link_stats(const struct repo_stat_data *note_stat_p)
 		l_get_note_name(tmppath_ref_name, note_stat_p->expired_links[i],
 			REF_NAME);
 		if ((r = l_get_path_blob_oid(&path_blob_oid, tmppath_ref_name)) < 0)
-			return -1;
+			goto error;//return -1;
 		DEBUG("EXPIRED LINK PATH %d : %s", i, note_stat_p->expired_links[i]);
 		git_note_remove(repo, NULL, author, author, &path_blob_oid);
 		DEBUG("NOTE REMOVED");
 	}
 
 	git_signature_free(author);
+success:
+	pthread_mutex_unlock(&note_lock);
 	return 0;
+error:
+	pthread_mutex_unlock(&note_lock);
+	return -1;
 }
 
 /**
@@ -485,6 +492,7 @@ l_update_link_stats(const struct repo_stat_data *note_stat_p)
 	static int
 l_get_note_stats(struct repo_stat_data **note_stat_p, const char *path)
 {
+	pthread_mutex_lock(&note_lock);
 	// TODO
 	// this path has the actual note statistics
 	// read the note and parse the notes
@@ -500,11 +508,11 @@ l_get_note_stats(struct repo_stat_data **note_stat_p, const char *path)
 
 	l_get_note_name(tmppath_ref_name, path, REF_NAME);
 	if ((r = l_get_path_blob_oid(&path_blob_oid, tmppath_ref_name)) < 0)
-		return -1;
+		goto error;//return -1;
 
 	DEBUG("READING THE NOTE");
 	if ((r = git_note_read(&note, repo, NULL, &path_blob_oid)) < 0)
-		return -1;
+		goto error;//return -1;
 	message = git_note_message(note);
 	DEBUG("NOTE MESSAGE\n%s", message);
 	// ***allocate space for repo_stat_data
@@ -586,13 +594,19 @@ l_get_note_stats(struct repo_stat_data **note_stat_p, const char *path)
 	}
 
 	git_note_free(note);
+//success:
+	pthread_mutex_unlock(&note_lock);
 	return 0;
+error:
+	pthread_mutex_unlock(&note_lock);
+	return -1;
 }
 
 	static int
 l_get_note_stats_link(struct repo_stat_data **note_stat_p, const char *path)
 {
 	DEBUG("** l_get_note_stats_link %s", path);
+	pthread_mutex_lock(&note_lock);
 	int r;
 	const char *message;
 	git_oid path_blob_oid;
@@ -602,9 +616,9 @@ l_get_note_stats_link(struct repo_stat_data **note_stat_p, const char *path)
 
 	l_get_note_name(tmppath_ref_name, path, REF_NAME);
 	if ((r = l_get_path_blob_oid(&path_blob_oid, tmppath_ref_name)) < 0)
-		return -1;
+		goto error;//return -1;
 	if ((r = git_note_read(&note, repo, NULL, &path_blob_oid)) < 0)
-		return -1;
+		goto error;//return -1;
 	
 	message = git_note_message(note);
 	if (message[0] == '@') {
@@ -613,16 +627,21 @@ l_get_note_stats_link(struct repo_stat_data **note_stat_p, const char *path)
 		git_note_free(note);
 		DEBUG("getting linked stats for %s, from %s", path, tmppath);
 		if ((r = l_get_note_stats(note_stat_p, tmppath)) < 0)
-			return -1;
+			goto error;//return -1;
 	} else {
 		// free the note
 		git_note_free(note);
 		DEBUG("getting original stats");
 		if ((r = l_get_note_stats(note_stat_p, path)) < 0)
-			return -1;
+			goto error;//return -1;
 	}
 
+//success:
+	pthread_mutex_unlock(&note_lock);
 	return 0;
+error:
+	pthread_mutex_unlock(&note_lock);
+	return -1;
 }
 
 	static void
