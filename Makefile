@@ -3,17 +3,23 @@
 # specify the folder. The repositories will be based on a timestamp, and 
 # linked to the folder.
 
+.PHONY: clean cleanall docs
+
 all: fusegit #docs	# THE CREATION OF DOCS IS COMMENTED FOR NOW
 
-fusegit: clean src/fg_util.o src/fg_git.o
+fusegit: clean src/fg_fuse.o src/fg_util.o src/fg_git.o
 	@echo "Compiling the complete library..."
-	@gcc -Wall -Iinclude src/fg_fuse.c fg_git.o fg_util.o `pkg-config fuse --cflags --libs` -lgit2 -o fusegit
+	@gcc -Wall -Iinclude src/fg.c fg_fuse.o fg_git.o fg_util.o `pkg-config fuse --cflags --libs` -lgit2 -o fusegit
 	@echo "Removing the object file..."
-	@rm fg_git.o fg_util.o
+	@rm *.o
 
-src/fg_git.o: src/fg_util.o
+src/fg_fuse.o:
+	@echo "Compiling the fuse code..."
+	@gcc -c -Wall -Iinclude src/fg_fuse.c `pkg-config fuse --cflags --libs`
+
+src/fg_git.o:
 	@echo "Compiling the git code..."
-	@gcc -c -Wall -Iinclude -lgit2 src/fg_git.c fg_util.o `pkg-config fuse --cflags --libs`
+	@gcc -c -Wall -Iinclude -lgit2 src/fg_git.c `pkg-config fuse --cflags --libs`
 
 src/fg_util.o:
 	@echo "Compiling the util code..."

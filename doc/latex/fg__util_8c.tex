@@ -1,0 +1,63 @@
+\hypertarget{fg__util_8c}{\section{fg\-\_\-util.\-c \-File \-Reference}
+\label{fg__util_8c}\index{fg\-\_\-util.\-c@{fg\-\_\-util.\-c}}
+}
+{\ttfamily \#include $<$stdio.\-h$>$}\*
+{\ttfamily \#include $<$string.\-h$>$}\*
+{\ttfamily \#include \char`\"{}fg.\-h\char`\"{}}\*
+\subsection*{\-Functions}
+\begin{DoxyCompactItemize}
+\item 
+int \hyperlink{fg__util_8c_afc8e8816e2fbf8863ff7a7b30025b6a7}{is\-\_\-substr} (const char $\ast$str, const char $\ast$sub)
+\item 
+int \hyperlink{fg__util_8c_ab58550acc7ad4dcee1c6765771f4c6a2}{get\-\_\-parent\-\_\-path} (const char $\ast$path, char $\ast$parent)
+\item 
+int \hyperlink{fg__util_8c_a3d9b5060cef40d1e0ff37ed0dcf006c2}{get\-\_\-last\-\_\-component} (const char $\ast$path, char $\ast$name)
+\item 
+int \hyperlink{fg__util_8c_ac144a18ad5189cbd769db26f27cbc949}{get\-\_\-next\-\_\-component} (const char $\ast$path, int hier, char $\ast$name)
+\item 
+void \hyperlink{fg__util_8c_a332b881ea529915bc90a13194f91311d}{print\-\_\-file\-\_\-stats} (const char $\ast$path, struct stat $\ast$stbuf)
+\end{DoxyCompactItemize}
+
+
+\subsection{\-Function \-Documentation}
+\hypertarget{fg__util_8c_a3d9b5060cef40d1e0ff37ed0dcf006c2}{\index{fg\-\_\-util.\-c@{fg\-\_\-util.\-c}!get\-\_\-last\-\_\-component@{get\-\_\-last\-\_\-component}}
+\index{get\-\_\-last\-\_\-component@{get\-\_\-last\-\_\-component}!fg_util.c@{fg\-\_\-util.\-c}}
+\subsubsection[{get\-\_\-last\-\_\-component}]{\setlength{\rightskip}{0pt plus 5cm}int {\bf get\-\_\-last\-\_\-component} (
+\begin{DoxyParamCaption}
+\item[{const char $\ast$}]{path, }
+\item[{char $\ast$}]{name}
+\end{DoxyParamCaption}
+)}}\label{fg__util_8c_a3d9b5060cef40d1e0ff37ed0dcf006c2}
+\hypertarget{fg__util_8c_ac144a18ad5189cbd769db26f27cbc949}{\index{fg\-\_\-util.\-c@{fg\-\_\-util.\-c}!get\-\_\-next\-\_\-component@{get\-\_\-next\-\_\-component}}
+\index{get\-\_\-next\-\_\-component@{get\-\_\-next\-\_\-component}!fg_util.c@{fg\-\_\-util.\-c}}
+\subsubsection[{get\-\_\-next\-\_\-component}]{\setlength{\rightskip}{0pt plus 5cm}int {\bf get\-\_\-next\-\_\-component} (
+\begin{DoxyParamCaption}
+\item[{const char $\ast$}]{path, }
+\item[{int}]{hier, }
+\item[{char $\ast$}]{name}
+\end{DoxyParamCaption}
+)}}\label{fg__util_8c_ac144a18ad5189cbd769db26f27cbc949}
+\hypertarget{fg__util_8c_ab58550acc7ad4dcee1c6765771f4c6a2}{\index{fg\-\_\-util.\-c@{fg\-\_\-util.\-c}!get\-\_\-parent\-\_\-path@{get\-\_\-parent\-\_\-path}}
+\index{get\-\_\-parent\-\_\-path@{get\-\_\-parent\-\_\-path}!fg_util.c@{fg\-\_\-util.\-c}}
+\subsubsection[{get\-\_\-parent\-\_\-path}]{\setlength{\rightskip}{0pt plus 5cm}int {\bf get\-\_\-parent\-\_\-path} (
+\begin{DoxyParamCaption}
+\item[{const char $\ast$}]{path, }
+\item[{char $\ast$}]{parent}
+\end{DoxyParamCaption}
+)}}\label{fg__util_8c_ab58550acc7ad4dcee1c6765771f4c6a2}
+\hypertarget{fg__util_8c_afc8e8816e2fbf8863ff7a7b30025b6a7}{\index{fg\-\_\-util.\-c@{fg\-\_\-util.\-c}!is\-\_\-substr@{is\-\_\-substr}}
+\index{is\-\_\-substr@{is\-\_\-substr}!fg_util.c@{fg\-\_\-util.\-c}}
+\subsubsection[{is\-\_\-substr}]{\setlength{\rightskip}{0pt plus 5cm}int {\bf is\-\_\-substr} (
+\begin{DoxyParamCaption}
+\item[{const char $\ast$}]{str, }
+\item[{const char $\ast$}]{sub}
+\end{DoxyParamCaption}
+)}}\label{fg__util_8c_afc8e8816e2fbf8863ff7a7b30025b6a7}
+\hypertarget{fg__util_8c_a332b881ea529915bc90a13194f91311d}{\index{fg\-\_\-util.\-c@{fg\-\_\-util.\-c}!print\-\_\-file\-\_\-stats@{print\-\_\-file\-\_\-stats}}
+\index{print\-\_\-file\-\_\-stats@{print\-\_\-file\-\_\-stats}!fg_util.c@{fg\-\_\-util.\-c}}
+\subsubsection[{print\-\_\-file\-\_\-stats}]{\setlength{\rightskip}{0pt plus 5cm}void {\bf print\-\_\-file\-\_\-stats} (
+\begin{DoxyParamCaption}
+\item[{const char $\ast$}]{path, }
+\item[{struct stat $\ast$}]{stbuf}
+\end{DoxyParamCaption}
+)}}\label{fg__util_8c_a332b881ea529915bc90a13194f91311d}

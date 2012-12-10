@@ -11,17 +11,9 @@
  * THE ROOT OF THIS FILE SYSTEM
  */
 
-//#define FUSE_USE_VERSION 29
-
-//#include <fuse.h>
 #include <fuse_opt.h>	// this is to read the input arguments
-#include <stdio.h>
-#include <stdlib.h>	// for exit()
-#include <string.h>
-#include <errno.h>
-#include <unistd.h>	// this is for getcwd
 #include "fg.h"
-#include "fg_vcs.h"
+#include "fg_repo.h"
 #include "fg_util.h"
 #ifdef HAVE_SETXATTR
 #include <sys/xattr.h>
@@ -29,10 +21,6 @@
 
 
 
-static char FG_ROOT[PATH_MAX_LENGTH];
-
-static const char *fg_path = "/fgtmp";  // path for the /fgtmp file
-static const char *fg_str = "Welcome to Fuse GIT";  // content of the /fgtmp file 
 
 
 
@@ -49,6 +37,7 @@ static const char *fg_str = "Welcome to Fuse GIT";  // content of the /fgtmp fil
  */
 static int fg_getattr(const char *path, struct stat *stbuf)
 {
+	DEBUG("FG_GETATTR");
 	/*
         int res = 0; // temporary result 
 	
@@ -77,17 +66,20 @@ static int fg_getattr(const char *path, struct stat *stbuf)
 	// st_oid  : this is obtained from the tree_entry oid, t_entry->oid
 	int r;
 	
-	fprintf(stdout, "getting attribute of %s\n", path);
-	if ((r = repo_isdir(path))) {
-		fprintf(stdout, "is directory %s\n", path);
+	DEBUG("checking if path exists: %s", path);
+	if (!repo_path_exists(path))
+		return -ENOENT;
+	DEBUG("getting attribute of %s", path);
+	if ((r = repo_is_dir(path))) {
+		//DEBUG("is directory %s", path);
 		if ((r = repo_dir_stat(path, stbuf)) < 0)
 			return -ENOENT;
 		//print_file_stats(path, stbuf);
 		return 0;
 	}
-	if ((r = repo_stat(strcmp("/", path) ? path : "/.", stbuf)) < 0)
+	if ((r = repo_stat(strcmp("/", path) ? path : "/", stbuf)) < 0)
 		return -ENOENT;
-	//print_file_stats(path, stbuf);
+	print_file_stats(path, stbuf);
 	
         return 0;
 }
@@ -104,6 +96,7 @@ static int fg_getattr(const char *path, struct stat *stbuf)
  */
 static int fg_readlink(const char *path, char *buf, size_t size)
 {
+	DEBUG("FG_READLINK");
         return -ENOSYS;
 }
 
@@ -118,6 +111,7 @@ static int fg_readlink(const char *path, char *buf, size_t size)
  */
 static int fg_mknod(const char *path, mode_t mode, dev_t rdev)
 {
+	DEBUG("FG_MKNOD");
         return -ENOSYS;
 }
 
@@ -131,8 +125,9 @@ static int fg_mknod(const char *path, mode_t mode, dev_t rdev)
  */
 static int fg_mkdir(const char *path, mode_t mode)
 {
+	DEBUG("FG_MKDIR");
 	int r;
-	fprintf(stdout, "directory mode : %o\n", mode|S_IFDIR);
+	//DEBUG("directory mode : %o", mode|S_IFDIR);
 	
 	if ((r = repo_mkdir(path, mode|S_IFDIR)) < 0)
 		return -ENOENT;
@@ -146,6 +141,7 @@ static int fg_mkdir(const char *path, mode_t mode)
  */
 static int fg_unlink(const char *path)
 {
+	DEBUG("FG_UNLINK");
 	int r;
 
 	if ((r = repo_unlink(path)) < 0)
@@ -159,6 +155,7 @@ static int fg_unlink(const char *path)
  */
 static int fg_rmdir(const char *path)
 {
+	DEBUG("FG_RMDIR");
 	// FIXIT rmdir can remove empty directories only. But to check this, the
 	// tmp_repo should have empty directories. But it is impossible to add
 	// an empty directory to a git repository.
@@ -189,17 +186,28 @@ static int fg_rmdir(const char *path)
  */
 static int fg_symlink(const char *from, const char *to)
 {
+	DEBUG("FG_SYMLINK");
         return -ENOSYS;
 }
 
 /**
- * Rename a file
+ * Rename a file (or directory)
  * 
  * XXX 
  */
 static int fg_rename(const char *from, const char *to)
 {
-        return -ENOSYS;
+	DEBUG("FG_RENAME");
+	int r;
+
+	if (repo_is_dir(from)) {
+		if ((r = repo_rename_dir(from, to)) < 0)
+			return -1;
+	} else {
+		if ((r = repo_rename_file(from, to)) < 0)
+			return -1;
+	}
+        return 0;
 }
 
 /**
@@ -211,6 +219,7 @@ static int fg_rename(const char *from, const char *to)
  */
 static int fg_link(const char *from, const char *to)
 {
+	DEBUG("FG_LINK");
 	int r;
 
 	if ((r = repo_link(from, to)) < 0) {
@@ -233,7 +242,12 @@ static int fg_link(const char *from, const char *to)
  */
 static int fg_chmod(const char *path, mode_t mode)
 {
-        return -ENOSYS;
+	DEBUG("FG_CHMOD");
+	int r;
+
+	if ((r = repo_chmod(path, mode)) < 0)
+		return -ENOLINK;
+        return 0;
 }
 
 /**
@@ -243,7 +257,12 @@ static int fg_chmod(const char *path, mode_t mode)
  */
 static int fg_chown(const char *path, uid_t uid, gid_t gid)
 {
-        return -ENOSYS;
+	DEBUG("FG_CHOWN");
+	int r;
+
+	if ((r = repo_chown(path, uid, gid)) < 0)
+		return -ENOLINK;
+        return 0;
 }
 
 /**
@@ -253,7 +272,12 @@ static int fg_chown(const char *path, uid_t uid, gid_t gid)
  */
 static int fg_truncate(const char *path, off_t size)
 {
-        return -ENOSYS;
+	DEBUG("FG_TRUNCATE");
+	int r;
+
+	if ((r = repo_truncate(path, size)) < 0)
+		return -ENOENT;
+        return 0;
 }
 
 /**
@@ -270,18 +294,10 @@ static int fg_truncate(const char *path, off_t size)
  */
 static int fg_open(const char *path, struct fuse_file_info *fi)
 {
-	// TODO all the code in this function is temporary and needs to be look
-	// over
-
-	// if the user if asking for anything besides /fgtmp, return  file does not exist
-        if(strcmp(path, fg_path) != 0)
-		return -ENOENT;
-	
-	// if the user wants to open the file for anything else than reading only, return  doesn't have sufficient permissions
-	if((fi->flags & 3) != O_RDONLY)
-		return -EACCES;
-
-	// else open the file
+	DEBUG("FG_OPEN");
+	// FIXIT doing nothing for this right now, since we are not using any
+	// file handles. Once we start creating file handles, we will need to
+	// implement this function.
 	return 0;
 }
 
@@ -295,32 +311,14 @@ static int fg_open(const char *path, struct fuse_file_info *fi)
  * value of this operation.
  * 
  * XXX 
+ * If the code comes here, it means that the file exists, since first the code
+ * does a getattr on the path.
  */
 static int fg_read(const char *path, char *buf, size_t size, off_t offset,
                       struct fuse_file_info *fi)
-{       
-	// TODO all the code in this function is temporary and needs to be look
-	// over
-
-	size_t len;
-	(void) fi;
-
-	if(strcmp(path, fg_path) != 0){
-		return -ENOENT;
-	}
-
-	if(strcmp(path, fg_path) == 0){
-		len = strlen(fg_str);
-		if(offset < len){
-			if(offset + size > len)
-				size = len - offset;
-			memcpy(buf, fg_str + offset, size);
-		}else
-			size=0;
-		
-	}
-
-        return size;
+{
+	DEBUG("FG_READ");
+	return repo_read(path, buf, size, offset); 	
 }
 
 /**
@@ -334,7 +332,8 @@ static int fg_read(const char *path, char *buf, size_t size, off_t offset,
 static int fg_write(const char *path, const char *buf, size_t size,
                        off_t offset, struct fuse_file_info *fi)
 {
-        return -ENOSYS;
+	DEBUG("FG_WRITE");
+        return repo_write(path, buf, size, offset);
 }
 
 /**
@@ -346,6 +345,7 @@ static int fg_write(const char *path, const char *buf, size_t size,
  */
 static int fg_statfs(const char *path, struct statvfs *stbuf)
 {
+	DEBUG("FG_STATFS");
         return -ENOSYS;
 }
 
@@ -365,7 +365,11 @@ static int fg_statfs(const char *path, struct statvfs *stbuf)
  */
 static int fg_release(const char *path, struct fuse_file_info *fi)
 {
-        return -ENOSYS;
+	DEBUG("FG_RELEASE");
+	// FIXIT doing nothing for this right now, since we are not using any
+	// file handles. Once we start creating file handles, we will need to
+	// implement this function.
+        return 0;
 }
 
 /**
@@ -379,6 +383,7 @@ static int fg_release(const char *path, struct fuse_file_info *fi)
 static int fg_fsync(const char *path, int isdatasync,
                        struct fuse_file_info *fi)
 {
+	DEBUG("FG_FSYNC : metadata?%d", isdatasync?0:1);
         return -ENOSYS;
 }
 
@@ -391,6 +396,7 @@ static int fg_fsync(const char *path, int isdatasync,
 static int fg_setxattr(const char *path, const char *name,
                           const char *value, size_t size, int flags)
 {
+	DEBUG("FG_SETXATTR");
         return _ENOSYS;
 }
 
@@ -401,6 +407,7 @@ static int fg_setxattr(const char *path, const char *name,
  */
 static int fg_listxattr(const char *path, char *list, size_t size)
 {
+	DEBUG("FG_LISTXATTR");
         return -ENOSYS;
 }
 
@@ -411,6 +418,7 @@ static int fg_listxattr(const char *path, char *list, size_t size)
  */
 static int fg_removexattr(const char *path, const char *name)
 {
+	DEBUG("FG_REMOVEXATTR");
         return -ENOSYS;
 }
 #endif  /* HAVE_SETXATTR */
@@ -435,10 +443,10 @@ static int fg_removexattr(const char *path, const char *name)
 static int fg_readdir(const char *path, void *buf, fuse_fill_dir_t filler, 
                          off_t offset, struct fuse_file_info *fi)
 {
-	// XXX no need to check if the path is for this filesystem
+	DEBUG("FG_READDIR");
 	char name[PATH_MAX_LENGTH] = ""; // name of the path component
 	int hier = 0; // stores the index in the hierarchy, starting from 0
-	struct fg_file_node *children;
+	struct repo_file_node *children;
 	int children_count;
 	int i, r;
 	
@@ -458,8 +466,8 @@ static int fg_readdir(const char *path, void *buf, fuse_fill_dir_t filler,
 	// for each of the entries one by one.
 	if ((r = repo_get_children(&children, &children_count, path)) < 0)
 		return -ENOENT;
-	fprintf(stdout, "CHILDREN OBTAINED FROM GIT REPO : %d\n",
-		children_count);
+	//DEBUG("CHILDREN OBTAINED FROM GIT REPO : %d",
+	//	children_count);
 
 	filler(buf, ".", NULL, 0);
 	filler(buf, "..", NULL, 0);
@@ -467,12 +475,12 @@ static int fg_readdir(const char *path, void *buf, fuse_fill_dir_t filler,
 	// the filler function takes buf, name of the entry, struct stat of the
 	// entry and offset.
 	for (i=0; i<children_count; i++) {
-		fprintf(stdout, "adding ");
-		fprintf(stdout, "%s\n", children[i].name);
-		filler(buf, children[i].name, NULL, 0);	// FIXIT NULL
-		fprintf(stdout, "added\n");
+		//DEBUG("adding ");
+		//DEBUG("%s", children[i].name);
+		filler(buf, children[i].name, NULL, 0);
+		//DEBUG("added");
 	}
-	free(children);	// children is obtained by calling malloc in repo_get_children
+	free(children);
 
         return 0;
 }
@@ -489,28 +497,35 @@ static int fg_readdir(const char *path, void *buf, fuse_fill_dir_t filler,
  */
 static int fg_access(const char *path, int mask)
 {
+	DEBUG("FG_ACCESS");
         return -ENOSYS;
 }
 
 /**
  * Create and open a file
- *
- * If the file does not exist, first create it with the specified
- * mode, and then open it.
- *
- * If this method is not implemented or under Linux kernel
- * versions earlier than 2.6.15, the mknod() and open() methods
- * will be called instead.
- *
+ * 
+ * If the file does not exist, first create it with the specified mode,
+ * and then open it.
+ * 
+ * If this method is not implemented or under Linux kernel versions
+ * earlier than 2.6.15, the mknod() and open() methods will be called
+ * instead.
+ * 
  * Introduced in version 2.5
  */
 static int fg_create(const char *path, mode_t mode, struct fuse_file_info *fi)
 {
+	DEBUG("FG_CREATE");
+	// only when a file doesn't exist will this function be called.
+	int r;
+
+	// ask repo to create a empty file and return
+	if ((r = repo_create_file(path, mode)) < 0)
+		return -1;	// SOME ERROR
 
 	return 0;
 }
 
-#ifdef HAVE_UTIMENSAT
 /**
  * Change the access and modification times of a file with nanosecond reslution
  * 
@@ -518,124 +533,65 @@ static int fg_create(const char *path, mode_t mode, struct fuse_file_info *fi)
  */
 static int fg_utimens(const char *path, const struct timespec ts[2])
 {
-        return -ENOSYS;
+	DEBUG("FG_UTIMENS");
+	int r;
+
+	// ask the repo to change the a and m times of the file
+	if ((r = repo_update_time_ns(path, ts)) < 0)
+		return -1;
+        return 0;
 }
-#endif
 
 static struct fuse_operations fg_oper = {
-        .getattr        = fg_getattr,
+        .getattr        = fg_getattr,	// DONE
         .readlink	= fg_readlink,
         .mknod	        = fg_mknod,
-        .mkdir	        = fg_mkdir,
-        .unlink	        = fg_unlink,
-        .rmdir	        = fg_rmdir,
+        .mkdir	        = fg_mkdir,	// DONE
+        .unlink	        = fg_unlink,	// DONE
+        .rmdir	        = fg_rmdir,	// DONE
         .symlink	= fg_symlink,
         .rename	        = fg_rename,
-        .link	        = fg_link,
+        .link	        = fg_link,	// DONE
         .chmod	        = fg_chmod,
         .chown	        = fg_chown,
         .truncate	= fg_truncate,
-        .open	        = fg_open,
-        .read	        = fg_read,
+        .open	        = fg_open,	// DONE - FIXIT
+        .read	        = fg_read,	// DONE
         .write	        = fg_write,
         .statfs	        = fg_statfs,
-        //.flush          = fg_flush, // TODO
-        .release	= fg_release,
+        //.flush          = fg_flush,	// TODO
+        .release	= fg_release,	// DONE - FIXIT
         .fsync	        = fg_fsync,
 #ifdef HAVE_SETXATTR
         .setxattr	= fg_setxattr,
-        .getxattr	= fg_getxattr, // TODO
+        .getxattr	= fg_getxattr,	// TODO
         .listxattr	= fg_listxattr,
         .removexattr	= fg_removexattr,
 #endif
-        //.opendir        = fg_opendir, // TODO
-        .readdir	= fg_readdir,
-        //.releasedir	= fg_releasedir, // TODO
-        //.fsyncdir	= fg_fsyncdir, // TODO
-        //.init           = fg_init, // TODO
-        //.destroy        = fg_destroy, // TODO
+        //.opendir        = fg_opendir,	// TODO
+        .readdir	= fg_readdir,	// DONE
+        //.releasedir	= fg_releasedir,	// TODO
+        //.fsyncdir	= fg_fsyncdir,	// TODO
+        //.init           = fg_init,	// TODO
+        //.destroy        = fg_destroy,	// TODO
         .access	        = fg_access,
-        .create         = fg_create,
-        //.ftruncate      = fg_ftruncate, // TODO
-        //.fgetattr       = fg_fgetattr, // TODO
-        //.lock           = fg_lock, // TODO
-#ifdef HAVE_UTIMENSAT
-        .utimens	= fg_utimens,
-#endif
-        //.bmap           = fg_bmap, // TODO
-        //.ioctl          = fg_ioctl, // TODO
-        //.poll           = fg_poll, // TODO
+        .create         = fg_create,	// DONE
+        //.ftruncate      = fg_ftruncate,	// TODO
+        //.fgetattr       = fg_fgetattr,	// TODO
+        //.lock           = fg_lock,	// TODO
+        .utimens	= fg_utimens,	// DONE
+        //.bmap           = fg_bmap,	// TODO
+        //.ioctl          = fg_ioctl,	// TODO
+        //.poll           = fg_poll,	// TODO
 };
 
-/**
- * remove any trailing / from the mpoint which is returned
- */
-	static void
-get_mountpoint(const char *arg, char *mpoint)
-{
-	char cwd[PATH_MAX_LENGTH];
-	if (getcwd(cwd, sizeof(cwd)) != NULL)
-		printf("current working directory: %s\n", cwd);
-	printf("function is called for %s\n", arg);
-
-	const char *y = cwd;
-	while ((*mpoint = *y)) {
-		mpoint++;
-		y++;
-	}
-	y = arg;
-	*mpoint = '/'; mpoint++;
-	while ((*mpoint = *y)) {
-		mpoint++;
-		y++;
-	}
-}
-
-/**
- * Process the mountpoint which the user has provided and then use it to create
- * a git repository in the same parent folder.
- */
-	static int
-proc_mountpoint(void *data, const char *arg, int key, struct fuse_args *outargs)
-{
-	int r;
-	static int times_called = 0;
-	if (times_called++ > 0)
-		return -1;
-	
-	// Now that we have checked that this is the only output we expect, i.e.
-	// this is the mountpoint of our filesystem. Check if a git repository
-	// already exists for this or not.
-	// If (git repository exists for this mountpoint)
-	// 	setup the file system to use the git repository
-	// Else
-	// 	create a git repository and setup the file system to use the git
-	// 	repository.
-	char repo[PATH_MAX_LENGTH];
-	get_mountpoint(arg, repo);
-	strcpy(FG_ROOT, repo);
-	printf("mountpoint is %s\n", repo);
-	if (strlen(repo) + strlen(".repo") >= PATH_MAX_LENGTH-1)
-		exit(-1);
-	strcpy(repo+strlen(repo), ".repo");
-	printf("repository is %s\n", repo);
-
-	// Now we have obtained the address of the repository, we can set it
-	if ((r = repo_setup(repo)) < 0)
-		exit(r);
-
-	return 0;
-}
-
 	int
-main(int argc, char *argv[])
+fg_fuse_main(int argc, char *argv[])
 {
-        umask(0); // XXX this provides the bits which will be masked for all the files which are to be created.
-
-	// creating the fuse_args to parse it for the mount-point
-	struct fuse_args args = FUSE_ARGS_INIT(argc, argv);
-	struct fuse_opt matching_opts[] = { FUSE_OPT_KEY("foo", 0) };
-	fuse_opt_parse(&args, NULL, matching_opts, (fuse_opt_proc_t)proc_mountpoint);
-
+	int i;
+	for (i=0; i<argc; i++) {
+		DEBUG("arg %d: %s", i, argv[i]);
+	}
         return fuse_main(argc, argv, &fg_oper, NULL);
 }
+

@@ -2,21 +2,202 @@
 \label{fg__git_8c}\index{fg\-\_\-git.\-c@{fg\-\_\-git.\-c}}
 }
 {\ttfamily \#include $<$stdio.\-h$>$}\*
+{\ttfamily \#include $<$stdlib.\-h$>$}\*
 {\ttfamily \#include $<$git2.\-h$>$}\*
-{\ttfamily \#include \char`\"{}fg\-\_\-vcs.\-h\char`\"{}}\*
+{\ttfamily \#include \char`\"{}fg.\-h\char`\"{}}\*
+{\ttfamily \#include \char`\"{}fg\-\_\-repo.\-h\char`\"{}}\*
+{\ttfamily \#include \char`\"{}fg\-\_\-util.\-h\char`\"{}}\*
 \subsection*{\-Functions}
 \begin{DoxyCompactItemize}
 \item 
-void \hyperlink{fg__git_8c_a708a4c1a4d0c4acc4c447310dd4db27f}{test} (void)
+static int \hyperlink{fg__git_8c_ae53173daaa6209e61b85fd6d557b4d43}{l\-\_\-get\-\_\-last\-\_\-commit} (git\-\_\-commit $\ast$$\ast$commit\-\_\-p)
+\item 
+static int \hyperlink{fg__git_8c_a5dfa0628c0644dce583a0e90578886d1}{l\-\_\-get\-\_\-path\-\_\-tree} (git\-\_\-tree $\ast$$\ast$tree, const char $\ast$path)
+\item 
+static int \hyperlink{fg__git_8c_a8e8ea03f72d7f893cd05172c705e6357}{l\-\_\-get\-\_\-parent\-\_\-tree} (git\-\_\-tree $\ast$$\ast$tree, const char $\ast$path)
+\item 
+static int \hyperlink{fg__git_8c_a9116a8b1960bd77bb249184946405d7e}{l\-\_\-git\-\_\-commit\-\_\-now} (git\-\_\-tree $\ast$tree, const char $\ast$message)
+\item 
+static int \hyperlink{fg__git_8c_ac4f6f650429e5228b43ac9c5715bb51a}{l\-\_\-make\-\_\-commit} (const char $\ast$path, git\-\_\-oid oid, const char $\ast$message)
+\item 
+int \hyperlink{fg__git_8c_a134be096a28f9bd88bd2384d0495e29b}{repo\-\_\-setup} (const char $\ast$repo\-\_\-address)
+\item 
+int \hyperlink{fg__git_8c_ad9ce2f0014d3d13f779e32d24d96a0e6}{repo\-\_\-path\-\_\-exists} (const char $\ast$path)
+\item 
+int \hyperlink{fg__git_8c_a7e0ddc1d74b9b18427fe5fcb7d3e902c}{repo\-\_\-is\-\_\-file} (const char $\ast$path)
+\item 
+int \hyperlink{fg__git_8c_afc190d3b183013c3d2132bf5c721ec51}{repo\-\_\-get\-\_\-children} (struct fg\-\_\-file\-\_\-node $\ast$$\ast$children, int $\ast$count, const char $\ast$path)
+\item 
+int \hyperlink{fg__git_8c_acea4f731e66b83fe12e5f3152aab434c}{repo\-\_\-stat} (const char $\ast$path, struct stat $\ast$stbuf)
+\item 
+int \hyperlink{fg__git_8c_ac7cc9cbbbf459abb1ec78c667b292408}{repo\-\_\-isdir} (const char $\ast$path)
+\item 
+int \hyperlink{fg__git_8c_a9b7c0c22b072db235688ec34ca210ab0}{repo\-\_\-dir\-\_\-stat} (const char $\ast$path, struct stat $\ast$stbuf)
+\item 
+int \hyperlink{fg__git_8c_adb9a38fe8aca99b825b2685953646045}{repo\-\_\-mkdir} (const char $\ast$path, unsigned int attr)
+\item 
+int \hyperlink{fg__git_8c_a5daef0bf2f6e0d7a80695911a6739516}{repo\-\_\-rmdir} (const char $\ast$path)
+\item 
+int \hyperlink{fg__git_8c_af4676db581bc87e7d59a4661c5a6b16e}{repo\-\_\-link} (const char $\ast$from, const char $\ast$to)
+\item 
+int \hyperlink{fg__git_8c_a5d5b1db41fc728cc89067cd6f5d1eecc}{repo\-\_\-unlink} (const char $\ast$path)
+\item 
+int \hyperlink{fg__git_8c_ae5dd2ad9100bc74997c5e59f59d7eb95}{repo\-\_\-read} (const char $\ast$path, char $\ast$buf, size\-\_\-t size, off\-\_\-t offset)
+\end{DoxyCompactItemize}
+\subsection*{\-Variables}
+\begin{DoxyCompactItemize}
+\item 
+static git\-\_\-repository $\ast$ \hyperlink{fg__git_8c_a1dbc8a606468a770bb30d96e558b4999}{repo}
+\item 
+static git\-\_\-commit $\ast$ \hyperlink{fg__git_8c_aef4b523b882314cc25bc61a3752bbb3a}{last\-\_\-commit} = \-N\-U\-L\-L
 \end{DoxyCompactItemize}
 
 
 \subsection{\-Function \-Documentation}
-\hypertarget{fg__git_8c_a708a4c1a4d0c4acc4c447310dd4db27f}{\index{fg\-\_\-git.\-c@{fg\-\_\-git.\-c}!test@{test}}
-\index{test@{test}!fg_git.c@{fg\-\_\-git.\-c}}
-\subsubsection[{test}]{\setlength{\rightskip}{0pt plus 5cm}void {\bf test} (
+\hypertarget{fg__git_8c_ae53173daaa6209e61b85fd6d557b4d43}{\index{fg\-\_\-git.\-c@{fg\-\_\-git.\-c}!l\-\_\-get\-\_\-last\-\_\-commit@{l\-\_\-get\-\_\-last\-\_\-commit}}
+\index{l\-\_\-get\-\_\-last\-\_\-commit@{l\-\_\-get\-\_\-last\-\_\-commit}!fg_git.c@{fg\-\_\-git.\-c}}
+\subsubsection[{l\-\_\-get\-\_\-last\-\_\-commit}]{\setlength{\rightskip}{0pt plus 5cm}static int {\bf l\-\_\-get\-\_\-last\-\_\-commit} (
 \begin{DoxyParamCaption}
-\item[{void}]{}
+\item[{git\-\_\-commit $\ast$$\ast$}]{commit\-\_\-p}
 \end{DoxyParamCaption}
-)}}\label{fg__git_8c_a708a4c1a4d0c4acc4c447310dd4db27f}
+)\hspace{0.3cm}{\ttfamily  \mbox{[}static\mbox{]}}}}\label{fg__git_8c_ae53173daaa6209e61b85fd6d557b4d43}
+\hypertarget{fg__git_8c_a8e8ea03f72d7f893cd05172c705e6357}{\index{fg\-\_\-git.\-c@{fg\-\_\-git.\-c}!l\-\_\-get\-\_\-parent\-\_\-tree@{l\-\_\-get\-\_\-parent\-\_\-tree}}
+\index{l\-\_\-get\-\_\-parent\-\_\-tree@{l\-\_\-get\-\_\-parent\-\_\-tree}!fg_git.c@{fg\-\_\-git.\-c}}
+\subsubsection[{l\-\_\-get\-\_\-parent\-\_\-tree}]{\setlength{\rightskip}{0pt plus 5cm}static int {\bf l\-\_\-get\-\_\-parent\-\_\-tree} (
+\begin{DoxyParamCaption}
+\item[{git\-\_\-tree $\ast$$\ast$}]{tree, }
+\item[{const char $\ast$}]{path}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily  \mbox{[}static\mbox{]}}}}\label{fg__git_8c_a8e8ea03f72d7f893cd05172c705e6357}
+\hypertarget{fg__git_8c_a5dfa0628c0644dce583a0e90578886d1}{\index{fg\-\_\-git.\-c@{fg\-\_\-git.\-c}!l\-\_\-get\-\_\-path\-\_\-tree@{l\-\_\-get\-\_\-path\-\_\-tree}}
+\index{l\-\_\-get\-\_\-path\-\_\-tree@{l\-\_\-get\-\_\-path\-\_\-tree}!fg_git.c@{fg\-\_\-git.\-c}}
+\subsubsection[{l\-\_\-get\-\_\-path\-\_\-tree}]{\setlength{\rightskip}{0pt plus 5cm}static int {\bf l\-\_\-get\-\_\-path\-\_\-tree} (
+\begin{DoxyParamCaption}
+\item[{git\-\_\-tree $\ast$$\ast$}]{tree, }
+\item[{const char $\ast$}]{path}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily  \mbox{[}static\mbox{]}}}}\label{fg__git_8c_a5dfa0628c0644dce583a0e90578886d1}
+\hypertarget{fg__git_8c_a9116a8b1960bd77bb249184946405d7e}{\index{fg\-\_\-git.\-c@{fg\-\_\-git.\-c}!l\-\_\-git\-\_\-commit\-\_\-now@{l\-\_\-git\-\_\-commit\-\_\-now}}
+\index{l\-\_\-git\-\_\-commit\-\_\-now@{l\-\_\-git\-\_\-commit\-\_\-now}!fg_git.c@{fg\-\_\-git.\-c}}
+\subsubsection[{l\-\_\-git\-\_\-commit\-\_\-now}]{\setlength{\rightskip}{0pt plus 5cm}static int {\bf l\-\_\-git\-\_\-commit\-\_\-now} (
+\begin{DoxyParamCaption}
+\item[{git\-\_\-tree $\ast$}]{tree, }
+\item[{const char $\ast$}]{message}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily  \mbox{[}static\mbox{]}}}}\label{fg__git_8c_a9116a8b1960bd77bb249184946405d7e}
+\hypertarget{fg__git_8c_ac4f6f650429e5228b43ac9c5715bb51a}{\index{fg\-\_\-git.\-c@{fg\-\_\-git.\-c}!l\-\_\-make\-\_\-commit@{l\-\_\-make\-\_\-commit}}
+\index{l\-\_\-make\-\_\-commit@{l\-\_\-make\-\_\-commit}!fg_git.c@{fg\-\_\-git.\-c}}
+\subsubsection[{l\-\_\-make\-\_\-commit}]{\setlength{\rightskip}{0pt plus 5cm}static int {\bf l\-\_\-make\-\_\-commit} (
+\begin{DoxyParamCaption}
+\item[{const char $\ast$}]{path, }
+\item[{git\-\_\-oid}]{oid, }
+\item[{const char $\ast$}]{message}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily  \mbox{[}static\mbox{]}}}}\label{fg__git_8c_ac4f6f650429e5228b43ac9c5715bb51a}
+\hypertarget{fg__git_8c_a9b7c0c22b072db235688ec34ca210ab0}{\index{fg\-\_\-git.\-c@{fg\-\_\-git.\-c}!repo\-\_\-dir\-\_\-stat@{repo\-\_\-dir\-\_\-stat}}
+\index{repo\-\_\-dir\-\_\-stat@{repo\-\_\-dir\-\_\-stat}!fg_git.c@{fg\-\_\-git.\-c}}
+\subsubsection[{repo\-\_\-dir\-\_\-stat}]{\setlength{\rightskip}{0pt plus 5cm}int {\bf repo\-\_\-dir\-\_\-stat} (
+\begin{DoxyParamCaption}
+\item[{const char $\ast$}]{path, }
+\item[{struct stat $\ast$}]{stbuf}
+\end{DoxyParamCaption}
+)}}\label{fg__git_8c_a9b7c0c22b072db235688ec34ca210ab0}
+get the stat for a directory \hypertarget{fg__git_8c_afc190d3b183013c3d2132bf5c721ec51}{\index{fg\-\_\-git.\-c@{fg\-\_\-git.\-c}!repo\-\_\-get\-\_\-children@{repo\-\_\-get\-\_\-children}}
+\index{repo\-\_\-get\-\_\-children@{repo\-\_\-get\-\_\-children}!fg_git.c@{fg\-\_\-git.\-c}}
+\subsubsection[{repo\-\_\-get\-\_\-children}]{\setlength{\rightskip}{0pt plus 5cm}int {\bf repo\-\_\-get\-\_\-children} (
+\begin{DoxyParamCaption}
+\item[{struct fg\-\_\-file\-\_\-node $\ast$$\ast$}]{children, }
+\item[{int $\ast$}]{count, }
+\item[{const char $\ast$}]{path}
+\end{DoxyParamCaption}
+)}}\label{fg__git_8c_afc190d3b183013c3d2132bf5c721ec51}
+returns the children of the directory represented by path
+
+\-Note \-: children should be freed from the function which calls it. \hypertarget{fg__git_8c_a7e0ddc1d74b9b18427fe5fcb7d3e902c}{\index{fg\-\_\-git.\-c@{fg\-\_\-git.\-c}!repo\-\_\-is\-\_\-file@{repo\-\_\-is\-\_\-file}}
+\index{repo\-\_\-is\-\_\-file@{repo\-\_\-is\-\_\-file}!fg_git.c@{fg\-\_\-git.\-c}}
+\subsubsection[{repo\-\_\-is\-\_\-file}]{\setlength{\rightskip}{0pt plus 5cm}int {\bf repo\-\_\-is\-\_\-file} (
+\begin{DoxyParamCaption}
+\item[{const char $\ast$}]{path}
+\end{DoxyParamCaption}
+)}}\label{fg__git_8c_a7e0ddc1d74b9b18427fe5fcb7d3e902c}
+checks if the path is of a file returns 1 if it is file, else 0 \hypertarget{fg__git_8c_ac7cc9cbbbf459abb1ec78c667b292408}{\index{fg\-\_\-git.\-c@{fg\-\_\-git.\-c}!repo\-\_\-isdir@{repo\-\_\-isdir}}
+\index{repo\-\_\-isdir@{repo\-\_\-isdir}!fg_git.c@{fg\-\_\-git.\-c}}
+\subsubsection[{repo\-\_\-isdir}]{\setlength{\rightskip}{0pt plus 5cm}int {\bf repo\-\_\-isdir} (
+\begin{DoxyParamCaption}
+\item[{const char $\ast$}]{path}
+\end{DoxyParamCaption}
+)}}\label{fg__git_8c_ac7cc9cbbbf459abb1ec78c667b292408}
+is the path a directory \hypertarget{fg__git_8c_af4676db581bc87e7d59a4661c5a6b16e}{\index{fg\-\_\-git.\-c@{fg\-\_\-git.\-c}!repo\-\_\-link@{repo\-\_\-link}}
+\index{repo\-\_\-link@{repo\-\_\-link}!fg_git.c@{fg\-\_\-git.\-c}}
+\subsubsection[{repo\-\_\-link}]{\setlength{\rightskip}{0pt plus 5cm}int {\bf repo\-\_\-link} (
+\begin{DoxyParamCaption}
+\item[{const char $\ast$}]{from, }
+\item[{const char $\ast$}]{to}
+\end{DoxyParamCaption}
+)}}\label{fg__git_8c_af4676db581bc87e7d59a4661c5a6b16e}
+create a link \hypertarget{fg__git_8c_adb9a38fe8aca99b825b2685953646045}{\index{fg\-\_\-git.\-c@{fg\-\_\-git.\-c}!repo\-\_\-mkdir@{repo\-\_\-mkdir}}
+\index{repo\-\_\-mkdir@{repo\-\_\-mkdir}!fg_git.c@{fg\-\_\-git.\-c}}
+\subsubsection[{repo\-\_\-mkdir}]{\setlength{\rightskip}{0pt plus 5cm}int {\bf repo\-\_\-mkdir} (
+\begin{DoxyParamCaption}
+\item[{const char $\ast$}]{path, }
+\item[{unsigned int}]{attr}
+\end{DoxyParamCaption}
+)}}\label{fg__git_8c_adb9a38fe8aca99b825b2685953646045}
+make a directory in the given path
+
+\-F\-I\-X\-I\-T check if the directory already exists, if it exists then throw error \hypertarget{fg__git_8c_ad9ce2f0014d3d13f779e32d24d96a0e6}{\index{fg\-\_\-git.\-c@{fg\-\_\-git.\-c}!repo\-\_\-path\-\_\-exists@{repo\-\_\-path\-\_\-exists}}
+\index{repo\-\_\-path\-\_\-exists@{repo\-\_\-path\-\_\-exists}!fg_git.c@{fg\-\_\-git.\-c}}
+\subsubsection[{repo\-\_\-path\-\_\-exists}]{\setlength{\rightskip}{0pt plus 5cm}int {\bf repo\-\_\-path\-\_\-exists} (
+\begin{DoxyParamCaption}
+\item[{const char $\ast$}]{path}
+\end{DoxyParamCaption}
+)}}\label{fg__git_8c_ad9ce2f0014d3d13f779e32d24d96a0e6}
+checks if the path exists in the repository returns 1 if the path exists, else 0 \hypertarget{fg__git_8c_ae5dd2ad9100bc74997c5e59f59d7eb95}{\index{fg\-\_\-git.\-c@{fg\-\_\-git.\-c}!repo\-\_\-read@{repo\-\_\-read}}
+\index{repo\-\_\-read@{repo\-\_\-read}!fg_git.c@{fg\-\_\-git.\-c}}
+\subsubsection[{repo\-\_\-read}]{\setlength{\rightskip}{0pt plus 5cm}int {\bf repo\-\_\-read} (
+\begin{DoxyParamCaption}
+\item[{const char $\ast$}]{path, }
+\item[{char $\ast$}]{buf, }
+\item[{size\-\_\-t}]{size, }
+\item[{off\-\_\-t}]{offset}
+\end{DoxyParamCaption}
+)}}\label{fg__git_8c_ae5dd2ad9100bc74997c5e59f59d7eb95}
+read a file \hypertarget{fg__git_8c_a5daef0bf2f6e0d7a80695911a6739516}{\index{fg\-\_\-git.\-c@{fg\-\_\-git.\-c}!repo\-\_\-rmdir@{repo\-\_\-rmdir}}
+\index{repo\-\_\-rmdir@{repo\-\_\-rmdir}!fg_git.c@{fg\-\_\-git.\-c}}
+\subsubsection[{repo\-\_\-rmdir}]{\setlength{\rightskip}{0pt plus 5cm}int {\bf repo\-\_\-rmdir} (
+\begin{DoxyParamCaption}
+\item[{const char $\ast$}]{path}
+\end{DoxyParamCaption}
+)}}\label{fg__git_8c_a5daef0bf2f6e0d7a80695911a6739516}
+remove a empty directory \hypertarget{fg__git_8c_a134be096a28f9bd88bd2384d0495e29b}{\index{fg\-\_\-git.\-c@{fg\-\_\-git.\-c}!repo\-\_\-setup@{repo\-\_\-setup}}
+\index{repo\-\_\-setup@{repo\-\_\-setup}!fg_git.c@{fg\-\_\-git.\-c}}
+\subsubsection[{repo\-\_\-setup}]{\setlength{\rightskip}{0pt plus 5cm}int {\bf repo\-\_\-setup} (
+\begin{DoxyParamCaption}
+\item[{const char $\ast$}]{repo\-\_\-address}
+\end{DoxyParamCaption}
+)}}\label{fg__git_8c_a134be096a28f9bd88bd2384d0495e29b}
+\-Setup the \-Git repository at the address repo\-\_\-address \hypertarget{fg__git_8c_acea4f731e66b83fe12e5f3152aab434c}{\index{fg\-\_\-git.\-c@{fg\-\_\-git.\-c}!repo\-\_\-stat@{repo\-\_\-stat}}
+\index{repo\-\_\-stat@{repo\-\_\-stat}!fg_git.c@{fg\-\_\-git.\-c}}
+\subsubsection[{repo\-\_\-stat}]{\setlength{\rightskip}{0pt plus 5cm}int {\bf repo\-\_\-stat} (
+\begin{DoxyParamCaption}
+\item[{const char $\ast$}]{path, }
+\item[{struct stat $\ast$}]{stbuf}
+\end{DoxyParamCaption}
+)}}\label{fg__git_8c_acea4f731e66b83fe12e5f3152aab434c}
+\hypertarget{fg__git_8c_a5d5b1db41fc728cc89067cd6f5d1eecc}{\index{fg\-\_\-git.\-c@{fg\-\_\-git.\-c}!repo\-\_\-unlink@{repo\-\_\-unlink}}
+\index{repo\-\_\-unlink@{repo\-\_\-unlink}!fg_git.c@{fg\-\_\-git.\-c}}
+\subsubsection[{repo\-\_\-unlink}]{\setlength{\rightskip}{0pt plus 5cm}int {\bf repo\-\_\-unlink} (
+\begin{DoxyParamCaption}
+\item[{const char $\ast$}]{path}
+\end{DoxyParamCaption}
+)}}\label{fg__git_8c_a5d5b1db41fc728cc89067cd6f5d1eecc}
+unlink a path 
+
+\subsection{\-Variable \-Documentation}
+\hypertarget{fg__git_8c_aef4b523b882314cc25bc61a3752bbb3a}{\index{fg\-\_\-git.\-c@{fg\-\_\-git.\-c}!last\-\_\-commit@{last\-\_\-commit}}
+\index{last\-\_\-commit@{last\-\_\-commit}!fg_git.c@{fg\-\_\-git.\-c}}
+\subsubsection[{last\-\_\-commit}]{\setlength{\rightskip}{0pt plus 5cm}git\-\_\-commit$\ast$ {\bf last\-\_\-commit} = \-N\-U\-L\-L\hspace{0.3cm}{\ttfamily  \mbox{[}static\mbox{]}}}}\label{fg__git_8c_aef4b523b882314cc25bc61a3752bbb3a}
+\hypertarget{fg__git_8c_a1dbc8a606468a770bb30d96e558b4999}{\index{fg\-\_\-git.\-c@{fg\-\_\-git.\-c}!repo@{repo}}
+\index{repo@{repo}!fg_git.c@{fg\-\_\-git.\-c}}
+\subsubsection[{repo}]{\setlength{\rightskip}{0pt plus 5cm}git\-\_\-repository$\ast$ {\bf repo}\hspace{0.3cm}{\ttfamily  \mbox{[}static\mbox{]}}}}\label{fg__git_8c_a1dbc8a606468a770bb30d96e558b4999}
 \hyperlink{fg__git_8c}{fg\-\_\-git.\-c} 
