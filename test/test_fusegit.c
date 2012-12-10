@@ -16,69 +16,238 @@ char ch;
 char buff[FILENAME_MAX];
 FILE *source, *target;
 
-/* Creates a new directory at the mount point */
-void createDir()
+/* Change working directory*/
+void changeDir(char *path)
 {
-	int r = mkdir("fusegitTest", 0777);
-	if(r == 0){
-		printf("Directory fusegitTest was created!\n");
+	printf("***START : change current working directory\n");
+	char buff[4096];
+	if (chdir(path) == -1) {
+		printf ("chdir failed - %s\n", strerror (errno));  
 	}
-	else{
+	
+	if (getcwd(buff, sizeof buff) != NULL)
+		printf("current working directory: %s\n", buff);
+	else
+		printf("unknown");
+	printf("***OVER***\n");
+}
+
+/* Get path of the current working directory*/
+void getPath()
+{
+	printf("***START : get current working directory\n");
+	char path[1024];	
+	size_t size = 1024;	
+	getcwd(path, size);	
+	printf("This is current working directory: %s \n", path);
+	printf("***OVER***\n");
+}
+
+/* Creates a new directory at the mount point */
+void createDir(const char *dir_name)
+{
+	printf("***START : create directory\n");
+	int r;
+	if ((r = mkdir(dir_name, 0777)) < 0) {
 		printf("Creating new directory : Failed\n");
 		printf ("Error no is : %d\n", errno);
 		printf("Error description is : %s\n",strerror(errno));
 	}
-	
+	printf("Directory fusegitTest was created!\n");
+	printf("***OVER***\n");
 }
 
 /* Creates a file inside the newly created directory */
-void createFile()
+void createFile(const char *file_path)
 {
-	if((istream = fopen ("fuseFileTest.txt", "r" ) ) != NULL){
-		printf("Error Creating a File. File already exists\n");
-	}
-	else
-	{
-		fp=fopen("fuseFileTest.txt","w");
+	printf("***START : create file\n");
+
+	FILE *f;
+
+	if ((f = fopen(file_path, "r")) != NULL) {
+		printf("Error!!! File already exists\n");
+	} else {
+		f = fopen(file_path,"w");
 	
-		if(!fp)
-		{
+		if(!f) {
 			printf("Error Creating a File\n");
-		}	
-		fclose(fp);
+		} else {
+			printf("File creation is successful\n");
+		}
+		fclose(f);
 	}
-	
+	printf("***OVER***\n");
 }
 
 /* After the file is created, Write to the file */
-void writeFile()
+void writeFile(const char *file_path, const char *data)
 {
-	fp=fopen("fuseFileTest.txt", "w");
-	while((ch=getchar())!=EOF)
-			putc(ch,fp);
+	printf("***START : create file\n");
+
+	FILE *fp;
+
+	fp = fopen(file_path, "w");
+	fprintf(fp, data);
+	printf("Data written to file: %s\n", data);
 			
 	fclose(fp);
+	printf("***OVER***\n");
 }
 
 /* Read from the file*/
-void readFile()
+void readFile(const char *file_path, const char *expected)
 {
-   fp=fopen("fuseFileTest.txt", "r");
+	printf("***START : create file\n");
 	
-   if( fp == NULL )
-   {
-      perror("Error while opening the file.\n");
-   }
-   printf("The contents of fuseFileTest.txt file are :- \n\n");
- 
-   while( ( ch = fgetc(fp) ) != EOF )
-      printf("%c",ch);
- 
-   fclose(fp);
-   
+	FILE *fp;
+	char data[1024];
+
+	fp = fopen(file_path, "r");
+
+	if (fp == NULL) {
+		printf("Error while opening the file.\n");
+	} else {
+		fscanf(fp, "%s", data);
+
+		if (strcmp(data, expected) == 0)
+			printf("Correctly read: %s\n", data);
+		else
+			printf("Incorrect read: %s\n", data);
+
+		fclose(fp);
+	}
+	printf("***OVER***\n");
 }
+
+/*Copy a file*/
+void copyFile(const char *from, const char *to, const char *expected)
+{
+	printf("***START : copy file\n");
+	FILE *f1, *f2;
+	char data[1024];
+	char ch;
+
+	f1 = fopen(from, "r");
+	f2 = fopen(to, "w");
+
+	while((ch = fgetc(f1)) != EOF)
+		fputc(ch, f2);
+
+	fclose(f2);
+	printf("Copy complete: Testing: ");
+	f2 = fopen(to, "r");
+	fscanf(f2, "%s", data);
+
+	if (strcmp(data, expected) == 0)
+		printf("Correct copy\n");
+	else
+		printf("Incorrect copy\n");
+ 
+	fclose(f1);
+	fclose(f2);
+	printf("***OVER***\n");
+}
+
+/* get attributes of the file*/
+void statTest(const char *file_path)
+{
+	printf("***START : file stat\n");
+	struct stat fileStat;
+	
+	if(stat(file_path, &fileStat) == -1) { 
+		perror("stat");
+	}
+ 
+	printf("Information for %s\n", file_path);
+
+	printf("File type:\t");
+
+	switch (fileStat.st_mode & S_IFMT) {
+	case S_IFBLK:  printf("block device\n");            break;
+	case S_IFCHR:  printf("character device\n");        break;
+	case S_IFDIR:  printf("directory\n");               break;
+	case S_IFIFO:  printf("FIFO/pipe\n");               break;
+	case S_IFLNK:  printf("symlink\n");                 break;
+	case S_IFREG:  printf("regular file\n");            break;
+	case S_IFSOCK: printf("socket\n");                  break;
+	default:       printf("unknown?\n");                break;
+	}
+	
+	printf("I-node number:              \t%ld\n", (long) fileStat.st_ino);
+	
+	printf("Mode:                       \t%lo (octal)\n", (unsigned long) fileStat.st_mode);
+	
+	printf("Number of Hard Links:       \t%ld\n", (long)fileStat.st_nlink);
+	
+	printf("Ownership:   UID=%ld   GID=%ld\n", (long)fileStat.st_uid, (long)fileStat.st_gid);
+	
+	printf("I/O Block Size:             \t%ld\n", (long)fileStat.st_blksize);
+	
+	printf("Number of blocks allocated: \t%ld\n",(long)fileStat.st_blocks);
+	
+	printf("File Size:                  \t%ld bytes\n",(long)fileStat.st_size);
+	
+	printf("Last Status Modification:   \t%d\n", ctime(&fileStat.st_ctime));
+	
+	printf("Last Data Modification:     \t%d\n",ctime(&fileStat.st_mtime));
+	
+	printf("Last Access:                \t%d\n",ctime(&fileStat.st_atime));
+	 
+	printf("File Permissions: \t\t");
+	printf( (S_ISDIR(fileStat.st_mode)) ? "d" : "-");
+	printf( (fileStat.st_mode & S_IRUSR) ? "r" : "-");
+	printf( (fileStat.st_mode & S_IWUSR) ? "w" : "-");
+	printf( (fileStat.st_mode & S_IXUSR) ? "x" : "-");
+	printf( (fileStat.st_mode & S_IRGRP) ? "r" : "-");
+	printf( (fileStat.st_mode & S_IWGRP) ? "w" : "-");
+	printf( (fileStat.st_mode & S_IXGRP) ? "x" : "-");
+	printf( (fileStat.st_mode & S_IROTH) ? "r" : "-");
+	printf( (fileStat.st_mode & S_IWOTH) ? "w" : "-");
+	printf( (fileStat.st_mode & S_IXOTH) ? "x" : "-");
+	printf("\n\n");
+ 
+	printf("The file %s a symbolic link\n", (S_ISLNK(fileStat.st_mode)) ? "is" : "is not");
+	printf("***OVER***\n");
+}
+
+/* Read a directory*/
+void readDir(const char *dir)
+{
+	printf("***START : read directory\n");
+	DIR *dirp;
+	struct dirent *dptr;
+	
+	if ((dirp=opendir(dir)) == NULL) {
+		printf("Error!\n");
+		printf("Error no is : %d\n", errno);
+		printf("Error description is : %s\n",strerror(errno));
+	} else {
+		printf("Directory entries for %s:\n", dir);
+		while(dptr = readdir(dirp)) {
+			printf("\t%s\n", dptr->d_name);
+		}
+	}
+	printf("***OVER***\n");
+}
+
+/*remove a file*/
+void removeFile(const char *file_path)
+{
+	printf("***START : remove file\n");
+	int r = remove(file_path);
+	if (r == 0 ) {
+		printf("file deleted successfully.\n");
+	} else {
+		printf("Removing file: Failed\n");
+		printf("Error no is : %d\n", errno);
+		printf("Error description is : %s\n",strerror(errno));
+	}
+	printf("***OVER***\n");
+}
+
 	
 /* Rename a file or directory */
+/*
 void rename()
 {
 	int r = rmdir("fusegitTest", "newdirTest");
@@ -92,99 +261,10 @@ void rename()
 		printf("Error description is : %s\n",strerror(errno));
 	}
 }
-
-/* Get path of the current working directory*/
-void getPath()
-{
-	char *path = NULL;	
-	size_t size;	
-	path = getcwd(path,size);	
-	printf("This is current working directory: %s \n", path);
-}
-
-/* get attributes of the file*/
-void statTest()
-{
-	struct stat fileStat;
-	
-	if(stat("fuseFileTest.txt",&fileStat) == -1)
-	{ 
-		perror("stat");
-	}
- 
- 
-	printf("Information for %s\n",argv[1]);
-    printf("---------------------------\n");
-    
-	printf("File type:                \t");
-
-           switch (fileStat.st_mode & S_IFMT) {
-           case S_IFBLK:  printf("block device\n");            break;
-           case S_IFCHR:  printf("character device\n");        break;
-           case S_IFDIR:  printf("directory\n");               break;
-           case S_IFIFO:  printf("FIFO/pipe\n");               break;
-           case S_IFLNK:  printf("symlink\n");                 break;
-           case S_IFREG:  printf("regular file\n");            break;
-           case S_IFSOCK: printf("socket\n");                  break;
-           default:       printf("unknown?\n");                break;
-    }
-	
-	printf("I-node number:            \t%ld\n", (long) fileStat.st_ino);
-	
-	printf("Mode:                     \t%lo (octal)\n", (unsigned long) fileStat.st_mode);
-	
-	printf("Number of Hard Links:     \t%ld\n", (long)fileStat.st_nlink);
-	
-	printf("Ownership:                      UID=%ld   GID=%ld\n", (long)fileStat.st_uid, (long)fileStat.st_gid);
-	
-	printf("I/O Block Size: \t\t%ld\n", (long)fileStat.st_blksize);
-	
-	printf("Number of blocks allocated: \t%ld\n",(long)fileStat.st_blocks);
-	
-	printf("File Size: \t\t\t%ld bytes\n",(long)fileStat.st_size);
-	
-	printf("Last Status Modification: \t%s", ctime(&fileStat.st_ctime));
-	
-	printf("Last Data Modification: \t%s",ctime(&fileStat.st_mtime));
-	
-	printf("Last Access: \t\t\t%s",ctime(&fileStat.st_atime));
-	 
-    printf("File Permissions: \t\t");
-    printf( (S_ISDIR(fileStat.st_mode)) ? "d" : "-");
-    printf( (fileStat.st_mode & S_IRUSR) ? "r" : "-");
-    printf( (fileStat.st_mode & S_IWUSR) ? "w" : "-");
-    printf( (fileStat.st_mode & S_IXUSR) ? "x" : "-");
-    printf( (fileStat.st_mode & S_IRGRP) ? "r" : "-");
-    printf( (fileStat.st_mode & S_IWGRP) ? "w" : "-");
-    printf( (fileStat.st_mode & S_IXGRP) ? "x" : "-");
-    printf( (fileStat.st_mode & S_IROTH) ? "r" : "-");
-    printf( (fileStat.st_mode & S_IWOTH) ? "w" : "-");
-    printf( (fileStat.st_mode & S_IXOTH) ? "x" : "-");
-    printf("\n\n");
- 
-    printf("The file %s a symbolic link\n", (S_ISLNK(fileStat.st_mode)) ? "is" : "is not");
-}
-
-/* Read a directory*/
-void readDir()
-{
-	DIR *dirp;
-	
-	if((dirp=opendir("fusegitTest")) == NULL){
-		printf("Error!\n");
-		printf ("Error no is : %d\n", errno);
-		printf("Error description is : %s\n",strerror(errno));
-	}
-	else
-	{
-		while(dptr=readdir(dirp))
-		{
-			printf("%s\n",dptr->d_name);
-		}
-	}
-}
+*/
 
 /* Remove directory*/
+/*
 void removeDir()
 {
 	int result_code = rmdir("fusegitTest");
@@ -199,8 +279,10 @@ void removeDir()
 	}
 	return 0;
 }
+*/
 
 /* Change permissions of file or directory*/
+/*
 void changePerm()
 {
 	int rc = chmod(filename, 754) ;
@@ -213,67 +295,29 @@ void changePerm()
 		printf("Permissions have been changed\n");
 	}
 }
-
-/* Change working directory*/
-void changeDir(char *path)
-{
-	if (chdir(path) == -1) 
-	{  
-        printf ("chdir failed - %s\n", strerror (errno));  
-	}
-	
-	if (getcwd(buff, sizeof buff) != NULL) puts(buff);
-	else puts("unknown");
-}
-
-/*Copy a file*/
-void copyFile()
-{
-	source = fopen("fuseFileTest.txt", "r");
-	target = fopen("targetFile.txt", "w");
-	
-	while( ( ch = fgetc(source) ) != EOF )
-      fputc(ch, target);
- 
-   printf("File copied successfully.\n");
- 
-   fclose(source);
-   fclose(target);
-	
-}
-
-/*remove a file*/
-void removeFile()
-{
-	int r = remove("targetFile.txt");
-	if( status == 0 )
-      printf("file deleted successfully.\n");
-	else
-	{
-		printf("Removing file: Failed\n");
-		printf ("Error no is : %d\n", errno);
-		printf("Error description is : %s\n",strerror(errno));
-	}
-}
+*/
 
 int main(int argc, char **argv)
 {
-	if(argc < 2) 
-	{
+	if(argc < 2) {
 		exit(1);
 	}
+
+	char test_dir[] = "fusegitTest";
+	char test_file1[] = "fuseFileTest.txt";
+	char test_file2[] = "targetFile.txt";
+	char test_data[] = "test";
 	
-	changedir(argv[1]);
-	createdir();
-	createFile();
-	writeFile();
-	readFile();
-	copyFile();
-	statTest();
+	changeDir(argv[1]);
 	getPath();
-	readDir();
-	removeFile();
-	readDir();
+	createDir(test_dir);
+	createFile(test_file1);
+	writeFile(test_file1, test_data);
+	readFile(test_file1, test_data);
+	copyFile(test_file1, test_file2, test_data);
+	statTest(test_file1);
+	readDir(test_dir);
+	removeFile(test_file2);
 	
 	return 0;
 }
