@@ -3,7 +3,9 @@
 # specify the folder. The repositories will be based on a timestamp, and 
 # linked to the folder.
 
-.PHONY: clean cleanall docs
+TEST_MOUNT := "test_mount1"
+
+.PHONY: clean cleanall docs $(TEST_MOUNT)
 
 all: fusegit #docs	# THE CREATION OF DOCS IS COMMENTED FOR NOW
 
@@ -28,21 +30,29 @@ src/fg_util.o:
 
 test: src/fg_util.o
 	@echo "Compiling the test functions for util..."
-	@gcc -Wall -Iinclude test/fg_test.c fg_util.o -o test_fusegit
+	@gcc -Wall -Iinclude test/test_fusegit.c fg_util.o -o test_fusegit
 	@echo "Removing the object files..."
 	@rm fg_util.o
+	@rm -rf $(TEST_MOUNT)*
+	@mkdir $(TEST_MOUNT)
+	@./fusegit -m $(TEST_MOUNT)
 	@echo "Running test..."
-	@./test_fusegit
+	@./test_fusegit $(TEST_MOUNT)
 	@echo
 	@echo "Successful"
+
+umount: $(TEST_MOUNT)
+	@fusermount -u $(TEST_MOUNT)
 
 docs:
 	@echo "Making documentation..."
 	@doxygen doxy-config
 
 clean:
-	@echo "Removing the fusegit executable >> $(RM) fusegit"
+	@echo "Removing the fusegit executable >> $(RM) fusegit test_fusegit"
 	@$(RM) fusegit test_fusegit
+	#@echo "Unmounting test_mount..."
+	#@fusermount -q -u test_mount
 
 cleanall: clean
 	@echo "Removing the tmp repository >> $(RM) -rf *.repo"

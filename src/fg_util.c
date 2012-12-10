@@ -94,15 +94,15 @@ int get_next_component(const char *path, int hier, char *name)
 // print file stats
 void print_file_stats(const char *path, struct stat *stbuf)
 {
-	fprintf(stdout, "***PRINT STAT : %s\n", path);
-	fprintf(stdout, "\tdev=%x\n", (unsigned int)stbuf->st_dev);
-	fprintf(stdout, "\tino=%x\n", (unsigned int)stbuf->st_ino);
-	fprintf(stdout, "\tmode=%x\n", (unsigned int)stbuf->st_mode);
-	fprintf(stdout, "\tnlink=%x\n", (unsigned int)stbuf->st_nlink);
-	fprintf(stdout, "\tuid=%x\n", (unsigned int)stbuf->st_uid);
-	fprintf(stdout, "\tgid=%x\n", (unsigned int)stbuf->st_gid);
-	fprintf(stdout, "\tsize=%x\n", (unsigned int)stbuf->st_size);
-	fprintf(stdout, "\tmtime=%x\n", (unsigned int)stbuf->st_mtime);
-	fprintf(stdout, "\tctime=%x\n", (unsigned int)stbuf->st_ctime);
-	fprintf(stdout, "***PRINT STAT OVER\n\n");
+	DEBUG("***PRINT STAT : %s", path);
+	DEBUG("\tdev=%x", (unsigned int)stbuf->st_dev);
+	DEBUG("\tino=%x", (unsigned int)stbuf->st_ino);
+	DEBUG("\tmode=%x", (unsigned int)stbuf->st_mode);
+	DEBUG("\tnlink=%x", (unsigned int)stbuf->st_nlink);
+	DEBUG("\tuid=%x", (unsigned int)stbuf->st_uid);
+	DEBUG("\tgid=%x", (unsigned int)stbuf->st_gid);
+	DEBUG("\tsize=%x", (unsigned int)stbuf->st_size);
+	DEBUG("\tmtime=%x", (unsigned int)stbuf->st_mtime);
+	DEBUG("\tctime=%x", (unsigned int)stbuf->st_ctime);
+	DEBUG("***PRINT STAT OVER\n");
 }
