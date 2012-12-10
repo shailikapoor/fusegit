@@ -298,6 +298,10 @@ static int fg_open(const char *path, struct fuse_file_info *fi)
 	// FIXIT doing nothing for this right now, since we are not using any
 	// file handles. Once we start creating file handles, we will need to
 	// implement this function.
+	int r;
+
+	if ((r = repo_open(path, &fi->fh)) < 0)
+		return -ENOLINK;
 	return 0;
 }
 
@@ -318,7 +322,7 @@ static int fg_read(const char *path, char *buf, size_t size, off_t offset,
                       struct fuse_file_info *fi)
 {
 	DEBUG("FG_READ");
-	return repo_read(path, buf, size, offset); 	
+	return repo_read(path, buf, size, offset, fi->fh); 	
 }
 
 /**
@@ -333,7 +337,7 @@ static int fg_write(const char *path, const char *buf, size_t size,
                        off_t offset, struct fuse_file_info *fi)
 {
 	DEBUG("FG_WRITE");
-        return repo_write(path, buf, size, offset);
+        return repo_write(path, buf, size, offset, fi->fh);
 }
 
 /**
@@ -347,6 +351,39 @@ static int fg_statfs(const char *path, struct statvfs *stbuf)
 {
 	DEBUG("FG_STATFS");
         return -ENOSYS;
+}
+
+/** Possibly flush cached data
+ *
+ * BIG NOTE: This is not equivalent to fsync().  It's not a
+ * request to sync dirty data.
+ *
+ * Flush is called on each close() of a file descriptor.  So if a
+ * filesystem wants to return write errors in close() and the file
+ * has cached dirty data, this is a good place to write back data
+ * and return any errors.  Since many applications ignore close()
+ * errors this is not always useful.
+ *
+ * NOTE: The flush() method may be called more than once for each
+ * open().      This happens if more than one file descriptor refers
+ * to an opened file due to dup(), dup2() or fork() calls.      It is
+ * not possible to determine if a flush is final, so each flush
+ * should be treated equally.  Multiple write-flush sequences are
+ * relatively rare, so this shouldn't be a problem.
+ *
+ * Filesystems shouldn't assume that flush will always be called
+ * after some writes, or that if will be called at all.
+ *
+ * Changed in version 2.2
+ */
+static int fg_flush(const char *path, struct fuse_file_info *fi)
+{
+	DEBUG("FG_FLUSH");
+	int r;
+
+	if ((r = repo_flush(path, fi->fh)) < 0)
+		return -ENOLINK;
+	return 0;
 }
 
 /**
@@ -369,6 +406,10 @@ static int fg_release(const char *path, struct fuse_file_info *fi)
 	// FIXIT doing nothing for this right now, since we are not using any
 	// file handles. Once we start creating file handles, we will need to
 	// implement this function.
+	int r;
+
+	if ((r = repo_release(path, fi->fh)) < 0)
+		return -ENOLINK;
         return 0;
 }
 
@@ -384,7 +425,11 @@ static int fg_fsync(const char *path, int isdatasync,
                        struct fuse_file_info *fi)
 {
 	DEBUG("FG_FSYNC : metadata?%d", isdatasync?0:1);
-        return -ENOSYS;
+	int r;
+
+	if ((r = repo_fsync(path, fi->fh, isdatasync)) < 0)
+		return -ENOLINK;
+        return 0;
 }
 
 #ifdef HAVE_SETXATTR
@@ -520,7 +565,7 @@ static int fg_create(const char *path, mode_t mode, struct fuse_file_info *fi)
 	int r;
 
 	// ask repo to create a empty file and return
-	if ((r = repo_create_file(path, mode)) < 0)
+	if ((r = repo_create_file(path, mode, &fi->fh)) < 0)
 		return -1;	// SOME ERROR
 
 	return 0;
@@ -559,7 +604,7 @@ static struct fuse_operations fg_oper = {
         .read	        = fg_read,	// DONE
         .write	        = fg_write,
         .statfs	        = fg_statfs,
-        //.flush          = fg_flush,	// TODO
+        .flush          = fg_flush,	// TODO
         .release	= fg_release,	// DONE - FIXIT
         .fsync	        = fg_fsync,
 #ifdef HAVE_SETXATTR

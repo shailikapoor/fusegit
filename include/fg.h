@@ -9,7 +9,7 @@
 #include <unistd.h>
 #include <pthread.h>
 
-//#define DEBUG_PRINT_ENABLED 1
+#define DEBUG_PRINT_ENABLED 1
 #define	PATH_MAX_LENGTH	1024
 #define	MAX_HARD_LINKS	100	// FIXIT : this can be fixed by storing the link
 				// information in multiple file notes, instead 

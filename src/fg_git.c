@@ -14,6 +14,7 @@ static const unsigned int INVALID_FILE_MODE = 077777777;
 static git_repository *repo;
 static git_commit *last_commit = NULL;
 char note_data[PATH_MAX_LENGTH*(MAX_HARD_LINKS+1)];
+struct repo_file_handle_queue file_queue = {.next = 0};
 pthread_mutex_t note_lock;
 
 struct copy_ref {
@@ -390,6 +391,7 @@ l_remove_link_stats(const char *path)
 	static int
 l_update_link_stats(const struct repo_stat_data *note_stat_p)
 {
+	DEBUG("***l_update_link_stats LOCKED");
 	pthread_mutex_lock(&note_lock);
 	int r;
 	int i;
@@ -479,9 +481,11 @@ l_update_link_stats(const struct repo_stat_data *note_stat_p)
 
 	git_signature_free(author);
 success:
+	DEBUG("***l_update_link_stats UNLOCKED");
 	pthread_mutex_unlock(&note_lock);
 	return 0;
 error:
+	DEBUG("***l_update_link_stats UNLOCKED");
 	pthread_mutex_unlock(&note_lock);
 	return -1;
 }
@@ -644,6 +648,237 @@ l_free_str_array(char **arr, int size)
 }
 
 // ****************************************************************************
+// FILE HANDLE
+
+	int
+l_create_file_handle(uint64_t *fh, const char *path)
+{
+	int err = -1;
+	int next;
+	//DEBUG("***l_create_file_handle LOCKED");
+	//pthread_mutex_lock(&file_queue.lock);
+	next = file_queue.next;
+	DEBUG("searching for the next file handle");
+	if (file_queue.handles[next] == NULL) {
+		file_queue.handles[next] = malloc(sizeof(struct repo_file_handle));
+		file_queue.handles[next]->path = NULL;
+	} else if (file_queue.handles[next]->free) {
+		// use this
+	} else {
+		while (next != file_queue.next) {
+			DEBUG("next = %d", next);
+			next = (next+1) % MAX_HANDLES;
+			if (file_queue.handles[next] == NULL) {
+				file_queue.handles[next] = malloc(sizeof(struct repo_file_handle));
+				file_queue.handles[next]->path = NULL;
+			} else if (file_queue.handles[next]->free) {
+				// use this
+			} else {
+				next++;
+				continue;
+			}
+			break;
+		}
+		if (next == file_queue.next) {	// queue is full
+			err = -EFG_MAX_HANDLES;
+			goto error;//return -EFG_MAX_HANDLES;
+		}
+	}
+	DEBUG("found the next file handle: %d", next);
+	struct repo_file_handle *handle = file_queue.handles[next];
+	//DEBUG("handle %d LOCKED", next);
+	//pthread_mutex_lock(&handle->lock);
+	// set the file handle as non-free
+	handle->free = 0;
+	// set the file path
+	if (handle->path != NULL)
+		free(handle->path);
+	handle->path = malloc(sizeof(char) * (strlen(path)+1));
+	strcpy(handle->path, path);
+	DEBUG("set the file handle");
+	// set the file handle
+	*fh = next;
+	file_queue.next = (next + 1) % MAX_HANDLES;
+	// set the size and off to 0
+	handle->size = 0;
+	handle->off = 0;
+	// mark the handle as non-dirty
+	handle->dirty = 0;
+	DEBUG("finished creating file handle");
+//success:
+	//DEBUG("handle UNLOCKED");
+	//DEBUG("***l_create_file_handle UNLOCKED");
+	//pthread_mutex_unlock(&handle->lock);
+	//pthread_mutex_unlock(&file_queue.lock);
+	return 0;
+error:
+	//DEBUG("handle UNLOCKED");
+	//DEBUG("***l_create_file_handle UNLOCKED");
+	//pthread_mutex_unlock(&handle->lock);
+	//pthread_mutex_unlock(&file_queue.lock);
+	return err;
+
+}
+
+	int
+l_get_file_handle(struct repo_file_handle **handle, uint64_t fh)
+{
+	if (fh >= MAX_HANDLES)
+		return -1;
+	*handle = file_queue.handles[(int)fh];
+	if (!(*handle)->free)
+		return 0;
+	*handle = NULL;
+	return -1;
+}
+
+	int
+l_copy_data_to_buffer(char *buf, struct repo_file_handle *handle, size_t size,
+	off_t off)
+{
+	if (size > handle->size)
+		return -1;
+	if (off < handle->off)
+		return -1;
+	if ((off + size) > (handle->off + handle->size))
+		return -1;
+	memcpy(buf, handle->buf+(off-handle->off), size);
+	return 0;
+}
+
+	int
+l_release_file_handle(const char *path, uint64_t fh)
+{
+	int err = -1;
+	//DEBUG("***l_release_file_handle LOCKED");
+	//pthread_mutex_lock(&file_queue.lock);
+	struct repo_file_handle *handle = file_queue.handles[(int)fh];
+	//DEBUG("handle %d LOCKED", fh);
+	//pthread_mutex_lock(&handle->lock);
+	if (strcmp(handle->path, path) != 0)
+		goto error;//return -1;
+	handle->free = 1;
+
+//success:
+	//DEBUG("handle UNLOCKED");
+	//DEBUG("***l_release_file_handle UNLOCKED");
+	//pthread_mutex_unlock(&handle->lock);
+	//pthread_mutex_unlock(&file_queue.lock);
+	return 0;
+error:
+	//DEBUG("handle UNLOCKED");
+	//DEBUG("***l_release_file_handle UNLOCKED");
+	//pthread_mutex_unlock(&handle->lock);
+	//pthread_mutex_unlock(&file_queue.lock);
+	return err;
+}
+
+/**
+ * this function just writes the content to the disk. It doesn't clear the
+ * buffer or sets the size and off of the handle to 0. This should be done by
+ * the calling function
+ */
+	int
+l_write_to_disk(struct repo_file_handle *handle, const char *operation)
+{
+	int err = -1;
+	DEBUG("handle LOCKED");
+	pthread_mutex_lock(&handle->lock);
+	const char *path = handle->path;
+	const char *buf = handle->buf;
+	size_t size = handle->size;
+	off_t offset = handle->off;
+	int r;
+	int i;
+	git_oid oid;
+	git_oid tree_oid;
+	git_blob *blob;
+	git_tree *tree;
+	const git_tree_entry *entry;
+	git_treebuilder *builder;
+	char write_buf[size+offset];
+	char *blob_content;
+	unsigned int mode;
+	char *tmppath;
+	char last[PATH_MAX_LENGTH];
+	struct repo_stat_data *stat_data;
+
+	// get the blob corresponding to this path
+	if ((r = l_get_path_oid(&oid, path)) < 0)
+		goto error;//return -EFG_UNKNOWN;
+	if ((r = git_blob_lookup(&blob, repo, &oid)) < 0)
+		goto error;//return -EFG_UNKNOWN;
+
+	if (offset == 0) {
+	// if the offset is 0
+	// create a blob with the buf and size, and make path to point to it
+		memcpy(write_buf, buf, size);
+	} else {
+	// if the offset is not 0
+	// obtain the blob for the path, create a new blob with the appended
+	// content and make path to point to it
+		blob_content = (char *)git_blob_rawcontent(blob);
+		memcpy(write_buf, blob_content, offset);
+		memcpy(write_buf+offset, buf, size);
+	}
+	git_blob_free(blob);
+
+	if ((r = l_get_note_stats_link(&stat_data, path)) < 0)
+		goto error;//return -EFG_UNKNOWN;
+
+	// create a new blob with the required size
+	if ((r = git_blob_create_frombuffer(&oid, repo, write_buf, offset+size)) < 0)
+		goto error;//return -EFG_UNKNOWN;
+
+	for (i=0; i<stat_data->count; i++) {
+		tmppath = stat_data->links[i];
+		// get the parent tree
+		if ((r = l_get_parent_tree(&tree, tmppath)) < 0)
+			goto error;//return -EFG_UNKNOWN;
+
+		// get the treebuilder for the parent tree
+		if ((r = git_treebuilder_create(&builder, tree)) < 0)
+			goto error;//return -EFG_UNKNOWN;
+
+		// add the blob with the name of the file as a child to the parent
+		if ((r = get_last_component(tmppath, last)) < 0)
+			goto error;//return -EFG_UNKNOWN;
+		//DEBUG("Adding the link to the tree builder");
+		entry = git_tree_entry_byname(tree, last);
+		mode = git_tree_entry_attributes(entry);
+		if ((r = git_treebuilder_insert(NULL, builder, last,
+			&oid, mode)) < 0)
+			goto error;//return -EFG_UNKNOWN;
+		//DEBUG("Writing to the original tree");
+		if ((r = git_treebuilder_write(&tree_oid, repo, builder)) < 0)
+			goto error;//return -EFG_UNKNOWN;
+		// free the tree builder
+		git_treebuilder_free(builder);
+		if ((r = get_parent_path(NULL, tmppath)) < 0)
+			goto error;//return -EFG_UNKNOWN;	// get parent path
+		
+		// call make commit function with this updated blob id
+		// do the commit
+		char header[] = "fusegit\nl_write_to_disk\n";
+		char message[PATH_MAX_LENGTH + strlen(header) + 10];
+		sprintf(message, "%s%s\n%s", header, operation, path);
+		//DEBUG("Making the commit : %s", message);
+		if ((r = l_make_commit(tmppath, tree_oid, message)) < 0)
+			goto error;//return r;
+		//DEBUG("Commit successful");
+	}
+
+//success:
+	DEBUG("handle UNLOCKED");
+	pthread_mutex_unlock(&handle->lock);
+	return size;
+error:
+	DEBUG("handle UNLOCKED");
+	pthread_mutex_unlock(&handle->lock);
+	return err;
+}
+
+// ****************************************************************************
 // GLOBAL
 
 /**
@@ -653,6 +888,7 @@ l_free_str_array(char **arr, int size)
 repo_setup(const char *repo_address)
 {
 	int r;
+	int i;
 	git_oid oid;
 	git_treebuilder *empty_treebuilder;
 	struct repo_stat_data *note_stat;
@@ -691,6 +927,11 @@ repo_setup(const char *repo_address)
 	if ((r = l_update_link_stats(note_stat)) < 0)
 		return -EFG_UNKNOWN;
 	free_repo_stat_data(note_stat);
+
+	// setup the file_queue
+	for (i=0; i<MAX_HANDLES; i++) {
+		file_queue.handles[i] = NULL;
+	}
 
 	return 0;
 }
@@ -1209,9 +1450,8 @@ repo_unlink(const char *path)
  * read a file
  */
 	int
-repo_read(const char *path, char *buf, size_t size, off_t offset)
+repo_read(const char *path, char *buf, size_t size, off_t offset, uint64_t fh)
 {
-
 	// get the blob
 	// we get the blob 
 	git_blob *blob;
@@ -1222,6 +1462,14 @@ repo_read(const char *path, char *buf, size_t size, off_t offset)
 	git_oid oid;
 	char *content;
 	size_t rawsize;
+	struct repo_file_handle *handle;
+
+	if ((r = l_get_file_handle(&handle, fh)) < 0)
+		return -EFG_UNKNOWN;
+	// l_copy_data_to_buffer returns 0 on success
+	if (l_copy_data_to_buffer(buf, handle, size, offset) == 0) {
+		return size;
+	}
 	// to get the parent tree we use the l_get_parent_tree.
 	DEBUG("get the parent tree");
 	if ((r = l_get_parent_tree(&tree, path)) < 0) 
@@ -1254,6 +1502,13 @@ repo_read(const char *path, char *buf, size_t size, off_t offset)
 	DEBUG("copy the content to the fuse buffer");
 	memcpy(buf, content, size);
 
+	// copy contents to the file handle
+	handle->size = (offset + size) % FILE_BUFFER_CHUNK;
+	handle->off = (offset + size) - handle->size;
+	DEBUG("copying to file handle: offset=%d, size=%d", handle->off,
+		handle->size);
+	memcpy(handle->buf, content+handle->off, handle->size);
+
 	git_blob_free(blob);
 	
 	// return the size of the content we have read
@@ -1265,7 +1520,7 @@ repo_read(const char *path, char *buf, size_t size, off_t offset)
  * create a empty file
  */
 	int
-repo_create_file(const char *path, mode_t mode)
+repo_create_file(const char *path, mode_t mode, uint64_t *fh)
 {
 	int r;
 	git_oid oid;
@@ -1318,6 +1573,10 @@ repo_create_file(const char *path, mode_t mode)
 	if ((r = l_update_link_stats(note_stat)) < 0)
 		return -EFG_UNKNOWN;
 	free_repo_stat_data(note_stat);
+	
+	// create the file handle
+	if ((r = l_create_file_handle(fh, path)) < 0)
+		return r;
 
 	return 0;
 }
@@ -1457,7 +1716,7 @@ free_repo_stat_data(struct repo_stat_data *data)
  * writes it to the file subsequently. But this will fail for large files.
  */
 	int
-repo_write(const char *path, const char *buf, size_t size, off_t offset)
+repo_write(const char *path, const char *buf, size_t size, off_t offset, uint64_t fh)
 {
 	int r;
 	int i;
@@ -2072,3 +2331,92 @@ repo_chown(const char *path, uid_t uid, gid_t gid)
 		return -EFG_UNKNOWN;
 	return 0;
 }
+
+/**
+ * open a file
+ */
+	int
+repo_open(const char *path, uint64_t *fh)
+{
+	int r;
+
+	if ((r = l_create_file_handle(fh, path)) < 0)
+		return r;
+	return 0;
+}
+
+/**
+ * release a file
+ */
+	int
+repo_release(const char *path, uint64_t fh)
+{
+	int r;
+	struct repo_file_handle *handle;
+
+	if ((r = l_get_file_handle(&handle, fh)) < 0)
+		return -EFG_UNKNOWN;
+	if (handle->dirty && ((r = repo_flush(path, fh)) < 0))
+		return -EFG_UNKNOWN;
+	if ((r = l_release_file_handle(path, fh)) < 0)
+		return -EFG_UNKNOWN;
+	return 0;
+}
+
+/**
+ * flush a file
+ */
+	int
+repo_flush(const char *path, uint64_t fh)
+{
+	int r;
+	struct repo_file_handle *handle;
+
+	DEBUG("getting file handle");
+	if ((r = l_get_file_handle(&handle, fh)) < 0)
+		return -EFG_UNKNOWN;
+	DEBUG("comparing path with the file handle");
+	if (strcmp(handle->path, path) != 0)
+		return -EFG_UNKNOWN;
+	// if not dirty
+	DEBUG("checking if handle is dirty");
+	if (handle->dirty == 0)
+		return 0;
+	DEBUG("writing to disk");
+	if ((r = l_write_to_disk(handle, "flush")) < 0)
+		return -EFG_UNKNOWN;
+	DEBUG("flush successful");
+	handle->size = 0;
+	handle->off = 0;
+	handle->dirty = 0;
+	
+	return 0;
+}
+
+/**
+ * fsync a file
+ * 
+ * TODO right now implemented exactly like flush
+ */
+	int
+repo_fsync(const char *path, uint64_t fh, int isdatasync)
+{
+	int r;
+	struct repo_file_handle *handle;
+
+	if ((r = l_get_file_handle(&handle, fh)) < 0)
+		return -EFG_UNKNOWN;
+	if (strcmp(handle->path, path) != 0)
+		return -EFG_UNKNOWN;
+	// if not dirty
+	if (handle->dirty == 0)
+		return 0;
+	if ((r = l_write_to_disk(handle, "fsync")) < 0)
+		return -EFG_UNKNOWN;
+	handle->size = 0;
+	handle->off = 0;
+	handle->dirty = 0;
+	
+	return 0;
+}
+
