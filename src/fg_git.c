@@ -1826,6 +1826,10 @@ repo_backup(const char *snapshot)
 	char tag_name_copy[PATH_MAX_LENGTH];
 	char message[100];
 	struct copy_ref copy_data;
+	char tmppath_ref_name[PATH_MAX_LENGTH];
+	git_oid path_blob_oid;
+	git_note *note;
+	const char *note_message;
 	
 	// get the latest commit of the repository
 	if ((r = l_get_last_commit(&commit_p)) < 0)
@@ -1874,11 +1878,38 @@ repo_backup(const char *snapshot)
 		DEBUG("error in callback");
 		return -EFG_UNKNOWN;
 	}
+
+	l_get_note_name(tmppath_ref_name, "/", REF_NAME);
+	if ((r = l_get_path_blob_oid(&path_blob_oid, tmppath_ref_name))
+		< 0)
+		return -EFG_UNKNOWN;
+	if ((r = git_note_read(&note, repo, NULL, &path_blob_oid)) < 0)
+		return -EFG_UNKNOWN;
+	note_message = git_note_message(note);
+	
+	// create a note for the tag
+	l_get_note_name(tmppath_ref_name, "/", tag_name_copy);
+	if ((r = l_get_path_blob_oid(&path_blob_oid, tmppath_ref_name))
+		< 0)
+		return -EFG_UNKNOWN;
+	if ((r = l_get_signature_now(&author)) < 0)
+		return -EFG_UNKNOWN;
+	if ((r = git_note_create(&oid,
+				repo,
+				author,
+				author,
+				NULL,
+				&path_blob_oid,
+				note_message)) < 0)
+		return -EFG_UNKNOWN;
+	
+	git_note_free(note);
+	git_signature_free(author);
+	DEBUG("repo_backup successful");
 	
 	// free the repository
 	git_commit_free(commit_p);
 	git_repository_free(repo);
-	git_signature_free(author);
 	return 0;
 }
 
