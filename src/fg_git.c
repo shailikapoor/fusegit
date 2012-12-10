@@ -650,7 +650,7 @@ l_free_str_array(char **arr, int size)
 // ****************************************************************************
 // FILE HANDLE
 
-	int
+	static int
 l_create_file_handle(uint64_t *fh, const char *path)
 {
 	int err = -1;
@@ -720,7 +720,7 @@ error:
 
 }
 
-	int
+	static int
 l_get_file_handle(struct repo_file_handle **handle, uint64_t fh)
 {
 	if (fh >= MAX_HANDLES)
@@ -732,21 +732,7 @@ l_get_file_handle(struct repo_file_handle **handle, uint64_t fh)
 	return -1;
 }
 
-	int
-l_copy_data_to_buffer(char *buf, struct repo_file_handle *handle, size_t size,
-	off_t off)
-{
-	if (size > handle->size)
-		return -1;
-	if (off < handle->off)
-		return -1;
-	if ((off + size) > (handle->off + handle->size))
-		return -1;
-	memcpy(buf, handle->buf+(off-handle->off), size);
-	return 0;
-}
-
-	int
+	static int
 l_release_file_handle(const char *path, uint64_t fh)
 {
 	int err = -1;
@@ -778,7 +764,7 @@ error:
  * buffer or sets the size and off of the handle to 0. This should be done by
  * the calling function
  */
-	int
+	static int
 l_write_to_disk(struct repo_file_handle *handle, const char *operation)
 {
 	int err = -1;
@@ -876,6 +862,45 @@ error:
 	DEBUG("handle UNLOCKED");
 	pthread_mutex_unlock(&handle->lock);
 	return err;
+}
+
+	static int
+l_copy_data_to_buffer(char *buf, struct repo_file_handle *handle, size_t size,
+	off_t off)
+{
+	if (size > handle->size)
+		return -1;
+	if (off < handle->off)
+		return -1;
+	if ((off + size) > (handle->off + handle->size))
+		return -1;
+	memcpy(buf, handle->buf+(off-handle->off), size);
+	return 0;
+}
+
+	static int
+l_copy_data_from_buffer(const char *buf, struct repo_file_handle *handle, size_t size,
+	off_t off)
+{
+	if (size > FILE_BUFFER_CHUNK)
+		return -1;
+	if ((off%FILE_BUFFER_CHUNK + size) > FILE_BUFFER_CHUNK)
+		return -1;
+	if ((off - off%FILE_BUFFER_CHUNK) != handle->off) {
+		l_write_to_disk(handle, "l_copy_data_from_buffer:writing more data");
+		handle->off = off - off%FILE_BUFFER_CHUNK;
+		handle->size = 0;
+		handle->dirty = 0;
+	}
+	// handle->off is set before this step
+	// need to fill handle->size, buf, dirty
+	if (size > 0) {
+		DEBUG("******* writing in memory");
+		memcpy(handle->buf + (off-handle->off), buf, size);
+		handle->size = size;
+		handle->dirty = 1;
+	}
+	return 0;
 }
 
 // ****************************************************************************
@@ -1732,6 +1757,13 @@ repo_write(const char *path, const char *buf, size_t size, off_t offset, uint64_
 	char *tmppath;
 	char last[PATH_MAX_LENGTH];
 	struct repo_stat_data *stat_data;
+	struct repo_file_handle *handle;
+
+	if ((r = l_get_file_handle(&handle, fh)) < 0)
+		return -EFG_UNKNOWN;
+	// returns 0 on successful copy to buffer
+	if ((r = l_copy_data_from_buffer(buf, handle, size, offset)) == 0)
+		return size;
 
 	// get the blob corresponding to this path
 	if ((r = l_get_path_oid(&oid, path)) < 0)
