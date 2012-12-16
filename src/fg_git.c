@@ -8,6 +8,25 @@
 #include "fg_repo.h"
 #include "fg_util.h"
 
+// ****************************************************************************
+// ALL NEW FILE STRUCTURE
+// The git repository main tree will not be the '/' directory anymore. It will
+// be called 'root'. It will have 2 children, and possibly more in future. One
+// will be the '/' root directory. The other child will be 'inodes'.
+// 
+// '/' child will remain almost the same, although some code changes will be
+// required.
+// 
+// 'inodes' will be a radix tree kind of structure, which will have several
+// levels. I'll keep the number of levels as '5', but it will remain a variable
+// parameter, and not hardcoded. At each level a node, can have at most 64
+// children. So 5 levels means 64^5 leaves. Which is the maximum number of
+// inodes supported in the file system right now. Which is already too much,
+// because libgit2 may not be able to handle all of them.
+// ****************************************************************************
+
+
+
 // LOCAL
 static char REF_NAME[PATH_MAX_LENGTH] = "refs/heads/master";
 static const unsigned int INVALID_FILE_MODE = 077777777;
@@ -72,6 +91,8 @@ l_get_last_commit(git_commit **commit_p)
 	return 0;
 }
 
+// OBSOLETE
+// Should be modified to look for the root at a lower level.
 	static int
 l_get_path_tree(git_tree **tree, const char *path)
 {
@@ -144,6 +165,8 @@ l_get_parent_tree(git_tree **tree, const char *path)
 	return 0;
 }
 
+// OBSOLETE
+// This code should be parameterized, shouldn't hardcode the user and email.
 	static int
 l_get_signature_now(git_signature **author_p)
 {
@@ -259,6 +282,15 @@ l_make_commit(const char *path, git_oid oid, const char *message)
 	return 0;
 }
 
+// OBSOLETE
+// This shouldn't be computed. This value should be read from the inode of the
+// file. For this, the inode should be updated with the new value whenever we do
+// write or truncate. Also, it should first check if the file handle is in the
+// buffer. If yes, then the information of the last blob, will be taken from the
+// buffer.
+// NOTE: What if the file was full till the last blob. The next write will
+// create a new blob for the buffer, so that should not be mistaken as the last
+// blob. Figure out a way to handle this case.
 	static size_t
 l_get_file_size(const char *path)
 {
@@ -287,6 +319,8 @@ l_get_file_size(const char *path)
 	return size;
 }
 
+// OBSOLETE
+// Read the file mode from the inode
 	static unsigned int
 l_get_file_mode(const char *path)
 {
@@ -306,6 +340,7 @@ l_get_file_mode(const char *path)
 	return git_tree_entry_attributes(entry);
 }
 
+// OBSOLETE : remove this
 	static int
 l_get_path_blob_oid(git_oid *blob_oid, const char *buffer)
 {
@@ -342,15 +377,17 @@ l_get_path_oid(git_oid *oid, const char *path)
 }
 
 //*****************************************************************************
-// STRUCTURE OF THE GIT Note for each file (git_object)
-// NOTE: All links have the same result when done stat, so the full note will be
-// stored only for the first note. The other notes will have the name of the
-// link they are associated to. So the name of the first link.
-// **Structure for first link**
+// STRUCTURE OF THE INODE for each file/directory
+// NOTE: All the files and directories will be stored as trees, and the
+// information of whether they are directory or file is stored in the first
+// entry, which we will call "inode:0"
+// **Structure of inode:0**
 // access time
 // modification time
 // $uid
 // $gid
+// $mode <----- this is NEW
+// $size <----- this is NEW
 // !3 - number of links
 // !/path/to/link1
 // !/path/to/link2
@@ -360,6 +397,8 @@ l_get_path_oid(git_oid *oid, const char *path)
 // @/path/to/first/link<NO NEW LINE> - this link will have a note associated to it which can
 // be used.
 //*****************************************************************************
+
+// OBSOLETE : remove this
 	static void
 l_get_note_name(char *out_name, const char *in_name, const char *prefix)
 {
@@ -369,6 +408,7 @@ l_get_note_name(char *out_name, const char *in_name, const char *prefix)
 	strcat(out_name, in_name);
 }
 
+// OBSOLETE : remove this
 	static int
 l_remove_link_stats(const char *path)
 {
@@ -388,6 +428,7 @@ l_remove_link_stats(const char *path)
 	return 0;
 }
 
+// OBSOLETE : remove this
 	static int
 l_update_link_stats(const struct repo_stat_data *note_stat_p)
 {
@@ -493,6 +534,7 @@ error:
 /**
  * one should free the note_stat_p after its use is over
  */
+// OBSOLETE : remove this
 	static int
 l_get_note_stats(struct repo_stat_data **note_stat_p, const char *path)
 {
@@ -600,6 +642,7 @@ l_get_note_stats(struct repo_stat_data **note_stat_p, const char *path)
 	return 0;
 }
 
+// OBSOLETE : remove this
 	static int
 l_get_note_stats_link(struct repo_stat_data **note_stat_p, const char *path)
 {
@@ -759,11 +802,17 @@ error:
 	return err;
 }
 
+
+
 /**
  * this function just writes the content to the disk. It doesn't clear the
  * buffer or sets the size and off of the handle to 0. This should be done by
  * the calling function
  */
+// OBSOLETE
+// instead of the earlier write function, write in chunks of 4096 bytes only,
+// and create individual blobs for each chunk and add it to the proper inode
+// tree
 	static int
 l_write_to_disk(struct repo_file_handle *handle, const char *operation)
 {
@@ -864,6 +913,10 @@ error:
 	return err;
 }
 
+// OBSOLETE
+// Read the data from the file from its different chunks, and then copy it to
+// the buffer. Right now all data is in one big blob, but now you might have to
+// read several blobs to get the whole data.
 	static int
 l_copy_data_to_buffer(char *buf, struct repo_file_handle *handle, size_t size,
 	off_t off)
@@ -909,6 +962,9 @@ l_copy_data_from_buffer(const char *buf, struct repo_file_handle *handle, size_t
 /**
  * Setup the Git repository at the address repo_address
  */
+// OBSOLETE
+// This creates the home directory and stores its metadata in the notes, this
+// should be replaced by the inode:0 structure, in the inodes tree.
 	int
 repo_setup(const char *repo_address)
 {
@@ -965,6 +1021,8 @@ repo_setup(const char *repo_address)
  * checks if the path exists in the repository
  * returns 1 if the path exists, else 0
  */
+// OBSOLETE
+// See if the handle for the file already exists.
 	int
 repo_path_exists(const char *path)
 {
@@ -989,6 +1047,10 @@ repo_path_exists(const char *path)
  * checks if the path is of a file
  * returns 1 if it is file, else 0
  */
+// OBSOLETE
+// To identify whether a tree is a file or a directory, read its inode, and the
+// read the first entry of the inode, which is inode:0, and figure out the type
+// of file it is. It may be a symbolic link, in which case do something special
 	int
 repo_is_file(const char *path)
 {
@@ -1000,10 +1062,32 @@ repo_is_file(const char *path)
 }
 
 /**
+ * is the path a directory
+ */
+// OBSOLETE
+// To identify whether a tree is a file or a directory, read its inode, and the
+// read the first entry of the inode, which is inode:0, and figure out the type
+// of file it is. It may be a symbolic link, in which case do something special
+	int
+repo_is_dir(const char *path)
+{
+	int r;
+	git_tree *tree;
+
+	if (strcmp(path, "/") == 0)
+		return 1;
+	if ((r = l_get_path_tree(&tree, path)) == 0)
+		return 1;	// is a directory
+	return 0;	// is not a directory
+}
+
+/**
  * returns the children of the directory represented by path
  * 
  * Note : children should be freed from the function which calls it.
  */
+// OBSOLETE
+// In the for loop you have entry index from 0 to n, it should now be 1 to n.
 	int
 repo_get_children(struct repo_file_node **children, int *count, const char *path)
 {
@@ -1032,6 +1116,8 @@ repo_get_children(struct repo_file_node **children, int *count, const char *path
 /**
  * get the stat for a file
  */
+// OBSOLETE
+// Use the inode and then look for inode:0 entry in that inode.
  	int
 repo_stat(const char *path, struct stat *stbuf)
 {
@@ -1096,24 +1182,10 @@ repo_stat(const char *path, struct stat *stbuf)
 }
 
 /**
- * is the path a directory
- */
-	int
-repo_is_dir(const char *path)
-{
-	int r;
-	git_tree *tree;
-
-	if (strcmp(path, "/") == 0)
-		return 1;
-	if ((r = l_get_path_tree(&tree, path)) == 0)
-		return 1;	// is a directory
-	return 0;	// is not a directory
-}
-
-/**
  * get the stat for a directory
  */
+// OBSOLETE
+// Use the new inode:0 blob in the inode to read the data instead of notes.
 	int
 repo_dir_stat(const char *path, struct stat *stbuf)
 {
@@ -1147,6 +1219,10 @@ repo_dir_stat(const char *path, struct stat *stbuf)
  * make a directory in the given path
  * 
  */
+// OBSOLETE
+// mkdir should create tree, with one blob as a child, which is a blob with the
+// inode number. This inode in the inode tree, should have the metadata file
+// inode:0.
 	int
 repo_mkdir(const char *path, unsigned int attr)
 {
@@ -1214,6 +1290,9 @@ repo_mkdir(const char *path, unsigned int attr)
 /**
  * remove a empty directory
  */
+// OBSOLETE
+// remove the tree entry correspondig to this directory. Also the inode for this
+// directory should be removed.
 	int
 repo_rmdir(const char *path)
 {
@@ -1271,6 +1350,12 @@ repo_rmdir(const char *path)
 /**
  * create a link
  */
+// OBSOLETE
+// Take the tree corresponding to 'from'. That will contain a blob with the
+// inode number. Obtain the inode corresponding to that inode number, and
+// increse the link count to contain this new file. No need to store the path to
+// the new file. Create a new tree entry for 'to' with a blob containing the
+// same inode number.
 	int
 repo_link(const char *from, const char *to)
 {
@@ -1363,6 +1448,12 @@ repo_link(const char *from, const char *to)
 /**
  * unlink a path
  */
+// OBSOLETE
+// Obtain the blob corresponding to blob, and decrease the links count in the
+// inode:0 blob. Now remove the link to path in the tree structure.
+// If the links count in the inode:0 become 0, remove the inode also. Removing
+// the inode code should be a helper function, because this will also be called
+// when the file is closed.
 	int
 repo_unlink(const char *path)
 {
@@ -1474,6 +1565,12 @@ repo_unlink(const char *path)
 /**
  * read a file
  */
+// OBSOLETE
+// Knowing the offset and the size, we know which blobs we need to read in the
+// file. Obtain the tree corresponding to the file. Get the blobs corresponding
+// to offset:size. And then read and put it in buf.
+// A lot of read code is written here. This should all be moved to the helper
+// function.
 	int
 repo_read(const char *path, char *buf, size_t size, off_t offset, uint64_t fh)
 {
@@ -1544,6 +1641,14 @@ repo_read(const char *path, char *buf, size_t size, off_t offset, uint64_t fh)
 /**
  * create a empty file
  */
+// OBSOLETE
+// Creating a file, just need to create a tree with one blob, which contains the
+// inode. Find the next available free inode, and use it. If there is no free
+// inode, then you cannot create a new file. The inode, should have a blob
+// called inode:0 to contain the metadata, and blobs 1:62 will contain data.
+// Instead of a blob 63, there will be another tree if the file is that big.
+// This will again have a maximum of 64 children, and if required the 63rd child
+// will again be a tree. So we can have huge files.
 	int
 repo_create_file(const char *path, mode_t mode, uint64_t *fh)
 {
@@ -1609,6 +1714,10 @@ repo_create_file(const char *path, mode_t mode, uint64_t *fh)
 /**
  * update the access and modification times of a file
  */
+// OBSOLETE
+// Just need to update the inode:0 blob for the inode of the file. This will
+// change the tree id, and so the new tree needs to be linked to all the links
+// in the inode:0.
 	int
 repo_update_time_ns(const char *path, const struct timespec ts[2])
 {
@@ -1631,6 +1740,8 @@ repo_update_time_ns(const char *path, const struct timespec ts[2])
 /**
  * truncate a file
  */
+// OBSOLETE
+// Truncate the file, and update the inode:0 of the files inode
 	int
 repo_truncate(const char *path, off_t size)
 {
@@ -1740,6 +1851,9 @@ free_repo_stat_data(struct repo_stat_data *data)
  * FIXIT : currently the file system keeps the data to be written in memroy and
  * writes it to the file subsequently. But this will fail for large files.
  */
+// OBSOLETE
+// this function writes to the file, so if we have abstracted all the code in
+// the helper function, similar to repo_read, then nothing much to be done here.
 	int
 repo_write(const char *path, const char *buf, size_t size, off_t offset, uint64_t fh)
 {
@@ -1836,6 +1950,11 @@ repo_write(const char *path, const char *buf, size_t size, off_t offset, uint64_
 /**
  * rename a file
  */
+// OBSOLETE
+// Just need to create a different link. The inodes are all handled, and so no
+// more handling will be required. Also, if someone had opened the file
+// previously, and then renamed the file - read and write will still work
+// normally.
 	int
 repo_rename_file(const char *from, const char *to)
 {
@@ -1917,6 +2036,11 @@ l_callback_rename_dir(const char *root, git_tree_entry *entry, void *payload)
 /**
  * rename a directory
  */
+// OBSOLETE
+// Just need to create a different link. The inodes are all handled, and so no
+// more handling will be required. Also, if someone had opened the file
+// previously, and then renamed the file - read and write will still work
+// normally.
 	int
 repo_rename_dir(const char *from, const char *to)
 {
@@ -2054,6 +2178,7 @@ repo_rename_dir(const char *from, const char *to)
 	return 0;
 }
 
+// OBSOLETE
 	static int
 l_callback_copy_note_attr(const char *root, git_tree_entry *entry, void
 	*payload)
@@ -2110,6 +2235,8 @@ l_callback_copy_note_attr(const char *root, git_tree_entry *entry, void
  * TODO Right now the REF_NAME is hardcoded. But when taking backup this has to be
  * obtained from a config file. So read it.
  */
+// OBSOLETE
+// This doesn't require to update notes. It is now much simpler.
 	int
 repo_backup(const char *snapshot)
 {
@@ -2214,6 +2341,8 @@ repo_backup(const char *snapshot)
 /**
  * restore the repository
  */
+// OBSOLETE
+// This doesn't require to update notes. It is now much simpler.
 	int
 repo_restore(const char *snapshot)
 {
@@ -2298,6 +2427,9 @@ repo_restore(const char *snapshot)
 /**
  * change file permissions
  */
+// OBSOLETE
+// This doesn't require to update notes. It just needs to find the inode number
+// and update that inode.
 	int
 repo_chmod(const char *path, mode_t mode)
 {
@@ -2349,6 +2481,9 @@ repo_chmod(const char *path, mode_t mode)
 /**
  * change owner
  */
+// OBSOLETE
+// This doesn't require to update notes. It just needs to find the inode number
+// and update that inode.
 	int
 repo_chown(const char *path, uid_t uid, gid_t gid)
 {
@@ -2367,6 +2502,9 @@ repo_chown(const char *path, uid_t uid, gid_t gid)
 /**
  * open a file
  */
+// OBSOLETE
+// When you open a file handle for the file, increase the links count in the
+// inode by 1.
 	int
 repo_open(const char *path, uint64_t *fh)
 {
@@ -2380,6 +2518,9 @@ repo_open(const char *path, uint64_t *fh)
 /**
  * release a file
  */
+// OBSOLETE
+// When you close a file handle for the file, decrease the links count in the
+// inode by 1. If the links count becomes 0, then remove the file.
 	int
 repo_release(const char *path, uint64_t fh)
 {
