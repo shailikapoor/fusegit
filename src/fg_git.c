@@ -8,7 +8,7 @@
 #include "fg_repo.h"
 #include "fg_util.h"
 
-// ****************************************************************************
+// *****************************************************************************
 // ALL NEW FILE STRUCTURE
 // The git repository main tree will not be the '/' directory anymore. It will
 // be called 'root'. It will have 2 children, and possibly more in future. One
@@ -23,7 +23,16 @@
 // children. So 5 levels means 64^5 leaves. Which is the maximum number of
 // inodes supported in the file system right now. Which is already too much,
 // because libgit2 may not be able to handle all of them.
-// ****************************************************************************
+// *****************************************************************************
+// ALL NEW PROJECT STRUCTURE
+// This file is getting too big. Try to make logical structure in this file.
+// Also have function prototypes so that, the order of functions doesn't matter.
+// This will help in writing code, when new functionality has to be added.
+// 
+// Also, the functionality like caches, should be abstracted nicely from the
+// calling functions, so that size of caches could be increased. Try to make the
+// layers as abstracted as possible.
+// *****************************************************************************
 
 
 
