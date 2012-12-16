@@ -34,6 +34,15 @@ You can run the following command to get instructions:
 
 Please see the [wiki](http://github.com/varun729/fusegit/wiki) to track the progress.
 
+Incremental Goals
+-----------------
+1. Reliable when FUSE runs in single thread
+2. Fast
+3. Run a `fsck` type of utility which identifies the useless commits and removes
+them from the commit history.
+4. Run `git pack` on the repository, and every thing should still run fine.
+5. Reliable when FUSE runs in multi thread
+
 ### Information
 Found another project with similar goals:
 [git-fs](http://github.com/patrickhaller/git-fs)
