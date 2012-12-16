@@ -34,43 +34,47 @@
 
 <h1>FuseGit</h1>
 
-<p>A FUSE file system with Git as the backend. Git is known to be a file system 
-in itself. So what is different in 'FuseGit'.</p>
+<p>A FUSE file system with Git as the backend.</p>
 
-<p>FuseGit is a file system first, and has the features of Git at its backend. So 
-if you modified a file and want to revert back. There is a backup waiting for 
-you. If you keep taking snapshots of your file system, then it becomes 
-extremely easy for FuseGit to revert you back in time. But, if you didn't name 
-it, it will still keep taking snapshots regularly. And you can choose your 
-time from the list provided to you.</p>
+<p>Git is known to be a file system in itself. So what is different in 'FuseGit'?
+Git is a version control system which has some features of a file system. But
+for a normal user it still looks like a version control system, and has a
+learning curve. <code>FuseGit</code> is primarily a file system. So, if you have the
+required dependencies and you install it, you don't need to know about the inner
+workings and can use it like any other file system.</p>
 
-<p>All this sounds non-magical if you are familiar with Git or any other version 
-control system. But for people who don't want the added complexity of playing 
-with a VCS, FuseGit will give a ready to use recipe. Just plug it in. And have 
-regular backups of your file system, without worrying about too much memory 
-being consumed.</p>
+<h2>How it started</h2>
 
-<h2>Cleaning up</h2>
+<p>The project was just an idea when I first learnt about <code>Git</code>. The project became
+a reality after one year, as part of a course project in the course <strong>Operating
+Systems</strong>.</p>
 
-<p>Have you ever looked at the Linux repository? If you do a clone of the 
-repository, it will be several multiples of the actual filesize. This is 
-because they are storing every possible content. This is a common issue with 
-any VCS, it grows in size with time more than the actual content. This can be 
-handled if you take care to clean up the history markers at regular intervals.</p>
+<h2>Dependencies</h2>
 
-<h2>Implementation</h2>
+<p>Fuse: v2.9.2
+libgit2: v0.17.0</p>
 
-<p><code>FUSE</code> is in the name, so we are obviously using it. This means that the file 
-system is in user space. This is a prototype version and we want to keep 
-things simple.</p>
+<p>You need to install them, and have them in the path before installing fusegit.</p>
 
-<p><code>libgit2</code> will be used to get the Git functionality. This library is still 
-under active development. I hope we don't end up requiring a feature which is 
-still under development. This is a risk we might have to take right now.</p>
+<h2>Installation</h2>
+
+<p>make</p>
+
+<p>You can run the following command to get instructions:
+./fusegit</p>
 
 <p>Please see the <a href="http://github.com/varun729/fusegit/wiki">wiki</a> to track the progress.</p>
 
-<h3>Information</h3>
+<h2>Incremental Goals</h2>
+
+<ol>
+<li>Reliable when FUSE runs in single thread</li>
+<li>Fast</li>
+<li>Run a <code>fsck</code> type of utility which identifies the useless commits and removes
+them from the commit history.</li>
+<li>Run <code>git pack</code> on the repository, and every thing should still run fine.</li>
+<li>Reliable when FUSE runs in multi thread</li>
+</ol><h3>Information</h3>
 
 <p>Found another project with similar goals:
 <a href="http://github.com/patrickhaller/git-fs">git-fs</a></p>
