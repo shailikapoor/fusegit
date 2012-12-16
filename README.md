@@ -3,40 +3,34 @@
 FuseGit
 =======
 
-A FUSE file system with Git as the backend. Git is known to be a file system 
-in itself. So what is different in 'FuseGit'.
+A FUSE file system with Git as the backend.
 
-FuseGit is a file system first, and has the features of Git at its backend. So 
-if you modified a file and want to revert back. There is a backup waiting for 
-you. If you keep taking snapshots of your file system, then it becomes 
-extremely easy for FuseGit to revert you back in time. But, if you didn't name 
-it, it will still keep taking snapshots regularly. And you can choose your 
-time from the list provided to you.
+Git is known to be a file system in itself. So what is different in 'FuseGit'?
+Git is a version control system which has some features of a file system. But
+for a normal user it still looks like a version control system, and has a
+learning curve. `FuseGit` is primarily a file system. So, if you have the
+required dependencies and you install it, you don't need to know about the inner
+workings and can use it like any other file system.
 
-All this sounds non-magical if you are familiar with Git or any other version 
-control system. But for people who don't want the added complexity of playing 
-with a VCS, FuseGit will give a ready to use recipe. Just plug it in. And have 
-regular backups of your file system, without worrying about too much memory 
-being consumed.
-
-Cleaning up
------------
-Have you ever looked at the Linux repository? If you do a clone of the 
-repository, it will be several multiples of the actual filesize. This is 
-because they are storing every possible content. This is a common issue with 
-any VCS, it grows in size with time more than the actual content. This can be 
-handled if you take care to clean up the history markers at regular intervals.
-
-Implementation
+How it started
 --------------
-`FUSE` is in the name, so we are obviously using it. This means that the file 
-system is in user space. This is a prototype version and we want to keep 
-things simple. We use version `2.9.2`.
+The project was just an idea when I first learnt about `Git`. The project became
+a reality after one year, as part of a course project in the course **Operating
+Systems**.
 
-`libgit2` will be used to get the Git functionality. This library is still 
-under active development. I hope we don't end up requiring a feature which is 
-still under development. This is a risk we might have to take right now. We use
-version `0.17.0`.
+Dependencies
+------------
+Fuse: v2.9.2
+libgit2: v0.17.0
+
+You need to install them, and have them in the path before installing fusegit.
+
+Installation
+------------
+make
+
+You can run the following command to get instructions:
+./fusegit
 
 Please see the [wiki](http://github.com/varun729/fusegit/wiki) to track the progress.
 

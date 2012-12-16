@@ -357,6 +357,7 @@ int main(int argc, char **argv)
 	readDir(test_dir);
 	removeFile(test_file2);
 	multiple(5);
+	multiple(200);	// THIS FAILS
 	return 0;
 }
 

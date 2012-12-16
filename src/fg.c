@@ -239,11 +239,13 @@ main(int argc, char *argv[])
 	case FG_MOUNT:
 		DEBUG("mounting...%s", config_opts.mount);
 		argc = 2;
-		argv[1] = config_opts.mount;
+		argv[argc-1] = config_opts.mount;
 		if (config_opts.debug) {
 			argc++;
-			argv[2] = "-d";
+			argv[argc-1] = "-d";
 		}
+		argc++;
+		argv[argc-1] = "-s";
 		if ((r = setup(config_opts.mount)) < 0)
 			return -1;
 		if ((r = fg_fuse_main(argc, argv)) < 0)
