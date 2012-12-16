@@ -692,7 +692,9 @@ l_free_str_array(char **arr, int size)
 
 // ****************************************************************************
 // FILE HANDLE
-
+// OBSOLETE
+// file handles should not have information about the file names, this prevents
+// us to use the handles after the files have been moved.
 	static int
 l_create_file_handle(uint64_t *fh, const char *path)
 {

@@ -32,6 +32,10 @@ struct repo_stat_data {
 };
 
 // data is stored in multiples of FILE_BUFFER_CHUNK only
+// OBSOLETE
+// The file handle should not have the information of the path, since this
+// prevent us from using the handle, if the file is moved to a different
+// location.
 struct repo_file_handle {
 	int free;
 	char *path;
